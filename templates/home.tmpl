@@ -1,0 +1,216 @@
+{{template "base/head" .}}
+<div role="main" aria-label="{{if .IsSigned}}{{ctx.Locale.Tr "dashboard"}}{{else}}{{ctx.Locale.Tr "home"}}{{end}}" class="page-content home zpm-home">
+
+	<section class="zpm-mast" aria-labelledby="zpm-title">
+		<div class="zpm-motto" aria-hidden="true">
+			<div class="zpm-motto-track">
+				<span>Keep thinking. Keep searching. Keep learning.&nbsp;·&nbsp;Keep thinking. Keep searching. Keep learning.&nbsp;·&nbsp;</span>
+				<span>Keep thinking. Keep searching. Keep learning.&nbsp;·&nbsp;Keep thinking. Keep searching. Keep learning.&nbsp;·&nbsp;</span>
+			</div>
+		</div>
+		<div class="zpm-shell zpm-mast-grid">
+			<div class="zpm-mast-copy">
+				<p class="zpm-status"><span class="zpm-dot" aria-hidden="true"></span>git.zapret.moe · сервер сообщества · Forgejo</p>
+				<h1 id="zpm-title">Интернет должен быть <span class="zpm-gl" data-text="свободным">свободным</span><span class="zpm-h1-sub"><b aria-hidden="true">$</b> как и код<span class="zpm-caret" aria-hidden="true">_</span></span></h1>
+				<p class="zpm-lead">Мы держим свой git-сервер, чтобы инструменты обхода блокировок нельзя было убрать одной жалобой на платформу. Здесь живут исходники, сборки и обсуждения: zapret, Xray, sing-box, клиенты для Android, Windows и Telegram.</p>
+				<div class="zpm-actions" aria-label="Основные разделы">
+					<a class="zpm-btn zpm-btn-main" href="{{AppSubUrl}}/zapretdiscordyoutube">проекты</a>
+					<a class="zpm-btn" href="{{AppSubUrl}}/explore/repos">репозитории</a>
+					{{if not .IsSigned}}<a class="zpm-btn" href="{{AppSubUrl}}/user/sign_up">аккаунт</a>{{end}}
+				</div>
+				<p class="zpm-note">весь код открыт · сборки рядом с исходниками · регистрация без почты</p>
+			</div>
+
+			<div class="zpm-term" aria-hidden="true">
+				<div class="zpm-term-bar"><i></i><i></i><i></i><span>zapret@moe: ~</span></div>
+				<div class="zpm-term-body">
+					<p class="l1"><b>$</b> <span class="zpm-type t1">git clone https://git.zapret.moe/zapret-kvn.git</span></p>
+					<p class="o l2">Клонирование в «zapret-kvn»… готово.</p>
+					<p class="l3"><b>$</b> <span class="zpm-type t2">./zapret-kvn --strategy auto</span></p>
+					<p class="o l4"><em>[ ok ]</em> стратегия найдена: fake,split2</p>
+					<p class="o l5"><em>[ ok ]</em> youtube.com — доступен</p>
+					<p class="o l6"><em>[ ok ]</em> discord.com — доступен</p>
+					<p class="l7"><b>$</b> <span class="zpm-block"></span></p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<div class="zpm-tick" aria-hidden="true">
+		<div class="zpm-tick-track">
+			<span>свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄ свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄ свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄&nbsp;</span>
+			<span>свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄ свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄ свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄&nbsp;</span>
+		</div>
+	</div>
+
+	<section class="zpm-sec" aria-labelledby="zpm-feat-title">
+		<div class="zpm-shell">
+			<div class="zpm-sec-head">
+				<h2 id="zpm-feat-title"><span aria-hidden="true">//</span> Главные проекты</h2>
+			</div>
+
+			<div class="zpm-flag">
+				<div class="zpm-flag-info">
+					<p class="zpm-flag-badge">флагман · windows</p>
+					<h3>Zapret 2 GUI</h3>
+					<p class="zpm-flag-desc">Лаунчер и профили обхода DPI-блокировок: YouTube, Discord и заблокированные сайты. Поставил, выбрал профиль — работает.</p>
+					<div class="zpm-flag-btns">
+						<a class="zpm-btn zpm-btn-main" href="{{AppSubUrl}}/zapretdiscordyoutube/zapret/releases">сборки</a>
+						<a class="zpm-btn" href="{{AppSubUrl}}/zapretdiscordyoutube/zapret">код</a>
+					</div>
+					<div class="zpm-eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+				</div>
+				<a class="zpm-flag-shot" href="{{AppSubUrl}}/zapretdiscordyoutube/zapret" aria-label="Открыть репозиторий Zapret 2 GUI">
+					<img src="{{AppSubUrl}}/assets/zapret-moe/shot-gui.webp" width="1200" height="804" alt="Окно Zapret 2 GUI: статус обхода, пресеты и настройки программы" loading="lazy">
+				</a>
+			</div>
+
+			<div class="zpm-duo-grid">
+				<article class="zpm-duo">
+					<header><h3>Zapret KVN</h3><span class="zpm-duo-tag">2 версии</span></header>
+					<p class="zpm-duo-desc">VPN-клиент с выборочной маршрутизацией: сами решаете, какие приложения и сайты идут через туннель.</p>
+					<div class="zpm-ver">
+						<a class="v-main" href="{{AppSubUrl}}/zapretdiscordyoutube/ZapretKVN-android"><span class="t">android</span><span class="v-name">ZapretKVN</span><span class="v-d">на движке sing-box-extended, без root</span></a>
+						<a class="v-rel" href="{{AppSubUrl}}/zapretdiscordyoutube/ZapretKVN-android/releases">сборки ↓</a>
+					</div>
+					<div class="zpm-ver">
+						<a class="v-main" href="{{AppSubUrl}}/zapretdiscordyoutube/zapret-kvn"><span class="t">windows</span><span class="v-name">Zapret KVN</span><span class="v-d">Xray-core, sing-box и Zapret под одним капотом</span></a>
+						<a class="v-rel" href="{{AppSubUrl}}/zapretdiscordyoutube/zapret-kvn/releases">сборки ↓</a>
+					</div>
+				</article>
+
+				<article class="zpm-duo">
+					<header><h3>ZaStoGram</h3><span class="zpm-duo-tag">2 версии</span></header>
+					<p class="zpm-duo-desc">Форк Telegram для сетей с DPI: MTProxy FakeTLS, WSS-транспорт и защита приватности.</p>
+					<div class="zpm-ver">
+						<a class="v-main" href="{{AppSubUrl}}/zapretdiscordyoutube/ZaStoGram"><span class="t">android</span><span class="v-name">ZaStoGram</span><span class="v-d">мобильный форк: FakeTLS, WSS, приватность</span></a>
+						<a class="v-rel" href="{{AppSubUrl}}/zapretdiscordyoutube/ZaStoGram/releases">сборки ↓</a>
+					</div>
+					<div class="zpm-ver">
+						<a class="v-main" href="{{AppSubUrl}}/zapretdiscordyoutube/ZaStoGram_desktop"><span class="t">desktop</span><span class="v-name">ZaStoGram Desktop</span><span class="v-d">форк Telegram Desktop с теми же транспортами</span></a>
+						<a class="v-rel" href="{{AppSubUrl}}/zapretdiscordyoutube/ZaStoGram_desktop/releases">сборки ↓</a>
+					</div>
+				</article>
+			</div>
+		</div>
+	</section>
+
+	<section class="zpm-sec" aria-labelledby="zpm-shots-title">
+		<div class="zpm-shell">
+			<div class="zpm-sec-head">
+				<h2 id="zpm-shots-title"><span aria-hidden="true">//</span> Как это выглядит</h2>
+			</div>
+			<div class="zpm-shots">
+				<a class="zpm-shot" href="{{AppSubUrl}}/zapretdiscordyoutube/ZapretKVN-android">
+					<img src="{{AppSubUrl}}/assets/zapret-moe/shot-kvn.webp" width="1200" height="514" alt="Интерфейс Zapret KVN для Android" loading="lazy">
+					<span class="zpm-shot-label"><strong>Zapret KVN</strong><span>android</span></span>
+				</a>
+				<a class="zpm-shot" href="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2">
+					<img src="{{AppSubUrl}}/assets/zapret-moe/shot-magisk.webp" width="1200" height="514" alt="Панель управления Magisk Zapret 2" loading="lazy">
+					<span class="zpm-shot-label"><strong>Magisk Zapret 2</strong><span>android · root</span></span>
+				</a>
+				<a class="zpm-shot" href="{{AppSubUrl}}/zapretdiscordyoutube/ZaStoGram_desktop">
+					<img src="{{AppSubUrl}}/assets/zapret-moe/shot-zsg.webp" width="1200" height="675" alt="Окно ZaStoGram Desktop" loading="lazy">
+					<span class="zpm-shot-label"><strong>ZaStoGram Desktop</strong><span>desktop</span></span>
+				</a>
+			</div>
+		</div>
+	</section>
+
+	<section class="zpm-sec" aria-labelledby="zpm-idx-title">
+		<div class="zpm-shell">
+			<div class="zpm-sec-head">
+				<h2 id="zpm-idx-title"><span aria-hidden="true">//</span> Ещё инструменты</h2>
+				<a class="zpm-more" href="{{AppSubUrl}}/zapretdiscordyoutube">вся организация →</a>
+			</div>
+			<ul class="zpm-index">
+				<li><a href="{{AppSubUrl}}/zapretdiscordyoutube/zapret2-youtube-discord">
+					<span class="n">01</span><strong>Zapret для YouTube и Discord</strong><span class="t">windows</span><span class="d">портативный zapret2 с готовыми BAT-профилями</span><span class="a" aria-hidden="true">↗</span></a></li>
+				<li><a href="{{AppSubUrl}}/zapretdiscordyoutube/roskomfree">
+					<span class="n">02</span><strong>RoskomFree</strong><span class="t">прокси</span><span class="d">HTTP-прокси на Tor и WebTunnel-мостах</span><span class="a" aria-hidden="true">↗</span></a></li>
+				<li><a href="{{AppSubUrl}}/zapretdiscordyoutube/yourvpndead">
+					<span class="n">03</span><strong>YourVPNDead</strong><span class="t">android</span><span class="d">показывает, как приложения обнаруживают ваш VPN</span><span class="a" aria-hidden="true">↗</span></a></li>
+				<li><a href="{{AppSubUrl}}/zapretdiscordyoutube/youtube_59second">
+					<span class="n">04</span><strong>YouTube 59second</strong><span class="t">userscript</span><span class="d">возвращает YouTube через альтернативный embed-плеер</span><span class="a" aria-hidden="true">↗</span></a></li>
+				<li><a href="https://publish.obsidian.md/zapret/Privacy/Zapret/home" target="_blank" rel="noopener noreferrer">
+					<span class="n">05</span><strong>База знаний</strong><span class="t">web</span><span class="d">статьи об обходе DPI, VPN и приватности</span><span class="a" aria-hidden="true">↗</span></a></li>
+			</ul>
+		</div>
+	</section>
+
+	<section class="zpm-sec zpm-rel" aria-labelledby="zpm-rel-title">
+		<div class="zpm-shell">
+			<div class="zpm-sec-head">
+				<h2 id="zpm-rel-title"><span aria-hidden="true">//</span> Свежие сборки</h2>
+				<p class="zpm-sec-note">APK и архивы лежат в Releases того же репозитория. Не доверяете сборке — соберите сами: код рядом.</p>
+			</div>
+			<div class="zpm-relrow">
+				<a href="{{AppSubUrl}}/zapretdiscordyoutube/zapret/releases"><span>windows · gui</span><strong>Zapret 2 GUI</strong><b aria-hidden="true">→</b></a>
+				<a href="{{AppSubUrl}}/zapretdiscordyoutube/ZapretKVN-android/releases"><span>android</span><strong>Zapret KVN</strong><b aria-hidden="true">→</b></a>
+				<a href="{{AppSubUrl}}/zapretdiscordyoutube/zapret-kvn/releases"><span>windows</span><strong>Zapret KVN</strong><b aria-hidden="true">→</b></a>
+				<a href="{{AppSubUrl}}/zapretdiscordyoutube/ZaStoGram/releases"><span>android</span><strong>ZaStoGram</strong><b aria-hidden="true">→</b></a>
+				<a href="{{AppSubUrl}}/zapretdiscordyoutube/ZaStoGram_desktop/releases"><span>desktop</span><strong>ZaStoGram</strong><b aria-hidden="true">→</b></a>
+			</div>
+		</div>
+	</section>
+
+	<section class="zpm-sec zpm-ci" aria-labelledby="zpm-ci-title">
+		<div class="zpm-shell">
+			<div class="zpm-sec-head">
+				<h2 id="zpm-ci-title"><span aria-hidden="true">//</span> Сборкам можно доверять</h2>
+				<p class="zpm-sec-note">Релизы собирает Forgejo Actions из открытых исходников: видно, что код не подменён и в сборку не подложено ничего лишнего.</p>
+			</div>
+			<div class="zpm-pipe" aria-hidden="true">
+				<div class="zpm-node n1"><b>01</b><span>checkout</span></div>
+				<i class="zpm-pipe-line"></i>
+				<div class="zpm-node n2"><b>02</b><span>build</span></div>
+				<i class="zpm-pipe-line"></i>
+				<div class="zpm-node n3"><b>03</b><span>checksum</span></div>
+				<i class="zpm-pipe-line"></i>
+				<div class="zpm-node n4"><b>04</b><span>release</span></div>
+			</div>
+			<div class="zpm-ci-points">
+				<div><em>[ ok ]</em><div><strong>Из этого же кода</strong><p>Сборку запускает Actions прямо из коммита в репозитории — руками в артефакт никто не лезет.</p></div></div>
+				<div><em>[ ok ]</em><div><strong>Публичные логи</strong><p>Каждый шаг открыт: видно окружение, команды и из какого коммита собран файл.</p></div></div>
+				<div><em>[ ok ]</em><div><strong>Воспроизводимо</strong><p>Те же шаги можно повторить у себя и сравнить результат — вирусам и скрытым артефактам негде спрятаться.</p></div></div>
+			</div>
+			<div class="zpm-ci-btns"><a class="zpm-btn" href="{{AppSubUrl}}/zapretdiscordyoutube/zapret/actions">смотреть actions</a></div>
+		</div>
+	</section>
+
+	<section class="zpm-sec zpm-help" aria-labelledby="zpm-help-title">
+		<div class="zpm-wm zpm-wm-help" aria-hidden="true">ZAPRET.MOE</div>
+		<div class="zpm-shell zpm-help-in">
+			<p class="zpm-help-kick">// поддержка проекта</p>
+			<h2 id="zpm-help-title">Нам нужна ваша помощь, чтобы создавать продукты бесплатно</h2>
+			<p class="zpm-help-desc">Донаты и премиум-опции — в боте <b>@zapretvpns_bot</b>. Код остаётся открытым, а сборки — бесплатными для всех.</p>
+			<a class="zpm-btn zpm-btn-main" href="https://t.me/zapretvpns_bot" target="_blank" rel="noopener noreferrer">поддержать в telegram</a>
+		</div>
+	</section>
+
+	<section class="zpm-sec zpm-join" aria-labelledby="zpm-join-title">
+		<div class="zpm-shell">
+			<div class="zpm-sec-head">
+				<h2 id="zpm-join-title"><span aria-hidden="true">//</span> Как участвовать</h2>
+			</div>
+			<ol class="zpm-steps">
+				<li><span aria-hidden="true">1</span><p><strong>Смотрите и скачивайте.</strong>Код и релизы открыты, аккаунт не нужен.</p></li>
+				<li><span aria-hidden="true">2</span><p><strong>Регистрируйтесь.</strong>Достаточно логина и пароля — почту подтверждать не нужно.</p></li>
+				<li><span aria-hidden="true">3</span><p><strong>Открывайте Issue.</strong>Ошибки, идеи и вопросы обсуждаются прямо в проектах.</p></li>
+			</ol>
+			<div class="zpm-cta">
+				<img src="{{AppSubUrl}}/assets/zapret-moe/community-avatar.jpg" width="72" height="72" alt="Эмблема сообщества Zapret.Moe" loading="lazy">
+				<div>
+					<p class="zpm-cta-brand">Zapret.Moe</p>
+					<p class="zpm-cta-line">Мы против гегемонии GitHub: открытый код нельзя выключить одним решением платформы.</p>
+				</div>
+				{{if .IsSigned}}
+					<a class="zpm-btn zpm-btn-main" href="{{AppSubUrl}}/explore/repos">к проектам</a>
+				{{else}}
+					<a class="zpm-btn zpm-btn-main" href="{{AppSubUrl}}/user/sign_up">создать аккаунт</a>
+				{{end}}
+			</div>
+		</div>
+	</section>
+</div>
+{{template "base/footer" .}}

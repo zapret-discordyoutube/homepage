@@ -725,6 +725,80 @@
   background: rgba(10, 20, 40, 0.4);
 }
 
+.zpm-fdroid {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 12px;
+  padding: 18px 22px;
+  border: 1px solid var(--zpm-line);
+  border-radius: 12px;
+  background: linear-gradient(90deg, rgba(46, 123, 255, 0.12), rgba(46, 123, 255, 0.04) 55%, rgba(255, 255, 255, 0.02));
+  color: var(--zpm-ink) !important;
+  text-decoration: none !important;
+  transition: transform 150ms ease, border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.zpm-fdroid:hover {
+  border-color: var(--zpm-lineb);
+  box-shadow: 0 0 30px -8px rgba(64, 170, 255, 0.5);
+  transform: translateY(-3px);
+}
+
+.zpm-fdroid-icon {
+  display: grid;
+  flex: none;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid var(--zpm-lineb);
+  border-radius: 12px;
+  color: var(--zpm-neon);
+  background: rgba(46, 123, 255, 0.1);
+  box-shadow:
+    0 0 24px -6px rgba(64, 170, 255, 0.5),
+    inset 0 0 16px rgba(64, 170, 255, 0.1);
+}
+
+.zpm-fdroid-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.zpm-fdroid-tag {
+  color: var(--zpm-neon);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(69, 207, 255, 0.5);
+}
+
+.zpm-fdroid strong {
+  font-family: var(--zpm-sans);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.zpm-fdroid-d {
+  color: var(--zpm-mut);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.zpm-fdroid > b {
+  margin-left: auto;
+  color: var(--zpm-neon);
+  font-size: 20px;
+  text-shadow: 0 0 12px rgba(69, 207, 255, 0.5);
+  transition: transform 150ms ease;
+}
+
+.zpm-fdroid:hover > b {
+  transform: translateX(4px);
+}
+
 .zpm-relrow {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -925,6 +999,15 @@
 
   .zpm-relrow {
     grid-template-columns: 1fr;
+  }
+
+  .zpm-fdroid {
+    gap: 16px;
+    padding: 16px 18px;
+  }
+
+  .zpm-fdroid > b {
+    display: none;
   }
 
   .zpm-cta {

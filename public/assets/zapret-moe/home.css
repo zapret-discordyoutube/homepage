@@ -318,8 +318,9 @@ body {
    Заставка-презентация
    ═══════════════════════════════════════════════════════════════════ */
 
-html.zpm-intro-on,
-html.zpm-intro-on body {
+/* прокрутку блокирует только сам home.js: если он не загрузился, страница листается */
+html.zpm-intro-lock,
+html.zpm-intro-lock body {
   overflow: hidden;
 }
 

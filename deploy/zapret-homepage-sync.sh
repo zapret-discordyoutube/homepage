@@ -7,8 +7,8 @@
 #  * Репозиторий — единственный источник правды. templates/ и public/ в
 #    /var/lib/forgejo/custom зеркалируют ветку main целиком: файлы, которых нет
 #    в git, удаляются. Правки прямо на сервере не живут дольше одной выкладки.
-#  * @ASSETS_VER@ в шаблонах заменяется хешем дерева public/, поэтому браузеры
-#    получают новые CSS/JS сразу, несмотря на кеш статики Forgejo.
+#  * @ASSETS_VER@ в шаблонах заменяется хешем home.css, home.js и site.css,
+#    поэтому браузеры получают новые CSS/JS сразу, несмотря на кеш статики Forgejo.
 #  * Шаблоны Forgejo читает при старте: при их изменении сервис
 #    перезапускается, после чего проверяется, что сайт отвечает. Если нет —
 #    возвращается предыдущая версия, а сломанный коммит запоминается и больше
@@ -26,6 +26,7 @@ RESTART_CMD=${RESTART_CMD:-systemctl restart forgejo}
 OWNER=${OWNER:-git}
 LOCK=${LOCK:-/run/zapret-homepage-sync.lock}
 MANAGED="templates public"
+ASSET_FILES="public/assets/zapret-moe/home.css public/assets/zapret-moe/home.js public/assets/zapret-moe/site.css"
 
 exec 9>"$LOCK"
 flock -n 9 || exit 0
@@ -51,13 +52,20 @@ fi
 if [ "$rev" = "$failed" ]; then
     exit 0
 fi
+# Ночной бэкап останавливает Forgejo; перезапускать его посреди pg_dump нельзя.
+# Через две минуты таймер попробует снова.
+if [ "$RESTART_CMD" = "systemctl restart forgejo" ] && ! systemctl is-active --quiet forgejo; then
+    exit 0
+fi
 
 stage=$(mktemp -d "$CUSTOM_DIR/.stage.XXXXXX")
 backup="$CUSTOM_DIR/.previous"
 trap 'rm -rf "$stage"' EXIT
 
 git_as_owner archive "$rev" $MANAGED | tar -x -C "$stage"
-assets_ver=$(git_as_owner rev-parse --short=12 "$rev:public")
+# Версия — хеш только CSS и JS: замена картинки или robots.txt не трогает
+# шаблоны и не перезапускает Forgejo.
+assets_ver=$(git_as_owner ls-tree "$rev" -- $ASSET_FILES | sha1sum | cut -c1-12)
 find "$stage/templates" -type f -name '*.tmpl' -exec sed -i "s/@ASSETS_VER@/$assets_ver/g" {} +
 [ "$(id -un)" = "$OWNER" ] || chown -R "$OWNER:$OWNER" "$stage"
 
@@ -74,10 +82,12 @@ done
 
 echo "homepage-sync: ${deployed:0:8} -> ${rev:0:8} (assets $assets_ver, templates_changed=$templates_changed)"
 
+# Главная и регистрация (у неё свой шаблон) должны отвечать 200.
 healthy() {
     for _ in $(seq 1 30); do
-        code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$HEALTH_URL" || true)
-        [ "$code" = "200" ] && return 0
+        home=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$HEALTH_URL" || true)
+        signup=$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "${HEALTH_URL}user/sign_up" || true)
+        [ "$home" = "200" ] && [ "$signup" = "200" ] && return 0
         sleep 2
     done
     return 1

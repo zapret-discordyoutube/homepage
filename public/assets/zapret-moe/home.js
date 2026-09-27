@@ -137,6 +137,7 @@
     music.stop(1.2);
     intro.classList.add('zi-out');
     document.removeEventListener('keydown', onKey);
+    root.classList.remove('zpm-intro-lock');
     setTimeout(function () {
       root.classList.remove('zpm-intro-on');
       intro.className = 'zi';
@@ -166,7 +167,7 @@
     var scene = intro.querySelector('.zi-scene');
     if (scene) scene.setAttribute('viewBox', innerWidth < innerHeight * 0.9 ? '420 20 760 700' : '0 0 1600 900');
     intro.className = 'zi';
-    root.classList.add('zpm-intro-on');
+    root.classList.add('zpm-intro-on', 'zpm-intro-lock');
     void intro.offsetWidth; // перезапуск CSS-анимаций при повторном показе
     intro.classList.add('zi-run');
     running = true;

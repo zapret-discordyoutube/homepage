@@ -29,7 +29,7 @@ LOCK=${LOCK:-/run/zapret-homepage-sync.lock}
 MANAGED="templates public"
 # Генерируемое на сервере (не из git) — переживает выкладку.
 PRESERVE="public/assets/zapret-moe-stats"
-ASSET_FILES="public/assets/zapret-moe/home.css public/assets/zapret-moe/home.js public/assets/zapret-moe/site.css"
+ASSET_FILES="public/assets/zapret-moe/home.css public/assets/zapret-moe/home.js public/assets/zapret-moe/site.css public/assets/zapret-moe/intro.css public/assets/zapret-moe/intro.js"
 
 exec 9>"$LOCK"
 flock -n 9 || exit 0

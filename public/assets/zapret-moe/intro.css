@@ -1,0 +1,2405 @@
+/* Заставка-история git.zapret.moe: три акта, 21 слайд.
+   Слайды нарисованы в системе координат 1600×900 (.zx-stage), home.js/intro.js
+   масштабирует её под экран. Персонажи (риги) — на отдельном слое во весь экран.
+   Анимируются только transform и opacity — всё на видеокарте. */
+
+html.zpm-intro-lock,
+html.zpm-intro-lock body {
+  overflow: hidden;
+}
+
+.zx {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--txt);
+  background: radial-gradient(60rem 36rem at 50% 40%, rgba(59, 130, 255, 0.1), transparent 70%), #03040b;
+  user-select: none;
+}
+
+html.zpm-intro-on .zx {
+  display: block;
+}
+
+/* страховка: если скрипт не запустился, заставка не закрывает сайт */
+html.zpm-intro-on .zx:not(.zx-run) {
+  animation: zx-failsafe 0.4s 4s forwards;
+}
+
+@keyframes zx-failsafe {
+  to { opacity: 0; visibility: hidden; }
+}
+
+.zx.zx-out {
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 0.7s, transform 0.7s;
+  pointer-events: none;
+}
+
+.zx.paused *,
+.zx.paused *::before,
+.zx.paused *::after {
+  animation-play-state: paused !important;
+}
+
+.zx-bg {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── сцена и слой персонажей ── */
+.zx-stage,
+.zx-rigs {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1600px;
+  height: 900px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.zx-stage {
+  transform: translate(var(--st-x, 0), var(--st-y, 0)) scale(var(--st-s, 1));
+}
+
+.zx-rigs {
+  transform: translate(var(--rg-x, 0), var(--rg-y, 0)) scale(var(--rg-s, 1));
+}
+
+.zx-rig {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s, transform 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform, opacity;
+}
+
+.zx-rig .zrig {
+  height: 100%;
+}
+
+/* края кадра — статичная виньетка (не mask-image: так дешевле) */
+.zx-rig::after {
+  position: absolute;
+  inset: -1px;
+  z-index: 5;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, #03040b, rgba(3, 4, 11, 0) 10%, rgba(3, 4, 11, 0) 70%, #03040b 98%),
+    linear-gradient(to right, #03040b, rgba(3, 4, 11, 0) 6%, rgba(3, 4, 11, 0) 94%, #03040b);
+}
+
+.zx[data-rig="rkn"] .zx-rig-rkn,
+.zx[data-rig="zt"] .zx-rig-zt,
+.zx[data-rig="both"] .zx-rig-rkn,
+.zx[data-rig="both"] .zx-rig-zt {
+  opacity: 1;
+}
+
+.zx[data-rig="rkn"] .zx-rig-rkn {
+  animation: zx-emerge 2s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes zx-emerge {
+  from { opacity: 0; transform: scale(1.2) translateY(4%); }
+}
+
+.zx[data-rig="zt"] .zx-rig-zt {
+  animation: zx-enter 1.2s cubic-bezier(0.2, 0.9, 0.25, 1.15) 0.35s both;
+}
+
+@keyframes zx-enter {
+  from { opacity: 0; transform: translateX(-38%) rotate(-5deg) scale(0.9); }
+}
+
+/* битва: Запрет-тян слева, РКН-тян справа, потом РКН-тян глючит и исчезает */
+.zx[data-rig="both"] .zx-rig .zr-embers,
+.zx[data-rig="both"] .zx-rig .zr-gl {
+  display: none;
+}
+
+.zx[data-rig="both"] .zx-rig-zt {
+  transform: translateX(-24%) scale(0.72);
+  animation: zx-zt-win 7s cubic-bezier(0.3, 0, 0.2, 1) forwards;
+}
+
+.zx[data-rig="both"] .zx-rig-rkn {
+  transform: translateX(24%) scale(0.72);
+  animation: zx-rkn-lose 7s steps(1) forwards;
+}
+
+@keyframes zx-zt-win {
+  0%, 55% { transform: translateX(-24%) scale(0.72); }
+  75%, 100% { transform: translateX(0) scale(0.9); }
+}
+
+@keyframes zx-rkn-lose {
+  0%, 48% { opacity: 1; clip-path: inset(0); transform: translateX(24%) scale(0.72); }
+  50% { clip-path: inset(10% 0 55% 0); transform: translateX(26%) scale(0.72); }
+  52% { clip-path: inset(40% 0 20% 0); transform: translateX(21%) scale(0.72); }
+  54% { clip-path: inset(0 0 70% 0); transform: translateX(28%) scale(0.72); }
+  56% { clip-path: inset(60% 0 5% 0); opacity: 0.7; transform: translateX(23%) scale(0.72); }
+  58% { clip-path: inset(48% 0 48% 0); opacity: 0.4; transform: translateX(24%) scale(0.9, 0.72); }
+  60%, 100% { opacity: 0; clip-path: inset(50% 0 50% 0); }
+}
+
+/* ── слайды ── */
+.zx-s {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s, visibility 0s 0.5s;
+}
+
+.zx-s.on {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.5s;
+}
+
+.zx-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* ── шапка: акты и управление ── */
+.zx-top {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  left: 16px;
+  z-index: 4;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.zx-acts {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+  min-width: 0;
+}
+
+.zx-act {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.zx-act span {
+  overflow: hidden;
+  color: var(--dim);
+  font: 600 11px var(--mono);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: color 0.3s;
+}
+
+.zx-act.cur span {
+  color: var(--cy);
+}
+
+.zx-ticks {
+  display: flex;
+  gap: 3px;
+}
+
+.zx-ticks i {
+  position: relative;
+  flex: 1;
+  height: 3px;
+  overflow: hidden;
+  cursor: pointer;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.zx-ticks i::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, var(--cy), var(--vio));
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.zx-ticks i.done::after {
+  transform: scaleX(1);
+}
+
+.zx-ticks i.cur::after {
+  animation: zx-tick var(--dur) linear forwards;
+}
+
+@keyframes zx-tick {
+  to { transform: scaleX(1); }
+}
+
+.zx-ctl {
+  display: flex;
+  flex: none;
+  gap: 8px;
+}
+
+.zx-btn {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  color: #cbd6f5;
+  font: 500 13px/1 var(--txt);
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(10, 16, 34, 0.72);
+}
+
+.zx-btn:hover {
+  color: #fff;
+  border-color: var(--cy);
+}
+
+.zx-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.zx-btn kbd {
+  padding: 2px 5px;
+  color: var(--dim);
+  font: 11px var(--mono);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.zx-snd-x,
+.zx.muted .zx-snd-w,
+.zx-pause-play,
+.zx.paused .zx-pause-bars {
+  display: none;
+}
+
+.zx.muted .zx-snd-x,
+.zx.paused .zx-pause-play {
+  display: inline;
+}
+
+.zx:not(.muted) .zx-sound {
+  color: var(--cy);
+  border-color: rgba(79, 209, 255, 0.5);
+}
+
+.zx.snd-wait .zx-sound {
+  animation: zx-nudge 1.2s ease-in-out infinite;
+}
+
+@keyframes zx-nudge {
+  50% { box-shadow: 0 0 0 6px rgba(79, 209, 255, 0.2); }
+}
+
+/* ── подписи ── */
+.zx-cap {
+  position: absolute;
+  right: 0;
+  bottom: 70px;
+  left: 0;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 0 24px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.zx-cap strong {
+  max-width: 1100px;
+  font: 700 clamp(22px, 3.2vw, 42px) / 1.15 var(--disp);
+  letter-spacing: -0.02em;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.95);
+}
+
+.zx-cap span {
+  max-width: 820px;
+  color: #b9c6ea;
+  font-size: clamp(15px, 1.5vw, 19px);
+  line-height: 1.45;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.95);
+}
+
+.zx-cap.in strong,
+.zx-cap.in span {
+  animation: zx-cap-in 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.zx-cap.in span {
+  animation-delay: 0.12s;
+}
+
+@keyframes zx-cap-in {
+  from { opacity: 0; transform: translateY(14px); filter: blur(4px); }
+}
+
+.zx-nav {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  z-index: 4;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  transform: translateX(-50%);
+}
+
+.zx-hint {
+  color: rgba(203, 214, 245, 0.45);
+  font: 12px var(--mono);
+  white-space: nowrap;
+}
+
+.zx.snd-wait .zx-hint-nav,
+.zx-hint-snd {
+  display: none;
+}
+
+.zx.snd-wait .zx-hint-snd {
+  display: inline;
+  color: var(--cy);
+}
+
+/* ═══ слайды ═══ */
+
+/* 1. сеть */
+.zx-edge {
+  fill: none;
+  stroke: rgba(79, 209, 255, 0.28);
+  stroke-width: 2;
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+}
+
+.zx-net.on .zx-edge {
+  animation: zx-draw 1.4s ease-out forwards;
+}
+
+.zx-net.on .zx-edge:nth-child(3n) { animation-delay: 0.2s; }
+.zx-net.on .zx-edge:nth-child(3n + 1) { animation-delay: 0.4s; }
+
+@keyframes zx-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.zx-node {
+  opacity: 0;
+}
+
+.zx-net.on .zx-node {
+  animation: zx-pop 0.6s cubic-bezier(0.3, 1.6, 0.5, 1) forwards;
+}
+
+.zx-net.on .zx-node:nth-of-type(2) { animation-delay: 0.15s; }
+.zx-net.on .zx-node:nth-of-type(3) { animation-delay: 0.3s; }
+.zx-net.on .zx-node:nth-of-type(4) { animation-delay: 0.45s; }
+.zx-net.on .zx-node:nth-of-type(5) { animation-delay: 0.6s; }
+.zx-net.on .zx-node:nth-of-type(6) { animation-delay: 0.75s; }
+.zx-net.on .zx-node:nth-of-type(7) { animation-delay: 0.9s; }
+
+@keyframes zx-pop {
+  from { opacity: 0; transform: var(--tr, none) scale(0.3); }
+  to { opacity: 1; }
+}
+
+.zx-halo {
+  fill: rgba(79, 209, 255, 0.08);
+  stroke: rgba(79, 209, 255, 0.3);
+  stroke-width: 1.5;
+}
+
+.zx-pks {
+  position: absolute;
+  inset: 0;
+}
+
+.zx-pk {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 13px;
+  border-radius: 4px;
+  background: #bff0ff;
+  box-shadow: 0 0 10px #4fd1ff;
+  offset-rotate: 0deg;
+  opacity: 0;
+}
+
+.zx-net.on .zx-pk {
+  animation: zx-run var(--t) linear var(--d) infinite;
+}
+
+@keyframes zx-run {
+  0% { offset-distance: 0%; opacity: 0; }
+  10%, 88% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+.zx-tag {
+  position: absolute;
+  color: var(--cy);
+  font: 600 18px var(--mono);
+  transform: translateX(-50%);
+}
+
+/* 2. конверт */
+.zx-envl {
+  position: absolute;
+  top: 250px;
+  left: 520px;
+  width: 560px;
+  height: 340px;
+  perspective: 1200px;
+}
+
+.zx-env-back,
+.zx-env-front {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+}
+
+.zx-env-back {
+  background: #182247;
+}
+
+.zx-env-letter {
+  position: absolute;
+  top: 26px;
+  right: 30px;
+  left: 30px;
+  height: 260px;
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  padding: 28px;
+  border-radius: 10px;
+  background: #e8efff;
+  transform: translateY(0);
+}
+
+.zx-env-letter i {
+  height: 12px;
+  border-radius: 6px;
+  background: #aab6d6;
+}
+
+.zx-env-letter i:nth-child(2) { width: 80%; }
+.zx-env-letter i:nth-child(3) { width: 90%; }
+.zx-env-letter i:nth-child(4) { width: 60%; }
+
+.zx-env-letter b {
+  color: #2b3a66;
+  font: 700 22px var(--mono);
+}
+
+.zx-env-front {
+  z-index: 2;
+  display: grid;
+  align-content: end;
+  gap: 4px;
+  padding: 26px 32px;
+  background: linear-gradient(160deg, #22306a, #151e44);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.9), inset 0 0 0 2px rgba(120, 180, 255, 0.35);
+  clip-path: polygon(0 34%, 50% 62%, 100% 34%, 100% 100%, 0 100%);
+}
+
+.zx-env-to {
+  color: #8fa3d0;
+  font: 16px var(--mono);
+}
+
+.zx-env-front strong {
+  color: #ffd166;
+  font: 800 44px var(--mono);
+}
+
+.zx-env-front em {
+  color: #8fa3d0;
+  font: normal 15px var(--mono);
+}
+
+.zx-env-flap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 3;
+  height: 60%;
+  background: linear-gradient(180deg, #2a3a80, #1c2858);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: 50% 0;
+}
+
+.zx-s.zx-env.on > .zx-envl {
+  animation: zx-env-in 0.8s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
+}
+
+@keyframes zx-env-in {
+  from { opacity: 0; transform: translateY(80px) rotate(-6deg) scale(0.8); }
+}
+
+.zx-s.zx-env.on .zx-env-flap {
+  animation: zx-flap 0.7s ease-in-out 1.4s forwards;
+}
+
+@keyframes zx-flap {
+  to { transform: rotateX(180deg); z-index: 0; }
+}
+
+.zx-s.zx-env.on .zx-env-letter {
+  animation: zx-letter 0.8s cubic-bezier(0.3, 1.2, 0.5, 1) 2s forwards;
+}
+
+@keyframes zx-letter {
+  to { transform: translateY(-180px); }
+}
+
+.zx-s.zx-env.on .zx-env-front strong {
+  animation: zx-glowtxt 1.2s ease-in-out 0.8s 2 alternate;
+}
+
+@keyframes zx-glowtxt {
+  to { text-shadow: 0 0 22px rgba(255, 209, 102, 0.9); }
+}
+
+.zx-note {
+  position: absolute;
+  display: grid;
+  gap: 4px;
+  max-width: 290px;
+  padding: 14px 18px;
+  border-left: 4px solid;
+  border-radius: 6px;
+  background: rgba(8, 12, 28, 0.85);
+  opacity: 0;
+}
+
+.zx-note b {
+  font: 700 22px var(--disp);
+}
+
+.zx-note span {
+  color: var(--mut);
+  font-size: 16px;
+}
+
+.zx-note-red {
+  border-color: #ff5a74;
+}
+
+.zx-note-red b {
+  color: #ff6b83;
+}
+
+.zx-note-cy {
+  border-color: var(--cy);
+}
+
+.zx-note-cy b {
+  color: var(--cy);
+}
+
+.zx-s.zx-env.on .zx-note-red {
+  animation: zx-note 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) 1s both;
+}
+
+.zx-s.zx-env.on .zx-note-cy {
+  animation: zx-note 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) 2.8s both;
+}
+
+@keyframes zx-note {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; }
+}
+
+/* 4. реестр */
+.zx-doc {
+  position: absolute;
+  top: 110px;
+  left: 450px;
+  width: 700px;
+  height: 560px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #efe8d6;
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9);
+  transform: rotate(-2deg);
+}
+
+.zx-doc-head {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  padding: 22px 28px 14px;
+  color: #3a2a18;
+  border-bottom: 3px double #b89d74;
+  background: #efe8d6;
+}
+
+.zx-doc-head b {
+  font: 800 30px var(--disp);
+  letter-spacing: 0.08em;
+}
+
+.zx-doc-head span {
+  font: 16px var(--mono);
+}
+
+.zx-doc-head .zx-count {
+  position: absolute;
+  top: 24px;
+  right: 26px;
+  color: #b3122f;
+  font: 800 26px var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.zx-doc-list {
+  margin: 0;
+  padding: 0 28px;
+  list-style: none;
+}
+
+.zx-s.zx-reg.on .zx-doc-list {
+  animation: zx-scroll 7s linear forwards;
+}
+
+@keyframes zx-scroll {
+  to { transform: translateY(-900px); }
+}
+
+.zx-doc-list li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: center;
+  height: 46px;
+  color: #3a2a18;
+  font: 20px var(--mono);
+  border-bottom: 1px solid #d6c6a6;
+}
+
+.zx-doc-list span {
+  color: #9c8460;
+  font-size: 15px;
+}
+
+.zx-doc-list em {
+  position: absolute;
+  right: 10px;
+  padding: 2px 12px;
+  color: #c4122f;
+  font: 800 16px var(--mono);
+  font-style: normal;
+  letter-spacing: 0.08em;
+  border: 3px solid #c4122f;
+  border-radius: 6px;
+  opacity: 0;
+  transform: rotate(-8deg) scale(2);
+}
+
+.zx-s.zx-reg.on .zx-doc-list em {
+  animation: zx-stamp 0.3s cubic-bezier(0.5, 0, 0.7, 1.4) forwards;
+}
+
+@keyframes zx-stamp {
+  to { opacity: 0.9; transform: rotate(-8deg) scale(1); }
+}
+
+.zx-art {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 24px;
+  box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 59, 92, 0.4);
+}
+
+.zx-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.zx-art-right {
+  top: 130px;
+  left: 920px;
+  width: 560px;
+  height: 520px;
+  opacity: 0;
+}
+
+.zx-art-right img {
+  object-position: 50% 30%;
+}
+
+.zx-s.zx-reg.on .zx-art-right {
+  animation: zx-art-in 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s both;
+}
+
+@keyframes zx-art-in {
+  from { opacity: 0; transform: translateX(80px) scale(0.95); }
+  to { opacity: 1; }
+}
+
+/* 5. карта ТСПУ */
+.zx-wire2 {
+  stroke: rgba(79, 209, 255, 0.25);
+  stroke-width: 1.5;
+}
+
+.zx-dot {
+  fill: #4fd1ff;
+}
+
+.zx-city text {
+  fill: #cbd6f5;
+  font: 600 16px var(--txt);
+  text-anchor: middle;
+}
+
+.zx-box {
+  fill: rgba(255, 59, 92, 0.25);
+  stroke: #ff3b5c;
+  stroke-width: 2;
+  opacity: 0;
+  transform: scale(2.4);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.zx-s.zx-map.on .zx-box {
+  animation: zx-boxin 0.35s cubic-bezier(0.3, 1.5, 0.5, 1) calc(0.6s + var(--i) * 0.12s) forwards;
+}
+
+.zx-s.zx-map.on .zx-dot {
+  animation: zx-dotred 0.3s calc(0.6s + var(--i) * 0.12s) forwards;
+}
+
+.zx-s.zx-map.on .zx-wire2 {
+  animation: zx-wirered 4s linear 1s forwards;
+}
+
+@keyframes zx-boxin {
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes zx-dotred {
+  to { fill: #ff5a74; }
+}
+
+@keyframes zx-wirered {
+  to { stroke: rgba(255, 59, 92, 0.35); }
+}
+
+.zx-mapcount {
+  position: absolute;
+  top: 110px;
+  right: 110px;
+  display: grid;
+  justify-items: end;
+}
+
+.zx-mapcount strong {
+  color: #ff6b83;
+  font: 800 64px var(--disp);
+  font-variant-numeric: tabular-nums;
+}
+
+.zx-mapcount span {
+  color: var(--mut);
+  font-size: 18px;
+}
+
+/* общая схема «вы — ТСПУ — сервер» */
+.zx-rail {
+  stroke: rgba(79, 209, 255, 0.45);
+  stroke-width: 4;
+}
+
+.zx-lbl {
+  fill: #cbd6f5;
+  font: 600 22px var(--mono);
+  text-anchor: middle;
+}
+
+.zx-gate rect:first-child {
+  fill: rgba(22, 6, 16, 0.95);
+  stroke: #ff3b5c;
+  stroke-width: 3;
+}
+
+.zx-gate text {
+  fill: #ff6b83;
+  font: 800 30px var(--disp);
+  letter-spacing: 0.12em;
+  text-anchor: middle;
+}
+
+.zx-scan {
+  fill: #ff3b5c;
+  animation: zx-scan 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes zx-scan {
+  from { transform: translateY(-50px); }
+  to { transform: translateY(50px); }
+}
+
+.zx-led {
+  fill: #ff3b5c;
+  animation: zx-led 0.9s steps(1) infinite;
+}
+
+.zx-led:nth-of-type(2) { animation-delay: -0.3s; }
+.zx-led:nth-of-type(3) { animation-delay: -0.6s; }
+
+@keyframes zx-led {
+  50% { fill: #3a0a16; }
+}
+
+.zx-mini {
+  position: absolute;
+  top: 424px;
+  left: 300px;
+  display: grid;
+  place-items: center;
+  min-width: 150px;
+  height: 52px;
+  padding: 0 16px;
+  font: 700 20px var(--mono);
+  white-space: nowrap;
+  border-radius: 10px;
+  opacity: 0;
+  background: #22306a;
+  box-shadow: inset 0 0 0 2px #4fd1ff, 0 0 18px rgba(79, 209, 255, 0.45);
+  transform: translateX(-50%);
+}
+
+.zx-mini b {
+  color: #ffd166;
+  font-weight: 700;
+}
+
+/* 6. рентген */
+.zx-s.zx-xray.on .zx-m-ok {
+  animation: zx-ok 3s cubic-bezier(0.45, 0, 0.55, 1) 0.2s forwards;
+}
+
+.zx-s.zx-xray.on .zx-m-bad {
+  animation: zx-bad 3s cubic-bezier(0.45, 0, 0.55, 1) 3s forwards;
+}
+
+@keyframes zx-ok {
+  0% { opacity: 0; transform: translateX(-50%); }
+  8% { opacity: 1; }
+  40%, 58% { transform: translateX(calc(-50% + 500px)); }
+  92% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(calc(-50% + 1000px)); }
+}
+
+@keyframes zx-bad {
+  0% { opacity: 0; transform: translateX(-50%); }
+  8% { opacity: 1; }
+  40%, 60% { transform: translateX(calc(-50% + 500px)); box-shadow: inset 0 0 0 2px #4fd1ff; }
+  66% { box-shadow: inset 0 0 0 2px #ff3b5c, 0 0 24px #ff3b5c; }
+  100% { opacity: 0; transform: translateX(calc(-50% + 470px)) translateY(260px) rotate(-60deg); box-shadow: inset 0 0 0 2px #ff3b5c; }
+}
+
+.zx-lens {
+  position: absolute;
+  top: 210px;
+  left: 800px;
+  width: 380px;
+  height: 130px;
+  transform: translateX(-50%);
+}
+
+.zx-lens span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  color: #ffd166;
+  font: 700 28px var(--mono);
+  border: 3px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  background: rgba(8, 12, 28, 0.9);
+  opacity: 0;
+}
+
+.zx-lens b {
+  font: 700 20px var(--txt);
+}
+
+.zx-lens .ok { color: #37e39a; }
+.zx-lens .bad { color: #ff6b83; }
+
+.zx-s.zx-xray.on .zx-lens-a {
+  animation: zx-lens 1s ease-out 1.3s both;
+}
+
+.zx-s.zx-xray.on .zx-lens-b {
+  animation: zx-lens 1.4s ease-out 4.1s both;
+}
+
+@keyframes zx-lens {
+  0% { opacity: 0; transform: scale(0.7); }
+  15%, 80% { opacity: 1; transform: none; }
+  100% { opacity: 0; }
+}
+
+.zx-cut {
+  position: absolute;
+  top: 400px;
+  left: 800px;
+  color: #ff3b5c;
+  font-size: 80px;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+.zx-s.zx-xray.on .zx-cut {
+  animation: zx-flash 0.6s ease-out 4.9s both;
+}
+
+@keyframes zx-flash {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* 7. замедление */
+.zx-player {
+  position: absolute;
+  top: 140px;
+  left: 330px;
+  width: 760px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #0f0f10;
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px #2a2a2e;
+}
+
+.zx-pl-top {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 18px;
+  color: #e8e8e8;
+  font-size: 18px;
+}
+
+.zx-pl-top svg {
+  width: 40px;
+}
+
+.zx-pl-video {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 18px;
+  height: 330px;
+  color: #aaa;
+  font-size: 18px;
+  background: repeating-linear-gradient(45deg, #161618 0 14px, #1a1a1d 14px 28px);
+}
+
+.zx-spin {
+  width: 64px;
+  height: 64px;
+  border: 6px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: zx-rot 0.9s linear infinite;
+}
+
+@keyframes zx-rot {
+  to { transform: rotate(360deg); }
+}
+
+.zx-pl-bar {
+  position: relative;
+  height: 6px;
+  background: #333;
+}
+
+.zx-pl-bar i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  transform-origin: left;
+}
+
+.zx-pl-buf {
+  background: #777;
+  transform: scaleX(0.04);
+}
+
+.zx-pl-play {
+  background: #ff2d2d;
+  transform: scaleX(0.02);
+}
+
+.zx-s.zx-slow.on .zx-pl-buf {
+  animation: zx-buf 6s linear forwards;
+}
+
+@keyframes zx-buf {
+  to { transform: scaleX(0.06); }
+}
+
+.zx-pl-bot {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 18px;
+  color: #ddd;
+  font: 16px var(--mono);
+}
+
+.zx-pl-bot b {
+  padding: 1px 8px;
+  color: #fff;
+  border-radius: 4px;
+  background: #ff2d2d;
+}
+
+.zx-speed {
+  position: absolute;
+  top: 200px;
+  left: 1140px;
+  display: grid;
+  gap: 8px;
+}
+
+.zx-speed span {
+  color: var(--mut);
+  font: 18px var(--mono);
+}
+
+.zx-speed strong {
+  position: relative;
+  display: grid;
+  height: 70px;
+  overflow: hidden;
+}
+
+.zx-speed i {
+  grid-area: 1 / 1;
+  color: #ff6b83;
+  font: 800 52px var(--disp);
+  font-style: normal;
+  white-space: nowrap;
+  opacity: 0;
+}
+
+.zx-speed i:first-child {
+  color: #37e39a;
+}
+
+.zx-s.zx-slow.on .zx-speed i {
+  animation: zx-drop 1.4s cubic-bezier(0.3, 0, 0.3, 1) calc(var(--k) * 1.3s) both;
+}
+
+.zx-speed i:nth-child(1) { --k: 0; }
+.zx-speed i:nth-child(2) { --k: 1; }
+.zx-speed i:nth-child(3) { --k: 2; }
+.zx-speed i:nth-child(4) { --k: 3; animation-fill-mode: forwards !important; }
+
+@keyframes zx-drop {
+  0% { opacity: 0; transform: translateY(-60px); }
+  20%, 80% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(60px); }
+}
+
+.zx-s.zx-slow.on .zx-speed i:nth-child(4) {
+  animation-name: zx-drop-last;
+}
+
+@keyframes zx-drop-last {
+  from { opacity: 0; transform: translateY(-60px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 8. потери */
+.zx-apps,
+.zx-people {
+  position: absolute;
+  display: grid;
+  gap: 16px;
+}
+
+.zx-apps {
+  top: 110px;
+  left: 260px;
+}
+
+.zx-people {
+  top: 420px;
+  left: 260px;
+}
+
+.zx-apps p,
+.zx-people p {
+  color: var(--mut);
+  font: 600 20px var(--mono);
+}
+
+.zx-appgrid {
+  display: grid;
+  grid-template-columns: repeat(8, 110px);
+  gap: 16px;
+}
+
+.zx-app {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 110px;
+  border-radius: 26px;
+  background: linear-gradient(160deg, #2a3a80, #151e44);
+}
+
+.zx-app svg {
+  width: 56px;
+  fill: none;
+  stroke: #9fd8ff;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.zx-app em {
+  position: absolute;
+  padding: 2px 8px;
+  color: #ff3b5c;
+  font: 800 15px var(--mono);
+  font-style: normal;
+  border: 3px solid #ff3b5c;
+  border-radius: 6px;
+  background: rgba(10, 4, 10, 0.8);
+  opacity: 0;
+  transform: rotate(-14deg) scale(2);
+}
+
+.zx-s.zx-loss.on .zx-app {
+  animation: zx-appgone 0.5s calc(0.6s + var(--i) * 0.35s) forwards;
+}
+
+.zx-s.zx-loss.on .zx-app em {
+  animation: zx-stamp2 0.3s cubic-bezier(0.5, 0, 0.7, 1.4) calc(0.6s + var(--i) * 0.35s) forwards;
+}
+
+@keyframes zx-appgone {
+  to { opacity: 0.45; }
+}
+
+@keyframes zx-stamp2 {
+  to { opacity: 1; transform: rotate(-14deg) scale(1); }
+}
+
+.zx-crowd {
+  display: flex;
+  gap: 22px;
+}
+
+.zx-crowd i {
+  position: relative;
+  width: 60px;
+  height: 90px;
+}
+
+.zx-crowd i::before,
+.zx-crowd i::after {
+  position: absolute;
+  left: 50%;
+  content: "";
+  background: #4fd1ff;
+  box-shadow: 0 0 14px rgba(79, 209, 255, 0.6);
+  transform: translateX(-50%);
+}
+
+.zx-crowd i::before {
+  top: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.zx-crowd i::after {
+  top: 36px;
+  width: 56px;
+  height: 54px;
+  border-radius: 28px 28px 8px 8px;
+}
+
+.zx-s.zx-loss.on .zx-crowd i {
+  animation: zx-dim 0.8s calc(1s + var(--i) * 0.28s) forwards;
+}
+
+@keyframes zx-dim {
+  to { opacity: 0.18; filter: grayscale(1); }
+}
+
+/* 9–12. приёмы: общая подпись и «мысли» ТСПУ */
+.zx-used {
+  position: absolute;
+  top: 640px;
+  left: 800px;
+  padding: 10px 20px;
+  color: var(--mut);
+  font: 18px var(--txt);
+  white-space: nowrap;
+  border: 1px solid var(--line2);
+  border-radius: 999px;
+  background: rgba(10, 16, 34, 0.8);
+  transform: translateX(-50%);
+}
+
+.zx-used b {
+  color: var(--cy);
+  font-family: var(--mono);
+}
+
+.zx-think {
+  position: absolute;
+  top: 230px;
+  left: 800px;
+  width: 520px;
+  height: 90px;
+  transform: translateX(-50%);
+}
+
+.zx-think span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 20px;
+  color: #ff9fb0;
+  font: 700 24px var(--txt);
+  text-align: center;
+  border: 2px solid rgba(255, 59, 92, 0.6);
+  border-radius: 22px;
+  background: rgba(28, 8, 16, 0.92);
+  opacity: 0;
+}
+
+.zx-think span::after {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  content: "";
+  border-right: 2px solid rgba(255, 59, 92, 0.6);
+  border-bottom: 2px solid rgba(255, 59, 92, 0.6);
+  background: rgba(28, 8, 16, 0.92);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+@keyframes zx-think {
+  0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+  12%, 85% { opacity: 1; transform: none; }
+  100% { opacity: 0; }
+}
+
+.zx-join {
+  position: absolute;
+  top: 330px;
+  left: 1350px;
+  color: #37e39a;
+  font: 800 26px var(--mono);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+@keyframes zx-joinin {
+  from { opacity: 0; transform: translateX(-50%) translateY(14px) scale(0.8); }
+  to { opacity: 1; transform: translateX(-50%); }
+}
+
+/* fake */
+.zx-m-fake {
+  background: rgba(155, 123, 255, 0.15);
+  box-shadow: inset 0 0 0 2px #9b7bff;
+  border: 2px dashed #9b7bff;
+}
+
+.zx-m-fake::after {
+  position: absolute;
+  top: -26px;
+  color: #b9a4ff;
+  font: 600 15px var(--mono);
+  content: attr(data-ttl);
+}
+
+.zx-s.zx-fake.on .zx-m-fake {
+  animation: zx-fakego 3.2s cubic-bezier(0.45, 0, 0.55, 1) 0.2s forwards;
+}
+
+@keyframes zx-fakego {
+  0% { opacity: 0; transform: translateX(-50%); }
+  8% { opacity: 1; }
+  40%, 55% { transform: translateX(calc(-50% + 500px)); }
+  80% { opacity: 1; transform: translateX(calc(-50% + 780px)) scale(1); }
+  100% { opacity: 0; transform: translateX(calc(-50% + 820px)) scale(0.3); }
+}
+
+.zx-s.zx-fake.on .zx-m-real {
+  animation: zx-ok 3s cubic-bezier(0.45, 0, 0.55, 1) 2.4s forwards;
+}
+
+.zx-s.zx-fake.on .zx-think .a {
+  animation: zx-think 1.6s ease-out 1.2s both;
+}
+
+.zx-s.zx-fake.on .zx-think .b {
+  animation: zx-think 1.6s ease-out 3.4s both;
+}
+
+.zx-poof {
+  position: absolute;
+  top: 520px;
+  left: 1100px;
+  color: #b9a4ff;
+  font: 600 18px var(--mono);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+.zx-s.zx-fake.on .zx-poof {
+  animation: zx-think 1.8s ease-out 2.6s both;
+}
+
+/* split */
+.zx-s.zx-split.on .zx-m-whole {
+  animation: zx-whole 1.2s ease-in 0.2s forwards;
+}
+
+@keyframes zx-whole {
+  0% { opacity: 0; transform: translateX(-50%); }
+  20% { opacity: 1; }
+  80% { opacity: 1; transform: translateX(calc(-50% + 180px)); }
+  100% { opacity: 0; transform: translateX(calc(-50% + 200px)) scale(1.1); }
+}
+
+.zx-m-p1,
+.zx-m-p2 {
+  min-width: 0;
+}
+
+.zx-s.zx-split.on .zx-m-p1 {
+  animation: zx-part 3.4s cubic-bezier(0.45, 0, 0.55, 1) 1.3s forwards;
+}
+
+.zx-s.zx-split.on .zx-m-p2 {
+  animation: zx-part 3.4s cubic-bezier(0.45, 0, 0.55, 1) 1.9s forwards;
+}
+
+@keyframes zx-part {
+  0% { opacity: 0; transform: translateX(calc(-50% + 200px)); }
+  8% { opacity: 1; }
+  38%, 52% { transform: translateX(calc(-50% + 500px)); }
+  92% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(calc(-50% + 1000px)); }
+}
+
+.zx-s.zx-split.on .zx-think .a {
+  animation: zx-think 2.2s ease-out 2.3s both;
+}
+
+.zx-s.zx-split.on .zx-join,
+.zx-s.zx-disorder.on .zx-join {
+  animation: zx-joinin 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) 5s both;
+}
+
+/* disorder */
+.zx-s.zx-disorder.on .zx-m-p2.first {
+  animation: zx-part 3.4s cubic-bezier(0.45, 0, 0.55, 1) 0.2s forwards;
+}
+
+.zx-s.zx-disorder.on .zx-m-p1.second {
+  animation: zx-part 3.4s cubic-bezier(0.45, 0, 0.55, 1) 1s forwards;
+}
+
+.zx-s.zx-disorder.on .zx-think .a {
+  animation: zx-think 2.4s ease-out 1.4s both;
+}
+
+/* tunnel */
+.zx-m-cap {
+  min-width: 240px;
+  height: 80px;
+  top: 410px;
+  gap: 2px;
+  background: linear-gradient(160deg, #1f5140, #10281f);
+  box-shadow: inset 0 0 0 2px #37e39a, 0 0 22px rgba(55, 227, 154, 0.45);
+  border-radius: 40px;
+}
+
+.zx-m-cap b {
+  color: #9ff5d0;
+}
+
+.zx-m-cap i {
+  color: #ffd166;
+  font: 700 15px var(--mono);
+  font-style: normal;
+  opacity: 0.8;
+}
+
+.zx-s.zx-tunnel.on .zx-m-cap {
+  animation: zx-ok 3.6s cubic-bezier(0.45, 0, 0.55, 1) 0.2s forwards;
+}
+
+.zx-s.zx-tunnel.on .zx-think .a {
+  animation: zx-think 1.8s ease-out 1.4s both;
+}
+
+/* 13. появление Запрет-тян */
+.zx-flash {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at 30% 45%, #fff, rgba(79, 209, 255, 0.6) 30%, transparent 70%);
+  opacity: 0;
+}
+
+.zx-s.zx-zt.on .zx-flash {
+  animation: zx-flashin 0.9s ease-out 0.35s;
+}
+
+@keyframes zx-flashin {
+  0% { opacity: 0; }
+  15% { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+
+.zx-speedlines {
+  position: absolute;
+  inset: -20%;
+  background: repeating-conic-gradient(from 0deg at 25% 50%, rgba(79, 209, 255, 0.55) 0 1deg, transparent 1deg 7deg);
+  opacity: 0;
+}
+
+.zx-s.zx-zt.on .zx-speedlines {
+  animation: zx-flashin 1.4s ease-out 0.4s;
+}
+
+/* 14–17. проекты */
+.zx-pcard {
+  position: absolute;
+  top: 190px;
+  left: 150px;
+  width: 760px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(155, 123, 255, 0.5);
+  border-radius: 22px;
+  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9), 0 0 60px -10px rgba(155, 123, 255, 0.5);
+  opacity: 0;
+}
+
+.zx-pcard img {
+  display: block;
+  width: 100%;
+}
+
+.zx-shot-gui {
+  top: 140px;
+  width: 640px;
+  left: 210px;
+}
+
+.zx-s.zx-proj.on .zx-pcard {
+  animation: zx-pcard 1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes zx-pcard {
+  from { opacity: 0; transform: perspective(1400px) translateX(-80px) rotateY(18deg) scale(0.92); }
+  to { opacity: 1; transform: perspective(1400px) rotateY(6deg); }
+}
+
+.zx-ptext {
+  position: absolute;
+  top: 180px;
+  left: 970px;
+  width: 520px;
+}
+
+.zx-pchips {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.zx-pchips span {
+  padding: 4px 12px;
+  color: var(--cy);
+  font: 16px var(--mono);
+  border: 1px solid rgba(79, 209, 255, 0.4);
+  border-radius: 999px;
+}
+
+.zx-ptext h3 {
+  margin: 0 0 22px;
+  font: 800 54px/1.05 var(--disp);
+  letter-spacing: -0.03em;
+}
+
+.zx-ptext ul {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.zx-ptext li {
+  position: relative;
+  padding-left: 40px;
+  color: #cbd6f5;
+  font-size: 24px;
+  line-height: 1.35;
+  opacity: 0;
+}
+
+.zx-ptext li::before {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  color: #031024;
+  content: "✓";
+  font: 800 15px var(--txt);
+  border-radius: 50%;
+  background: #37e39a;
+}
+
+.zx-s.zx-proj.on .zx-pchips,
+.zx-s.zx-proj.on h3 {
+  animation: zx-note 0.6s ease-out 0.3s both;
+}
+
+.zx-s.zx-proj.on .zx-ptext li {
+  animation: zx-note 0.5s ease-out calc(0.9s + var(--i) * 0.7s) both;
+}
+
+/* 18. инфраструктура */
+.zx-link {
+  fill: none;
+  stroke: rgba(79, 209, 255, 0.5);
+  stroke-width: 2.5;
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+}
+
+.zx-s.zx-infra.on .zx-link {
+  animation: zx-draw 0.7s ease-out calc(0.5s + var(--i) * 0.4s) forwards;
+}
+
+.zx-inode {
+  position: absolute;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 230px;
+  padding: 14px 20px;
+  text-align: center;
+  border: 1px solid var(--line2);
+  border-radius: 18px;
+  background: rgba(10, 16, 34, 0.92);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+}
+
+.zx-inode b {
+  font: 700 22px var(--disp);
+}
+
+.zx-inode span {
+  color: var(--mut);
+  font-size: 16px;
+}
+
+.zx-inode.c {
+  border-color: var(--cy);
+  box-shadow: 0 0 40px rgba(79, 209, 255, 0.4);
+}
+
+.zx-inode.c b {
+  color: var(--cy);
+  font-size: 30px;
+}
+
+.zx-s.zx-infra.on .zx-inode {
+  animation: zx-inode 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) calc(0.2s + var(--i) * 0.4s) both;
+}
+
+@keyframes zx-inode {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+/* 19. цифры */
+.zx-nums {
+  position: absolute;
+  top: 170px;
+  right: 120px;
+  left: 120px;
+  display: flex;
+  justify-content: center;
+  gap: 70px;
+  text-align: center;
+}
+
+.zx-nums b {
+  display: block;
+  font: 800 70px/1.05 var(--disp);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  background: linear-gradient(100deg, var(--cy), var(--blu) 50%, var(--vio));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.zx-nums span {
+  color: #b9c6ea;
+  font-size: 18px;
+}
+
+.zx-chart {
+  position: absolute;
+  top: 380px;
+  left: 200px;
+  width: 1200px;
+  height: 240px;
+  overflow: visible;
+}
+
+.zx-ch-area {
+  fill: url(#zx-cf);
+}
+
+.zx-ch-line {
+  fill: none;
+  stroke: var(--cy);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* 20. битва */
+.zx-bolt {
+  position: absolute;
+  top: 0;
+  left: 700px;
+  width: 200px;
+  height: 900px;
+  opacity: 0;
+}
+
+.zx-s.zx-battle.on .zx-bolt {
+  animation: zx-boltlife 7s linear forwards;
+}
+
+@keyframes zx-boltlife {
+  0%, 4% { opacity: 0; }
+  6%, 55% { opacity: 1; }
+  62%, 100% { opacity: 0; }
+}
+
+.zx-shock {
+  position: absolute;
+  top: 450px;
+  left: 800px;
+  width: 700px;
+  height: 700px;
+  border: 4px solid rgba(232, 246, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 40px #4fd1ff, inset 0 0 40px #ff3b5c;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.1);
+}
+
+.zx-s.zx-battle.on .zx-shock {
+  animation: zx-shock 1.2s ease-out 3.6s both;
+}
+
+@keyframes zx-shock {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.8); }
+}
+
+/* 21. финал */
+.zx-fin {
+  position: absolute;
+  top: 200px;
+  right: 100px;
+  left: 100px;
+  display: grid;
+  justify-items: center;
+  gap: 22px;
+  text-align: center;
+}
+
+.zx-final-k {
+  color: var(--cy);
+  font: 600 22px var(--mono);
+  letter-spacing: 0.1em;
+}
+
+.zx-fin h2 {
+  font: 800 88px/1.02 var(--disp);
+  letter-spacing: -0.04em;
+}
+
+.zx-fin h2 span {
+  background: linear-gradient(100deg, var(--cy), var(--blu) 40%, var(--vio) 70%, var(--cy));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.zx-final-s {
+  max-width: 760px;
+  color: #b9c6ea;
+  font-size: 26px;
+}
+
+.zx-final-btns {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.zx-final-btns .zb {
+  min-height: 62px;
+  padding: 16px 32px;
+  font-size: 22px;
+}
+
+.zx-s.zx-final.on .zx-fin > * {
+  animation: zx-note 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.zx-s.zx-final.on .zx-fin > :nth-child(2) { animation-delay: 0.2s; }
+.zx-s.zx-final.on .zx-fin > :nth-child(3) { animation-delay: 0.5s; }
+.zx-s.zx-final.on .zx-fin > :nth-child(4) { animation-delay: 0.8s; }
+
+.zx[data-cur="final"] .zx-cap {
+  display: none;
+}
+
+/* короткий режим: полёт мимо проектов */
+.zx-fly .zi-warp {
+  position: absolute;
+  inset: -200px;
+  width: calc(100% + 400px);
+  height: calc(100% + 400px);
+}
+
+.zx-fly .zi-warp line {
+  stroke: #a9c2ff;
+  stroke-width: var(--ww, 1.5);
+  stroke-linecap: round;
+  stroke-dasharray: 60 1000;
+  opacity: 0.5;
+  animation: zx-warp 1.9s linear infinite;
+  animation-delay: var(--wd);
+}
+
+@keyframes zx-warp {
+  to { stroke-dashoffset: -1000; }
+}
+
+.zx-flyhero {
+  position: absolute;
+  top: 330px;
+  left: 730px;
+  width: 140px;
+  height: 140px;
+  overflow: hidden;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--cy), 0 0 60px 14px rgba(79, 209, 255, 0.45);
+}
+
+.zx-flyhero img {
+  position: absolute;
+  top: -78%;
+  left: -236%;
+  width: 540%;
+  max-width: none;
+}
+
+.zx-flycards figure {
+  position: absolute;
+  top: 400px;
+  left: 800px;
+  width: 440px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(155, 123, 255, 0.55);
+  border-radius: 16px;
+  background: #0a1022;
+  opacity: 0;
+}
+
+.zx-flycards img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2.35;
+  object-fit: cover;
+}
+
+.zx-flycards figcaption {
+  padding: 10px 16px;
+  font: 700 22px var(--disp);
+}
+
+.zx-s.zx-fly.on .zx-flycards figure {
+  animation: zx-present 1.8s cubic-bezier(0.25, 0.8, 0.3, 1) calc(0.2s + var(--i) * 1.3s) both;
+}
+
+@keyframes zx-present {
+  0% { opacity: 0; transform: translate(-50%, -50%) translateX(calc(var(--x) * 60px)) scale(0.3); }
+  25% { opacity: 1; transform: translate(-50%, -50%) translateX(calc(var(--x) * 420px)) scale(1); }
+  78% { opacity: 1; transform: translate(-50%, -50%) translateX(calc(var(--x) * 440px)) scale(1.04); }
+  100% { opacity: 0; transform: translate(-50%, -50%) translateX(calc(var(--x) * 1100px)) scale(1.6); }
+}
+
+/* ── узкие экраны ── */
+@media (max-width: 760px) {
+  .zx-top {
+    flex-wrap: wrap;
+  }
+
+  .zx-acts {
+    order: 2;
+    flex-basis: 100%;
+  }
+
+  .zx-ctl {
+    margin-left: auto;
+  }
+
+  .zx-btn .zx-lbl-t,
+  .zx-btn kbd {
+    display: none;
+  }
+
+  .zx-cap {
+    bottom: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zx *,
+  .zx *::before,
+  .zx *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ═══ сюжетные арты: штамп, сращивание кабеля, поражение, победа ═══ */
+.zx-art-rig > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.zx[data-rig="stamp"] .zx-rig-stamp,
+.zx[data-rig="splice"] .zx-rig-splice,
+.zx[data-rig="defeat"] .zx-rig-defeat,
+.zx[data-rig="victory"] .zx-rig-victory {
+  opacity: 1;
+}
+
+/* штамп: медленный наезд, два удара с тряской, красной вспышкой и разлетом бумаг */
+.zx[data-rig="stamp"] .zx-rig-stamp {
+  transform-origin: 36% 62%;
+  animation: zx-kb 4.8s ease-out both;
+}
+
+@keyframes zx-kb {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.12); }
+}
+
+.zx[data-rig="stamp"] .zx-rig-stamp > img {
+  animation: zx-slam 2.2s cubic-bezier(0.3, 0, 0.3, 1) 0.3s 2;
+}
+
+@keyframes zx-slam {
+  0%, 18%, 100% { transform: none; }
+  20% { transform: translate(-6px, 10px) scale(1.01); }
+  23% { transform: translate(8px, -6px); }
+  26% { transform: translate(-5px, 4px); }
+  30% { transform: translate(2px, -1px); }
+}
+
+.zx-redflash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 36% 68%, rgba(255, 40, 70, 0.55), transparent 55%);
+  opacity: 0;
+}
+
+.zx[data-rig="stamp"] .zx-redflash {
+  animation: zx-redf 2.2s ease-out 0.3s 2;
+}
+
+@keyframes zx-redf {
+  0%, 18% { opacity: 0; }
+  21% { opacity: 1; }
+  60%, 100% { opacity: 0; }
+}
+
+.zx-papers i {
+  position: absolute;
+  top: 640px;
+  left: 576px;
+  width: 64px;
+  height: 84px;
+  border-radius: 3px;
+  background: linear-gradient(#f4efe4, #ddd3bf);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+}
+
+.zx[data-rig="stamp"] .zx-papers i {
+  animation: zx-paper 1.6s cubic-bezier(0.2, 0.7, 0.4, 1) calc(0.75s + var(--d)) 2;
+}
+
+@keyframes zx-paper {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0) scale(0.4); }
+  100% { opacity: 0; transform: translate(calc(var(--x) * 1px), calc(var(--y) * 1px)) rotate(calc(var(--r) * 4)) scale(1); }
+}
+
+/* сращивание кабеля: пульс света в месте соединения и искры */
+.zx[data-rig="splice"] .zx-rig-splice {
+  transform-origin: 50% 55%;
+  animation: zx-enter2 1.1s cubic-bezier(0.2, 0.9, 0.25, 1.1) 0.3s both, zx-kb2 5s ease-out 0.3s both;
+}
+
+@keyframes zx-enter2 {
+  from { opacity: 0; }
+}
+
+@keyframes zx-kb2 {
+  from { transform: scale(1.14); }
+  to { transform: scale(1.02); }
+}
+
+.zx-joinglow {
+  position: absolute;
+  top: 552px;
+  left: 800px;
+  width: 520px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.9), rgba(79, 209, 255, 0.55) 35%, transparent);
+  opacity: 0.5;
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+  animation: zx-pulse 1.1s ease-in-out infinite alternate;
+}
+
+@keyframes zx-pulse {
+  from { opacity: 0.35; transform: translate(-50%, -50%) scale(0.85); }
+  to { opacity: 0.85; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.zx-bits i {
+  position: absolute;
+  top: 552px;
+  left: 800px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: #bff0ff;
+  box-shadow: 0 0 10px #4fd1ff;
+  opacity: 0;
+  animation: zx-bit 2.4s ease-out var(--d) infinite;
+}
+
+@keyframes zx-bit {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(var(--x) * 2.4px), calc(var(--y) * 2.4px)) rotate(180deg); }
+}
+
+/* поражение: срывы сигнала, синий луч и распад */
+.zx-gl {
+  opacity: 0;
+  will-change: transform, clip-path, opacity;
+}
+
+.zx[data-rig="defeat"] .zx-gl-a {
+  animation: zx-gla 0.9s steps(1) infinite;
+}
+
+.zx[data-rig="defeat"] .zx-gl-b {
+  animation: zx-glb 0.9s steps(1) -0.45s infinite;
+}
+
+@keyframes zx-gla {
+  0%, 60%, 100% { opacity: 0; }
+  62% { opacity: 1; clip-path: inset(12% 0 70% 0); transform: translateX(-3%); }
+  70% { opacity: 1; clip-path: inset(40% 0 44% 0); transform: translateX(4%); }
+  78% { opacity: 1; clip-path: inset(66% 0 18% 0); transform: translateX(-2%); }
+  86% { opacity: 0; }
+}
+
+@keyframes zx-glb {
+  0%, 64%, 100% { opacity: 0; }
+  66% { opacity: 0.9; clip-path: inset(24% 0 60% 0); transform: translateX(3%); }
+  74% { opacity: 0.9; clip-path: inset(52% 0 32% 0); transform: translateX(-4%); }
+  82% { opacity: 0; }
+}
+
+.zx-beam {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 50% at 0% 30%, rgba(160, 220, 255, 0.85), rgba(79, 209, 255, 0.25) 40%, transparent 70%);
+  opacity: 0.6;
+  will-change: opacity;
+  animation: zx-beam 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes zx-beam {
+  to { opacity: 1; }
+}
+
+.zx[data-rig="defeat"] .zx-rig-defeat {
+  animation: zx-defeat 4.6s ease-in both;
+}
+
+@keyframes zx-defeat {
+  0% { opacity: 0; transform: scale(1.06); }
+  10% { opacity: 1; }
+  80% { opacity: 1; transform: scale(1); clip-path: inset(0); }
+  100% { opacity: 0; transform: scale(0.98); clip-path: inset(46% 0 46% 0); }
+}
+
+/* победа: Запрет-тян справа, текст финала слева; кубик в руке светится */
+.zx[data-rig="victory"] .zx-rig-victory {
+  animation: zx-victory 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes zx-victory {
+  from { opacity: 0; transform: translateX(26%) scale(1.08); }
+  to { opacity: 1; transform: translateX(22%); }
+}
+
+.zx-rig-victory::before {
+  position: absolute;
+  inset: 0 -30% 0 -60%;
+  z-index: 6;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(to right, #03040b 0 42%, rgba(3, 4, 11, 0.7) 55%, rgba(3, 4, 11, 0) 70%);
+}
+
+.zx-cubeglow {
+  position: absolute;
+  top: 464px;
+  left: 940px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.8), rgba(79, 209, 255, 0.5) 40%, transparent);
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+  animation: zx-pulse 1.4s ease-in-out infinite alternate;
+}
+
+.zx-fin {
+  top: 170px;
+  right: auto;
+  left: 110px;
+  width: 760px;
+  justify-items: start;
+  text-align: left;
+}
+
+.zx-fin h2 {
+  font-size: 80px;
+}
+
+.zx-final-btns {
+  justify-content: flex-start;
+}
+
+@media (max-width: 760px) {
+  .zx[data-rig="victory"] .zx-rig-victory {
+    animation: none;
+    transform: none;
+    opacity: 0.35;
+  }
+
+  .zx-fin {
+    left: 300px;
+    width: 1000px;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .zx-final-btns {
+    justify-content: center;
+  }
+}
+
+/* ═══ телефон: вертикальная раскладка слайдов (видимая ширина сцены — 1250 единиц, 175…1425) ═══ */
+.zx.portrait .zx-nav .zx-hint,
+.zx.portrait .zx-nav [data-a="act"] span {
+  display: none;
+}
+
+.zx.portrait .zx-note-red { left: 230px !important; top: 640px !important; }
+.zx.portrait .zx-note-cy { left: 830px !important; top: 640px !important; }
+
+.zx.portrait .zx-mapsvg,
+.zx.portrait .zx-map .zx-svg {
+  transform: scale(0.84);
+  transform-origin: 800px 420px;
+}
+
+.zx.portrait .zx-mapcount {
+  top: 690px;
+  right: auto;
+  left: 800px;
+  justify-items: center;
+  transform: translateX(-50%);
+}
+
+.zx.portrait .zx-player {
+  left: 220px;
+  width: 1160px;
+  top: 40px;
+}
+
+.zx.portrait .zx-pl-video {
+  height: 420px;
+}
+
+.zx.portrait .zx-speed {
+  top: 720px;
+  left: 800px;
+  justify-items: center;
+  transform: translateX(-50%);
+}
+
+.zx.portrait .zx-apps {
+  top: -60px;
+  left: 230px;
+}
+
+.zx.portrait .zx-appgrid {
+  grid-template-columns: repeat(4, 180px);
+  gap: 24px;
+}
+
+.zx.portrait .zx-app {
+  height: 180px;
+}
+
+.zx.portrait .zx-people {
+  top: 520px;
+  left: 230px;
+}
+
+.zx.portrait .zx-crowd {
+  flex-wrap: wrap;
+  width: 1150px;
+  gap: 26px 30px;
+}
+
+.zx.portrait .zx-crowd i {
+  transform: scale(1.3);
+}
+
+.zx.portrait .zx-pcard,
+.zx.portrait .zx-shot-gui {
+  top: -80px;
+  left: 220px;
+  width: 1160px;
+}
+
+.zx.portrait .zx-ptext {
+  top: 470px;
+  left: 220px;
+  width: 1160px;
+}
+
+.zx.portrait .zx-ptext h3 {
+  font-size: 90px;
+}
+
+.zx.portrait .zx-ptext li {
+  font-size: 40px;
+  padding-left: 60px;
+}
+
+.zx.portrait .zx-ptext li::before {
+  width: 40px;
+  height: 40px;
+  font-size: 22px;
+}
+
+.zx.portrait .zx-pchips span {
+  font-size: 28px;
+}
+
+.zx.portrait .zx-nums {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px 40px;
+  top: 0;
+  left: 250px;
+  right: 250px;
+}
+
+.zx.portrait .zx-nums b {
+  font-size: 110px;
+}
+
+.zx.portrait .zx-nums span {
+  font-size: 30px;
+}
+
+.zx.portrait .zx-chart {
+  top: 560px;
+  left: 220px;
+  width: 1160px;
+}
+
+.zx.portrait .zx-inode {
+  min-width: 300px;
+  padding: 18px 22px;
+}
+
+.zx.portrait .zx-inode b {
+  font-size: 30px;
+}
+
+.zx.portrait .zx-inode span {
+  font-size: 22px;
+}
+
+.zx.portrait .zx-doc {
+  left: 300px;
+  width: 1000px;
+  top: 60px;
+  height: 760px;
+}
+
+.zx.portrait .zx-think {
+  width: 900px;
+  top: 190px;
+}
+
+.zx.portrait .zx-think span {
+  font-size: 36px;
+}
+
+.zx.portrait .zx-used {
+  font-size: 30px;
+  white-space: normal;
+  width: 1000px;
+  text-align: center;
+  border-radius: 24px;
+}
+
+.zx.portrait .zx-fin h2 {
+  font-size: 110px;
+}
+
+.zx.portrait .zx-final-s {
+  font-size: 38px;
+}
+
+.zx.portrait .zx-final-btns {
+  flex-direction: column;
+  align-items: center;
+}
+
+.zx.portrait .zx-final-btns .zb {
+  font-size: 36px;
+  min-height: 90px;
+  min-width: 620px;
+  justify-content: center;
+}
+
+/* битва на телефоне: Запрет-тян сверху, РКН-тян снизу; молния — горизонтально */
+.zx.portrait[data-rig="both"] .zx-rig-zt {
+  animation: none;
+  transform: translateY(-52%);
+}
+
+.zx.portrait[data-rig="both"] .zx-rig-rkn {
+  animation: zx-rkn-lose-p 7s steps(1) forwards;
+  transform: translateY(52%);
+}
+
+@keyframes zx-rkn-lose-p {
+  0%, 48% { opacity: 1; clip-path: inset(0); }
+  50% { clip-path: inset(10% 0 55% 0); }
+  52% { clip-path: inset(40% 0 20% 0); }
+  54% { clip-path: inset(0 0 70% 0); }
+  56% { clip-path: inset(60% 0 5% 0); opacity: 0.7; }
+  58% { clip-path: inset(48% 0 48% 0); opacity: 0.4; }
+  60%, 100% { opacity: 0; clip-path: inset(50% 0 50% 0); }
+}
+
+.zx.portrait .zx-bolt {
+  top: 350px;
+  left: 800px;
+  transform: translate(-50%, 0) rotate(90deg) scaleY(1.4);
+  transform-origin: 50% 0;
+}
+
+.zx.portrait .zx-p-gui .zx-ptext {
+  top: 560px;
+}

@@ -247,211 +247,250 @@
     } else go();
   }).catch(function () {});
 
-  /* ── Музыка: синтезируется на лету через Web Audio, без файлов ──────────
-     Интернет — тревожный пэд. РКН-тян — хоррор: гул в тритон, «браам»,
-     сердцебиение, скрежет. Запрет-тян — нарастание и барабаны.
-     Финал — медная тема «ту-ду ту-ту-ту ду-ду-ду» в ре мажоре: мы справились. */
-  var music = (function () {
-    var ctx = null, master = null, wet = null, noise = null, loop = null;
-    var mode = 'calm', held = [], next = 0, beat = 0, startId = 0;
+  /* ── Музыка: саундтрек заставки, синтезируется Web Audio, без файлов ────
+     У каждого слайда своя фраза длиной ровно в слайд (ре минор → ре мажор):
+     1 шкатулка · 2 «браам» и диссонанс РКН-тян · 3 сканер и сердцебиение ·
+     4 нарастание · 5 удар и призыв валторн · 6–7 полёт: тайко, остинато ·
+     8 дробь и подъём · 9 медная тема «ту-ду ту-ту-ту ду-ду-ду».
+     makeMusic(ctx) работает и с OfflineAudioContext — так саундтрек можно
+     отрендерить в файл целиком.                                             */
+  function makeMusic(ctxArg) {
+    var ctx = ctxArg || null, master = null, rev = null, noise = null, bus = null;
 
     function hz(m) { return 440 * Math.pow(2, (m - 69) / 12) }
-    function now() { return ctx.currentTime }
 
-    function out(node, rev) {
-      node.connect(master);
-      if (rev) { var s = ctx.createGain(); s.gain.value = rev; node.connect(s); s.connect(wet) }
-    }
-    // голос: несколько расстроенных пил через фильтр — струнные, медь, пэды
-    function voice(o) {
-      var t = o.t, g = ctx.createGain(), f = ctx.createBiquadFilter();
-      f.type = 'lowpass'; f.Q.value = o.q || 0.7;
-      f.frequency.setValueAtTime(o.cut || 1200, t);
-      if (o.cutTo) f.frequency.linearRampToValueAtTime(o.cutTo, t + (o.cutAt || o.a || 0.1));
-      if (o.cutEnd) f.frequency.linearRampToValueAtTime(o.cutEnd, t + o.dur);
-      g.gain.setValueAtTime(0.0001, t);
-      g.gain.linearRampToValueAtTime(o.vol, t + (o.a || 0.05));
-      if (!o.hold) {
-        g.gain.setValueAtTime(o.vol, t + Math.max(o.a || 0.05, o.dur - (o.r || 0.3)));
-        g.gain.linearRampToValueAtTime(0.0001, t + o.dur);
+    function init() {
+      if (!ctx) { var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false; ctx = new AC() }
+      if (master) return true;
+      var comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -14; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.25;
+      var lim = ctx.createDynamicsCompressor();   // лимитер против клиппинга
+      lim.threshold.value = -2; lim.knee.value = 0; lim.ratio.value = 20; lim.attack.value = 0.002; lim.release.value = 0.1;
+      master = ctx.createGain(); master.gain.value = 0.7;
+      master.connect(comp); comp.connect(lim); lim.connect(ctx.destination);
+      var sr = ctx.sampleRate, len = Math.floor(sr * 3.6), ir = ctx.createBuffer(2, len, sr);
+      for (var ch = 0; ch < 2; ch++) {
+        var d = ir.getChannelData(ch), pre = Math.floor(sr * 0.02);
+        for (var i = pre; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - (i - pre) / (len - pre), 2.6);
       }
-      f.connect(g); out(g, o.rev == null ? 0.35 : o.rev);
-      var oscs = (o.det || [-7, 7]).map(function (c) {
+      var conv = ctx.createConvolver(); conv.buffer = ir;
+      var damp = ctx.createBiquadFilter(); damp.type = 'lowpass'; damp.frequency.value = 5200;
+      rev = ctx.createGain(); rev.gain.value = 0.55;
+      rev.connect(damp); damp.connect(conv); conv.connect(master);
+      noise = ctx.createBuffer(1, sr * 2, sr);
+      var nd = noise.getChannelData(0);
+      for (var j = 0; j < nd.length; j++) nd[j] = Math.random() * 2 - 1;
+      return true;
+    }
+
+    // шина сцены: всё, что звучит в слайде, идёт через неё, чтобы сцену можно было погасить
+    function newBus(t, fadeOld) {
+      if (bus) {
+        var old = bus;
+        old.gain.cancelScheduledValues(t);
+        old.gain.setValueAtTime(old.gain.value, t);
+        old.gain.linearRampToValueAtTime(0.0001, t + fadeOld);
+        if (!(window.OfflineAudioContext && ctx instanceof OfflineAudioContext)) setTimeout(function () { try { old.disconnect() } catch (e) {} }, (fadeOld + 4) * 1000);
+      }
+      bus = ctx.createGain(); bus.gain.value = 1;
+      bus.connect(master);
+      bus._dry = master;
+      return bus;
+    }
+    function to(node, wet) {
+      var g = ctx.createGain(); g.gain.value = 1; node.connect(g); g.connect(bus._dry ? bus : master);
+      if (wet) { var w = ctx.createGain(); w.gain.value = wet; node.connect(w); w.connect(rev) }
+    }
+
+    /* инструменты */
+    function tone(o) {
+      var t = o.t, dur = o.dur, g = ctx.createGain(), f = ctx.createBiquadFilter();
+      f.type = o.ft || 'lowpass'; f.Q.value = o.q || 0.7;
+      f.frequency.setValueAtTime(o.cut || 2000, t);
+      if (o.cutTo) { f.frequency.linearRampToValueAtTime(o.cutTo, t + (o.cutAt || 0.08)); f.frequency.linearRampToValueAtTime(o.cutEnd || o.cutTo, t + dur) }
+      var a = o.a || 0.02, r = Math.min(o.r || 0.2, dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(o.vol, t + a);
+      if (o.sus != null) g.gain.linearRampToValueAtTime(o.vol * o.sus, t + a + (o.dec || 0.2));
+      g.gain.setValueAtTime(o.vol * (o.sus != null ? o.sus : 1), t + Math.max(a, dur - r));
+      g.gain.linearRampToValueAtTime(0.0001, t + dur);
+      if (o.trem) {
+        var tl = ctx.createOscillator(), tg = ctx.createGain(), tm = ctx.createGain();
+        tl.frequency.value = o.trem; tg.gain.value = 0.5; tl.connect(tg); tm.gain.value = 0.5; tg.connect(tm.gain);
+        f.connect(tm); tm.connect(g); tl.start(t); tl.stop(t + dur + 0.05);
+      } else f.connect(g);
+      to(g, o.wet == null ? 0.3 : o.wet);
+      (o.det || [0]).forEach(function (c) {
         var s = ctx.createOscillator(); s.type = o.type || 'sawtooth';
-        s.frequency.setValueAtTime(o.f, t); s.detune.value = c;
-        if (o.glide) s.frequency.exponentialRampToValueAtTime(o.glide, t + o.dur);
+        s.frequency.setValueAtTime(o.f * (o.bend ? 0.97 : 1), t);
+        if (o.bend) s.frequency.exponentialRampToValueAtTime(o.f, t + 0.06);
+        if (o.glide) s.frequency.exponentialRampToValueAtTime(o.glide, t + dur);
+        s.detune.value = c;
         if (o.vib) {
-          var l = ctx.createOscillator(), lg = ctx.createGain();
-          l.frequency.value = 5.5; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(o.vib, t + 0.25);
-          l.connect(lg); lg.connect(s.detune); l.start(t); l.stop(t + o.dur + 0.1);
+          var l = ctx.createOscillator(), lg = ctx.createGain(); l.frequency.value = 5.2;
+          lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(o.vib, t + Math.min(0.35, dur));
+          l.connect(lg); lg.connect(s.detune); l.start(t); l.stop(t + dur + 0.05);
         }
-        s.connect(f); s.start(t); if (!o.hold) s.stop(t + o.dur + 0.05);
-        return s;
+        s.connect(f); s.start(t); s.stop(t + dur + 0.05);
       });
-      return { g: g, oscs: oscs };
     }
-    function release(v, sec) {
-      var t = now();
-      v.g.gain.cancelScheduledValues(t);
-      v.g.gain.setValueAtTime(v.g.gain.value, t);
-      v.g.gain.linearRampToValueAtTime(0.0001, t + sec);
-      v.oscs.forEach(function (s) { s.stop(t + sec + 0.05) });
+    function brass(t, m, dur, vol) {
+      tone({ t: t, f: hz(m), dur: dur, a: 0.04, r: Math.min(0.35, dur * 0.5), vol: vol || 0.09, det: [-9, 0, 9], cut: 500, cutTo: 3400, cutAt: 0.07, cutEnd: 1500, bend: 1, vib: dur > 0.6 ? 12 : 0, wet: 0.35 });
+      tone({ t: t, f: hz(m - 12), dur: dur, a: 0.05, r: 0.3, vol: (vol || 0.09) * 0.45, det: [-6, 6], cut: 900, wet: 0.3 });
     }
-    function hiss(t, type, f0, f1, vol, dur, q, rev) {
+    function strings(t, m, dur, vol, o) {
+      o = o || {};
+      tone({ t: t, f: hz(m), dur: dur, a: o.a || 0.5, r: o.r || 0.8, vol: vol, det: [-16, -8, 0, 8, 16], cut: o.cut || 2400, trem: o.trem, wet: 0.5 });
+    }
+    function choir(t, m, dur, vol) {
+      [730, 1090, 2440].forEach(function (fm, i) {
+        tone({ t: t, f: hz(m), dur: dur, a: 0.8, r: 1, vol: vol * [1, 0.6, 0.25][i], det: [-10, 0, 10], ft: 'bandpass', cut: fm, q: 6, vib: 8, wet: 0.7 });
+      });
+    }
+    function box(t, m, vol) {  // музыкальная шкатулка
+      tone({ t: t, f: hz(m), dur: 1.4, a: 0.004, r: 1.3, vol: vol || 0.06, type: 'sine', cut: 8000, wet: 0.6 });
+      tone({ t: t, f: hz(m) * 3.01, dur: 0.5, a: 0.002, r: 0.45, vol: (vol || 0.06) * 0.25, type: 'sine', cut: 9000, wet: 0.6 });
+    }
+    function hiss(t, dur, type, f0, f1, vol, q, wet, shape) {
       var s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
       s.buffer = noise; s.loop = true; fl.type = type; fl.Q.value = q || 0.8;
       fl.frequency.setValueAtTime(f0, t); fl.frequency.exponentialRampToValueAtTime(f1, t + dur);
-      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + dur * 0.7); g.gain.linearRampToValueAtTime(0.0001, t + dur);
-      s.connect(fl); fl.connect(g); out(g, rev == null ? 0.4 : rev);
+      g.gain.setValueAtTime(0.0001, t);
+      if (shape === 'swell') { g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.95); g.gain.linearRampToValueAtTime(0.0001, t + dur) }
+      else { g.gain.linearRampToValueAtTime(vol, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + dur) }
+      s.connect(fl); fl.connect(g); to(g, wet == null ? 0.3 : wet);
       s.start(t); s.stop(t + dur + 0.05);
     }
-    // удар: тайко/литавра — синус с падением высоты и шумовая «кожа»
-    function boom(t, vol, f) {
+    function drum(t, vol, f0, f1, len) {  // тайко / литавра
       var o = ctx.createOscillator(), g = ctx.createGain();
-      o.frequency.setValueAtTime(f || 90, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.5);
-      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
-      o.connect(g); out(g, 0.3); o.start(t); o.stop(t + 1.2);
-      var s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), ng = ctx.createGain();
-      s.buffer = noise; fl.type = 'lowpass'; fl.frequency.value = 700;
-      ng.gain.setValueAtTime(vol * 0.5, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
-      s.connect(fl); fl.connect(ng); out(ng, 0.3); s.start(t); s.stop(t + 0.3);
+      o.frequency.setValueAtTime(f0 || 110, t); o.frequency.exponentialRampToValueAtTime(f1 || 42, t + (len || 0.45));
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + (len || 0.45) * 2.2);
+      o.connect(g); to(g, 0.25); o.start(t); o.stop(t + (len || 0.45) * 2.3);
+      hiss(t, 0.18, 'lowpass', 900, 300, vol * 0.45, 0.7, 0.25);
     }
-    function heart(t) {
-      [0, 0.28].forEach(function (d, i) {
-        var o = ctx.createOscillator(), g = ctx.createGain();
-        o.frequency.setValueAtTime(70, t + d); o.frequency.exponentialRampToValueAtTime(40, t + d + 0.15);
-        g.gain.setValueAtTime(i ? 0.35 : 0.5, t + d); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.3);
-        o.connect(g); out(g, 0.1); o.start(t + d); o.stop(t + d + 0.35);
-      });
-    }
-    // «браам» — низкая медь с раскрывающимся фильтром, как в трейлерах
+    function snare(t, vol) { hiss(t, 0.16, 'bandpass', 2200, 1600, vol, 1.1, 0.25); tone({ t: t, f: 190, dur: 0.08, a: 0.002, r: 0.07, vol: vol * 0.5, type: 'triangle', cut: 3000, wet: 0.1 }) }
+    function crash(t, vol, len) { hiss(t, len || 2.4, 'highpass', 5000, 7000, vol, 0.5, 0.6) }
+    function subdrop(t, vol) { tone({ t: t, f: 90, glide: 28, dur: 1.6, a: 0.01, r: 1.2, vol: vol, type: 'sine', cut: 400, wet: 0.1 }) }
     function braam(t, vol) {
-      [26, 38, 45].forEach(function (m, i) {
-        voice({ t: t, f: hz(m), dur: 3.2, a: 0.08, r: 1.4, vol: (vol || 0.22) / (i + 1), cut: 120, cutTo: 1600, cutAt: 0.5, cutEnd: 180, det: [-12, 0, 12], rev: 0.5 });
+      [26, 38, 45, 50].forEach(function (m, i) {
+        tone({ t: t, f: hz(m), dur: 2.6, a: 0.05, r: 1.5, vol: vol / (1 + i * 0.6), det: [-14, -5, 5, 14], cut: 110, cutTo: 1300, cutAt: 0.45, cutEnd: 160, q: 2, wet: 0.5 });
       });
-      voice({ t: t, f: hz(26), dur: 3, a: 0.05, r: 1.2, vol: 0.3, type: 'sine', det: [0], cut: 400, rev: 0.1 });
-      boom(t, 0.6, 70);
+      subdrop(t, vol * 1.2); drum(t, vol * 2.4, 80, 32, 0.6);
     }
-    function scrape(t) { hiss(t, 'bandpass', 3200, 700, 0.12, 1.6, 14, 0.6) }
+    function heart(t, vol) { drum(t, vol, 70, 38, 0.12); drum(t + 0.26, vol * 0.7, 66, 36, 0.12) }
+    function ping(t, m, vol) { tone({ t: t, f: hz(m), dur: 0.35, a: 0.002, r: 0.33, vol: vol, type: 'sine', cut: 9000, wet: 0.8 }) }
 
-    function stopHeld(sec) { held.forEach(function (v) { release(v, sec || 1.2) }); held = [] }
-
-    function enter(m) {
-      var t = now() + 0.05;
-      stopHeld(m === 'triumph' ? 0.6 : 1.4);
-      if (m === 'calm') {
-        [50, 53, 57, 64].forEach(function (n) { held.push(voice({ t: t, f: hz(n), a: 1.6, vol: 0.05, cut: 900, hold: 1, det: [-8, 8], rev: 0.6 })) });
+    /* сцены: n — номер слайда, t — начало, D — длительность */
+    var CH = { Dm: [50, 53, 57], Bb: [46, 50, 53], F: [53, 57, 60], C: [48, 52, 55], Gm: [55, 58, 62], A: [45, 49, 52], D: [50, 54, 57] };
+    function scene(n, t, D) {
+      var i, k, b;
+      if (n === 1) {                                        // жил-был интернет
+        [50, 57, 62, 65].forEach(function (m) { strings(t, m, D + 1.2, 0.032, { a: 0.9, r: 1.2, cut: 1600 }) });
+        var mel = [74, 77, 81, 79, 77, 76, 74, 69];
+        for (i = 0; i < mel.length; i++) { if (i * 0.26 < D - 0.1) box(t + 0.1 + i * 0.26, mel[i], 0.08) }
       }
-      if (m === 'horror') {
-        braam(t, 0.26);
-        held.push(voice({ t: t, f: hz(26), a: 2, vol: 0.12, cut: 260, hold: 1, det: [-10, 10] }));
-        held.push(voice({ t: t, f: hz(32), a: 2.5, vol: 0.07, cut: 300, hold: 1, det: [-14, 14] }));      // тритон
-        held.push(voice({ t: t + 0.8, f: hz(74), a: 2.5, vol: 0.018, cut: 3000, hold: 1, det: [-4, 4], rev: 0.8 }));
-        held.push(voice({ t: t + 0.8, f: hz(75), a: 2.5, vol: 0.015, cut: 3000, hold: 1, det: [-4, 4], rev: 0.8 })); // кластер полутоном
+      if (n === 2) {                                        // РКН-тян
+        hiss(t - 0.9, 0.9, 'highpass', 1500, 7000, 0.12, 0.7, 0.3, 'swell');
+        braam(t, 0.12);
+        [38, 39, 44].forEach(function (m) { strings(t + 0.3, m + 12, D + 1.5, 0.03, { a: 1.2, trem: 11, cut: 1400 }) });
+        choir(t + 0.6, 62, D, 0.03); choir(t + 0.6, 63, D, 0.025);
+        heart(t + 0.9, 0.3); if (D > 2.2) heart(t + 2, 0.3);
       }
-      if (m === 'rise') {
-        hiss(t, 'highpass', 200, 9000, 0.3, 1.7, 1, 0.3);
-        voice({ t: t, f: hz(38), glide: hz(74), dur: 1.7, a: 1.4, r: 0.1, vol: 0.12, cut: 600, cutTo: 5000, cutAt: 1.6 });
+      if (n === 3) {                                        // смотрит в каждый пакет
+        for (k = 0; k * 0.3 < D; k++) { ping(t + k * 0.3, k % 4 === 3 ? 87 : 86, 0.018); tone({ t: t + k * 0.3, f: hz(k % 2 ? 39 : 38), dur: 0.28, a: 0.01, r: 0.2, vol: 0.12, det: [-6, 6], cut: 500, wet: 0.2 }) }
+        for (k = 0; k * 0.8 < D; k++) heart(t + k * 0.8, 0.45);
+        hiss(t + 0.4, 1.3, 'bandpass', 3400, 700, 0.07, 14, 0.6);
+        strings(t, 51, D + 1, 0.04, { a: 0.4, trem: 13, cut: 1800 }); strings(t, 50, D + 1, 0.045, { a: 0.4, trem: 13, cut: 1800 });
       }
-      if (m === 'drive') {
-        boom(t, 0.9, 100); braam(t, 0.12);
-        [38, 50, 53, 57].forEach(function (n) { held.push(voice({ t: t, f: hz(n), a: 0.8, vol: 0.05, cut: 1400, hold: 1, rev: 0.5 })) });
-        next = t + 0.3; beat = 0;
+      if (n === 4) {                                        // хитрый пакет: нарастание
+        tone({ t: t, f: hz(38), glide: hz(62), dur: D, a: D * 0.8, r: 0.1, vol: 0.1, det: [-12, 0, 12], cut: 500, cutTo: 4000, cutAt: D, wet: 0.4 });
+        hiss(t, D, 'highpass', 300, 9000, 0.22, 0.9, 0.3, 'swell');
+        for (k = 0; k < 8; k++) snare(t + D - 0.8 + k * 0.1, 0.05 + k * 0.02);
+        for (k = 0; k * 0.4 < D - 0.9; k++) heart(t + k * 0.4, 0.4 + k * 0.03);
       }
-      if (m === 'triumph') triumph(t);
-    }
-
-    // полёт: барабаны и остинато баса, 100 ударов в минуту
-    function tickDrive() {
-      var s8 = 60 / 100 / 2;
-      while (next < now() + 0.15) {
-        var b = beat % 16, t = next;
-        if (b === 0 || b === 3 || b === 6 || b === 8 || b === 11 || b === 14) boom(t, b === 0 || b === 8 ? 0.7 : 0.4, b % 8 ? 120 : 90);
-        if (b % 2 === 1) hiss(t, 'highpass', 6000, 7000, 0.05, 0.08, 1, 0.1);
-        var bass = [38, 38, 41, 38, 36, 38, 45, 38][b % 8];
-        voice({ t: t, f: hz(bass), dur: s8 * 0.9, a: 0.01, r: 0.1, vol: 0.14, cut: 500, cutTo: 900, cutAt: 0.02, cutEnd: 300, rev: 0.1 });
-        next += s8; beat++;
+      if (n === 5) {                                        // Запрет-тян
+        drum(t, 0.9, 120, 40, 0.5); crash(t, 0.14, 2.6); subdrop(t, 0.25);
+        for (k = 0; k < 6; k++) tone({ t: t + 0.15 + k * 0.06, f: hz(62 + (k % 2) * 13), dur: 0.05, a: 0.002, r: 0.04, vol: 0.05, type: 'square', cut: 3000, wet: 0.2 }); // глитч РКН
+        brass(t + 0.55, 62, 0.45, 0.1); brass(t + 1.0, 69, 1.3, 0.11);  // ту-ду!
+        brass(t + 1.0, 62, 1.3, 0.06);
+        CH.Dm.forEach(function (m) { strings(t + 0.5, m + 12, D, 0.03, { a: 0.6 }) });
+        drum(t + 1.0, 0.6, 100, 45, 0.4);
       }
-    }
-    function tickHorror() {
-      while (next < now() + 0.15) {
-        var t = next;
-        heart(t);
-        if (beat % 3 === 2) scrape(t + 0.6);
-        if (beat % 2 === 1) voice({ t: t + 0.9, f: hz(86), dur: 0.5, a: 0.005, r: 0.45, vol: 0.02, type: 'sine', det: [0], cut: 8000, rev: 0.9 });
-        next += 1.6; beat++;
-      }
-    }
-
-    // финал: «ту-ду ту-ту-ту ду-ду-ду»
-    function triumph(t) {
-      var q = 0.36;
-      boom(t, 1, 80); hiss(t, 'highpass', 5000, 9000, 0.12, 2.6, 0.7, 0.6);
-      [50, 54, 57].forEach(function (n) { voice({ t: t, f: hz(n), dur: 1.9, a: 0.04, r: 0.6, vol: 0.07, cut: 500, cutTo: 2400, cutAt: 0.08, cutEnd: 1100, vib: 6 }) });
-      var mel = [[62, 0, 1], [69, 1, 1], [66, 2, 1 / 3], [67, 2 + 1 / 3, 1 / 3], [69, 2 + 2 / 3, 1 / 3], [74, 3, 1], [73, 4, 1], [74, 5, 3.5]];
-      mel.forEach(function (n) {
-        voice({ t: t + n[1] * q, f: hz(n[0]), dur: n[2] * q * 0.95 + (n[2] > 1 ? 0.6 : 0), a: 0.03, r: n[2] > 1 ? 0.9 : 0.08, vol: 0.11, cut: 700, cutTo: 3200, cutAt: 0.06, cutEnd: 1500, vib: n[2] > 1 ? 10 : 0, rev: 0.45 });
-      });
-      boom(t + 3 * q, 0.6, 90);
-      [43, 47, 50].forEach(function (n) { voice({ t: t + 3 * q, f: hz(n), dur: 0.8, a: 0.04, r: 0.3, vol: 0.06, cut: 600, cutTo: 2200, cutAt: 0.08 }) });
-      boom(t + 5 * q, 1, 70); braam(t + 5 * q, 0.1);
-      [38, 50, 54, 57, 62].forEach(function (n) { voice({ t: t + 5 * q, f: hz(n), dur: 2.6, a: 0.05, r: 1.4, vol: 0.06, cut: 600, cutTo: 2600, cutAt: 0.1, cutEnd: 900, vib: 8 }) });
-    }
-
-    function run() {
-      clearInterval(loop);
-      loop = setInterval(function () {
-        if (!ctx || ctx.state !== 'running') return;
-        if (mode === 'drive') tickDrive();
-        else if (mode === 'horror') tickHorror();
-      }, 40);
-    }
-
-    return {
-      running: function () { return !!(ctx && ctx.state === 'running') },
-      start: function (m) {
-        var AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return false;
-        if (!ctx) {
-          ctx = new AC();
-          var comp = ctx.createDynamicsCompressor();
-          master = ctx.createGain(); master.gain.value = 0.0001;
-          master.connect(comp); comp.connect(ctx.destination);
-          // реверберация: свёртка со сгенерированным хвостом в 3 секунды
-          var len = ctx.sampleRate * 3, ir = ctx.createBuffer(2, len, ctx.sampleRate);
-          for (var ch = 0; ch < 2; ch++) { var d = ir.getChannelData(ch); for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3) }
-          var conv = ctx.createConvolver(); conv.buffer = ir;
-          wet = ctx.createGain(); wet.gain.value = 0.8; wet.connect(conv); conv.connect(master);
-          noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-          var nd = noise.getChannelData(0);
-          for (var j = 0; j < nd.length; j++) nd[j] = Math.random() * 2 - 1;
+      if (n === 6 || n === 7) {                             // полёт
+        var bpm = 112, s16 = 60 / bpm / 4, prog = n === 6 ? ['Dm', 'Bb', 'F', 'C'] : ['Dm', 'Bb', 'Gm', 'A'];
+        var bar = s16 * 16, half = bar / 2;
+        for (k = 0; k * s16 < D; k++) {
+          var tt = t + k * s16, st = k % 16, ch = CH[prog[Math.floor(k * s16 / half) % 4]];
+          if (st === 0 || st === 6 || st === 8 || st === 11 || st === 14) drum(tt, st === 0 || st === 8 ? 0.6 : 0.35, st % 8 ? 130 : 95, 45, 0.35);
+          if (st === 4 || st === 12) snare(tt, 0.12);
+          if (st % 2 === 0) hiss(tt, 0.05, 'highpass', 7000, 8000, 0.03, 1, 0.1);
+          if (st % 2 === 0) tone({ t: tt, f: hz(ch[0] - 12 + (st === 14 ? 12 : 0)), dur: s16 * 1.8, a: 0.005, r: 0.08, vol: 0.12, det: [-8, 8], cut: 600, cutTo: 1100, cutAt: 0.02, cutEnd: 400, wet: 0.1 });
+          tone({ t: tt, f: hz(ch[st % 3] + 12), dur: s16 * 0.9, a: 0.005, r: s16 * 0.6, vol: 0.022, det: [-10, 10], cut: 2600, wet: 0.35 }); // струнное остинато
+          if (k % 8 === 0) ch.forEach(function (m) { strings(tt, m + 12, half + 0.2, 0.022, { a: 0.15, r: 0.3 }) });
         }
-        var p = ctx.resume();
-        mode = m || mode;
-        master.gain.cancelScheduledValues(now());
-        master.gain.setTargetAtTime(0.7, now(), 0.3);
-        var id = ++startId;
-        var go = function () { if (id !== startId) return; next = now() + 0.1; beat = 0; enter(mode); run() };
+        if (n === 6) { brass(t + 0.1, 62, 0.9, 0.08); brass(t + 1.1, 65, 0.4, 0.07); brass(t + 1.55, 69, 1.4, 0.08) }
+        else { brass(t + 0.1, 74, 0.5, 0.07); brass(t + 0.65, 72, 0.5, 0.07); brass(t + 1.2, 70, 0.9, 0.07); brass(t + 2.2, 69, 1.0, 0.08) }
+        choir(t, 62, D, 0.02);
+      }
+      if (n === 8) {                                        // наш год в цифрах
+        var roll = Math.floor((D - 0.4) / 0.07);
+        for (k = 0; k < roll; k++) snare(t + k * 0.07, 0.02 + 0.1 * k / roll);
+        ['Bb', 'C'].forEach(function (c, j) {
+          CH[c].forEach(function (m) { strings(t + j * D / 2, m + 12, D / 2 + 0.4, 0.03, { a: 0.3, r: 0.4 }); brass(t + j * D / 2, m, D / 2, 0.035) });
+          drum(t + j * D / 2, 0.55, 100, 45, 0.5);
+        });
+        hiss(t + D * 0.5, D * 0.5, 'highpass', 800, 9000, 0.12, 0.8, 0.3, 'swell');
+      }
+      if (n === 9) {                                        // мы справились
+        var q = 0.34;
+        drum(t, 1, 90, 38, 0.6); crash(t, 0.18, 3.5);
+        var mel = [[62, 0, 1], [69, 1, 1], [66, 2, 1 / 3], [67, 2 + 1 / 3, 1 / 3], [69, 2 + 2 / 3, 1 / 3], [74, 3, 2.2]];
+        mel.forEach(function (x) { brass(t + x[1] * q, x[0], x[2] * q * 0.95 + (x[2] > 1 ? 0.9 : 0), 0.12) });
+        mel.forEach(function (x) { brass(t + x[1] * q, x[0] - 12, x[2] * q * 0.95 + (x[2] > 1 ? 0.9 : 0), 0.05) });
+        [[0, 'D'], [2, 'Bb'], [3, 'D']].forEach(function (c) {
+          CH[c[1]].forEach(function (m) { strings(t + c[0] * q, m + 12, (c[0] === 3 ? 3 : 1) * q + 0.6, 0.035, { a: 0.08, r: 0.6 }) });
+        });
+        for (k = 0; k < 6; k++) drum(t + 3 * q - 0.3 + k * 0.05, 0.12 + k * 0.05, 90, 45, 0.12);
+        drum(t + 3 * q, 1, 80, 34, 0.7); crash(t + 3 * q, 0.2, 3.5);
+        CH.D.concat([62, 66, 69]).forEach(function (m) { brass(t + 3 * q, m, 2.6, 0.045) });
+        choir(t + 3 * q, 66, 2.8, 0.04); choir(t + 3 * q, 69, 2.8, 0.03);
+      }
+    }
+
+    var cur = 0, on = false;
+    return {
+      ctx: function () { return ctx },
+      running: function () { return !!(ctx && ctx.state === 'running' && on) },
+      // запустить сцену n сразу (прошлая плавно гаснет)
+      play: function (n, dur, when) {
+        if (!init()) return;
+        var t = when != null ? when : ctx.currentTime + 0.03;
+        newBus(t, n === cur + 1 ? 0.6 : 0.15);
+        cur = n; scene(n, t, dur);
+      },
+      start: function (n, dur) {
+        if (!init()) return false;
+        on = true;
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(0.7, ctx.currentTime);
+        var self = this, p = ctx.resume && ctx.resume();
+        var go = function () { if (on) self.play(n, dur) };
         if (ctx.state === 'running') go(); else if (p && p.then) p.then(go);
         return p;
       },
-      mode: function (m) {
-        if (m === mode) return;
-        mode = m;
-        if (!ctx || ctx.state !== 'running') return;
-        next = now() + 0.1; beat = 0;
-        enter(m);
-      },
       stop: function (fade) {
-        if (!ctx) return;
-        clearInterval(loop);
-        stopHeld(fade || 0.4);
-        master.gain.cancelScheduledValues(now());
-        master.gain.setTargetAtTime(0.0001, now(), (fade || 0.4) / 3);
-        setTimeout(function () { if (ctx) ctx.suspend() }, (fade || 0.4) * 1000 + 300);
+        on = false;
+        if (!ctx || !master) return;
+        var t = ctx.currentTime;
+        master.gain.cancelScheduledValues(t);
+        master.gain.setValueAtTime(master.gain.value, t);
+        master.gain.linearRampToValueAtTime(0.0001, t + (fade || 0.4));
+        setTimeout(function () { if (!on && ctx && ctx.suspend) ctx.suspend() }, (fade || 0.4) * 1000 + 300);
       }
     };
-  })();
+  }
+  window.zpmMakeMusic = makeMusic;   // для рендера саундтрека в файл
+  var music = makeMusic();
 
   /* ── Заставка-презентация ─────────────────────────────────────────────── */
   var intro = document.getElementById('zpm-intro');
@@ -462,7 +501,7 @@
   try { muted = localStorage.getItem('zpm-mute') === '1' } catch (e) {}
 
   function remember() { try { localStorage.setItem('zpm-intro', '1') } catch (e) {} }
-  function musicMode(n) { return n === 1 ? 'calm' : n <= 4 ? 'horror' : n === 5 ? 'rise' : n <= 8 ? 'drive' : 'triumph' }
+  function sceneLen(n) { return steps[n - 1] / 1000 }
 
   function warp() {
     var w = intro.querySelector('.zi-warp');
@@ -534,7 +573,7 @@
     intro.classList.add('s' + n);
     intro.setAttribute('data-cur', n);
     intro.style.setProperty('--step', steps[n - 1] + 'ms');
-    music.mode(musicMode(n));
+    if (music.running()) music.play(n, sceneLen(n));
     if (n === 8) introStats();
     timer = setTimeout(function () { go(n + 1) }, steps[n - 1]);
   }
@@ -543,7 +582,7 @@
   // первое касание включает звук и не перелистывает слайд.
   function unlockSound() {
     if (muted || music.running()) return false;
-    music.start(musicMode(cur));
+    music.start(cur, sceneLen(cur));
     intro.classList.remove('zi-snd-wait');
     return true;
   }
@@ -581,7 +620,7 @@
     running = true;
     document.addEventListener('keydown', onKey);
     go(1);
-    if (!muted) music.start('calm');
+    if (!muted) music.start(1, sceneLen(1));
     syncSoundUi();
   }
 
@@ -591,7 +630,7 @@
     intro.addEventListener('click', function (e) {
       if (e.target.closest('.zi-skip')) return finish();
       if (e.target.closest('.zi-sound')) {
-        if (muted || !music.running()) { muted = false; music.start(musicMode(cur)) }
+        if (muted || !music.running()) { muted = false; music.start(cur, sceneLen(cur)) }
         else { muted = true; music.stop(0.3) }
         try { localStorage.setItem('zpm-mute', muted ? '1' : '0') } catch (err) {}
         syncSoundUi();

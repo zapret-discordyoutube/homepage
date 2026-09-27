@@ -778,7 +778,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 /* края кадра растворяются в темноте — на узких экранах не видно «прямоугольника» */
-.zi-rig .zr {
+.zi-rig .zrig {
   height: 100%;
   -webkit-mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 80%, transparent), linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
   mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 80%, transparent), linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
@@ -1037,7 +1037,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
   66%, 100% { stroke: var(--red); fill: rgba(255, 59, 92, 0.3); }
 }
 
-.zi.s4 .zi-rig-rkn > .zr {
+.zi.s4 .zi-rig-rkn > .zrig {
   animation: zi-lunge 2.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
@@ -1813,7 +1813,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
    Координаты слоёв — в системе 1600×900, как у сцены заставки.
    ═══════════════════════════════════════════════════════════════════ */
 
-.zr {
+.zrig {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
@@ -2011,14 +2011,14 @@ html.zpm-intro-on .zi:not(.zi-run) {
   transition-delay: 0.15s;
 }
 
-.zd-side .zr {
+.zd-side .zrig {
   -webkit-mask-image: linear-gradient(to right, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
   mask-image: linear-gradient(to right, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
   -webkit-mask-composite: source-in;
   mask-composite: intersect;
 }
 
-.zd-right .zr {
+.zd-right .zrig {
   -webkit-mask-image: linear-gradient(to left, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
   mask-image: linear-gradient(to left, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
 }
@@ -2038,11 +2038,11 @@ html.zpm-intro-on .zi:not(.zi-run) {
   transform: none;
 }
 
-.zd-on .zd-side .zr {
+.zd-on .zd-side .zrig {
   animation: zd-float 6s ease-in-out infinite alternate;
 }
 
-.zd-on .zd-right .zr {
+.zd-on .zd-right .zrig {
   animation-delay: -3s;
 }
 
@@ -2161,8 +2161,8 @@ html.zpm-intro-on .zi:not(.zi-run) {
     margin: 0 !important;
   }
 
-  .zd-side .zr,
-  .zd-right .zr {
+  .zd-side .zrig,
+  .zd-right .zrig {
     -webkit-mask-image: linear-gradient(to top, transparent, #000 25%);
     mask-image: linear-gradient(to top, transparent, #000 25%);
   }

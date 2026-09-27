@@ -304,7 +304,7 @@
 
     /* инструменты */
     function tone(o) {
-      var t = o.t, dur = o.dur, g = ctx.createGain(), f = ctx.createBiquadFilter();
+      var t = Math.max(o.t, ctx.currentTime), dur = o.dur, g = ctx.createGain(), f = ctx.createBiquadFilter();
       f.type = o.ft || 'lowpass'; f.Q.value = o.q || 0.7;
       f.frequency.setValueAtTime(o.cut || 2000, t);
       if (o.cutTo) { f.frequency.linearRampToValueAtTime(o.cutTo, t + (o.cutAt || 0.08)); f.frequency.linearRampToValueAtTime(o.cutEnd || o.cutTo, t + dur) }
@@ -352,6 +352,7 @@
       tone({ t: t, f: hz(m) * 3.01, dur: 0.5, a: 0.002, r: 0.45, vol: (vol || 0.06) * 0.25, type: 'sine', cut: 9000, wet: 0.6 });
     }
     function hiss(t, dur, type, f0, f1, vol, q, wet, shape) {
+      if (t < ctx.currentTime) { dur -= ctx.currentTime - t; t = ctx.currentTime; if (dur < 0.05) return }
       var s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
       s.buffer = noise; s.loop = true; fl.type = type; fl.Q.value = q || 0.8;
       fl.frequency.setValueAtTime(f0, t); fl.frequency.exponentialRampToValueAtTime(f1, t + dur);
@@ -362,6 +363,7 @@
       s.start(t); s.stop(t + dur + 0.05);
     }
     function drum(t, vol, f0, f1, len) {  // тайко / литавра
+      t = Math.max(t, ctx.currentTime);
       var o = ctx.createOscillator(), g = ctx.createGain();
       o.frequency.setValueAtTime(f0 || 110, t); o.frequency.exponentialRampToValueAtTime(f1 || 42, t + (len || 0.45));
       g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + (len || 0.45) * 2.2);

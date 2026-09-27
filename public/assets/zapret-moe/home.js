@@ -323,8 +323,8 @@
       raf = 0;
       var moving = false;
       rigs.forEach(function (r, i) {
-        var b = r.getBoundingClientRect();
-        if (!b.width || b.bottom < 0 || b.top > innerHeight) return;
+        var b = rects[i];                     // положение кэшировано: чтение rect каждый кадр заставляло браузер пересчитывать раскладку
+        if (!b || !b.width || b.bottom < 0 || b.top > innerHeight) return;
         var tx = Math.max(-1, Math.min(1, (mx - (b.left + b.width / 2)) / (b.width * 0.6)));
         var ty = Math.max(-1, Math.min(1, (my - (b.top + b.height / 2)) / (b.height * 0.6)));
         var s = state[i];
@@ -335,9 +335,12 @@
       });
       if (moving) raf = requestAnimationFrame(tick);
     }
-    function kick() { if (!raf) raf = requestAnimationFrame(tick) }
+    var rects = [], rectsAt = 0;
+    function measure() { rects = rigs.map(function (r) { return r.getBoundingClientRect() }); rectsAt = performance.now() }
+    function kick() { if (!raf) { if (performance.now() - rectsAt > 300) measure(); raf = requestAnimationFrame(tick) } }
     addEventListener('pointermove', function (e) { mx = e.clientX; my = e.clientY; kick() }, { passive: true });
-    addEventListener('scroll', kick, { passive: true });
+    addEventListener('scroll', function () { rectsAt = 0; kick() }, { passive: true });
+    addEventListener('resize', function () { rectsAt = 0 });
     function poke(r) {
       if (r.classList.contains('zr-poke')) return;
       r.classList.add('zr-poke');
@@ -549,7 +552,7 @@
     }
     function drawClaw(x, y, a) {
       g.save(); g.translate(x, y); g.globalAlpha = a;
-      g.shadowColor = '#ff2b4f'; g.shadowBlur = 18;
+      g.fillStyle = 'rgba(255,43,79,.18)'; g.beginPath(); g.ellipse(0, -30, 44, 50, 0, 0, 6.28); g.fill();   // ореол без shadowBlur
       g.fillStyle = '#e9b8a4'; g.beginPath(); g.ellipse(0, -46, 26, 30, 0, 0, 6.28); g.fill();
       [-18, -6, 6, 18].forEach(function (dx, i) {
         g.fillStyle = '#e9b8a4'; g.beginPath(); g.ellipse(dx, -18, 6, 16, dx / 60, 0, 6.28); g.fill();
@@ -595,12 +598,13 @@
         if (!p.grab) p.x += p.v * dt * (p.s ? 1.6 : 1);
         var y = p.grab ? p.y : wireY;
         if (p.s) {
-          g.strokeStyle = 'rgba(79,209,255,.9)'; g.lineWidth = 2; g.shadowColor = '#4fd1ff'; g.shadowBlur = 14;
+          g.fillStyle = 'rgba(79,209,255,.14)'; g.beginPath(); g.arc(p.x, y, 22, 0, 6.28); g.fill();
+          g.strokeStyle = 'rgba(79,209,255,.9)'; g.lineWidth = 2;
           g.beginPath(); g.arc(p.x, y, 17, 0, 6.28); g.stroke();
         }
-        g.shadowColor = p.grab ? '#ff3b5c' : '#4fd1ff'; g.shadowBlur = 12;
+        g.fillStyle = p.grab ? 'rgba(255,59,92,.22)' : 'rgba(79,209,255,.2)'; g.fillRect(p.x - 14, y - 11, 28, 22);
         g.fillStyle = p.grab ? '#ff5a74' : (p.s ? '#bff0ff' : '#4fd1ff');
-        g.beginPath(); g.roundRect ? g.roundRect(p.x - 9, y - 7, 18, 14, 4) : g.rect(p.x - 9, y - 7, 18, 14); g.fill(); g.shadowBlur = 0;
+        g.beginPath(); g.roundRect ? g.roundRect(p.x - 9, y - 7, 18, 14, 4) : g.rect(p.x - 9, y - 7, 18, 14); g.fill();
         if (p.x > W + 20) { p.gone = 1; if (p.s) { score.saved++; if (score.saved > score.best) { score.best = score.saved; try { localStorage.setItem('zg-best', score.best) } catch (e) {} } ui(); milestone() } }
       });
       pk = pk.filter(function (p) { return !p.gone });
@@ -844,7 +848,7 @@
           f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 160 * dt; f.vx *= 0.97;
           var s = f.s * (k < 0.15 ? k / 0.15 : 1);
           g.save(); g.translate(f.x, f.y); g.rotate(f.vx * 0.002); g.globalAlpha = 1 - k * k;
-          g.fillStyle = 'hsl(' + f.h + ',90%,66%)'; g.shadowColor = '#ff3b5c'; g.shadowBlur = 8;
+          g.fillStyle = 'hsl(' + f.h + ',90%,66%)';
           g.beginPath(); g.moveTo(0, s * 0.9);
           g.bezierCurveTo(-s * 1.4, 0, -s * 0.9, -s, 0, -s * 0.35);
           g.bezierCurveTo(s * 0.9, -s, s * 1.4, 0, 0, s * 0.9); g.fill(); g.restore();
@@ -855,9 +859,9 @@
             // рамка схлопывается вокруг пакета
             s = 44 - close * 26;
             g.rotate(f.ang * (1 - close));
-            g.strokeStyle = 'rgba(255,59,92,' + (0.4 + close * 0.6) + ')'; g.lineWidth = 2.5; g.shadowColor = '#ff3b5c'; g.shadowBlur = 12;
+            g.strokeStyle = 'rgba(255,59,92,' + (0.4 + close * 0.6) + ')'; g.lineWidth = 2.5;
             g.strokeRect(-s / 2, -s / 2, s, s);
-            g.shadowBlur = 0; g.fillStyle = 'rgba(255,107,131,' + close + ')'; g.font = '700 9px ui-monospace, monospace'; g.textAlign = 'center';
+            g.fillStyle = 'rgba(255,107,131,' + close + ')'; g.font = '700 9px ui-monospace, monospace'; g.textAlign = 'center';
             g.fillText('ТСПУ', 0, -s / 2 - 5);
             g.fillStyle = '#4fd1ff'; g.fillRect(-6, -4.5, 12, 9);
             if (k > 0.3) { g.fillStyle = 'rgba(255,255,255,' + (1 - (k - 0.3) / 0.12) + ')'; g.beginPath(); g.arc(0, 0, 16, 0, 6.28); g.fill() }
@@ -872,10 +876,10 @@
               g.beginPath(); g.moveTo(-9, 0); g.lineTo(9, 0); g.stroke(); g.restore();
             });
             g.globalAlpha = 1 - e * 0.8;
-            g.fillStyle = '#4fd1ff'; g.shadowColor = '#4fd1ff'; g.shadowBlur = 10;
+            g.fillStyle = '#4fd1ff';
             g.fillRect(-6 - d * 1.2, -4.5 - d * 0.5, 5.5, 9);
             g.fillRect(0.5 + d * 1.2, -4.5 + d * 0.5, 5.5, 9);
-            g.shadowBlur = 0; g.fillStyle = 'rgba(79,209,255,' + (1 - e) + ')'; g.font = '700 10px ui-monospace, monospace'; g.textAlign = 'center';
+            g.fillStyle = 'rgba(79,209,255,' + (1 - e) + ')'; g.font = '700 10px ui-monospace, monospace'; g.textAlign = 'center';
             g.fillText('обход ✓', 0, -20 - d * 0.4);
           }
           g.restore();
@@ -885,5 +889,15 @@
       if (Math.abs(mx - rx) + Math.abs(my - ry) > 0.3 || trail.length || fx.length) raf = requestAnimationFrame(frame);
       else last = 0;
     }
+  })();
+
+  /* ── Пауза анимаций вне экрана ──────────────────────────────────────── */
+  (function () {
+    if (!window.IntersectionObserver) return;
+    var blocks = document.querySelectorAll('.zpm-home > section, .zpm-home > div:not(.zx), #zpm-duel, #zg-packets');
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { e.target.classList.toggle('zoff', !e.isIntersecting) });
+    }, { rootMargin: '150px 0px' });
+    blocks.forEach(function (b) { io.observe(b) });
   })();
 })();

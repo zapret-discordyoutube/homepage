@@ -465,12 +465,6 @@ html.zpm-intro-lock body {
    2.5–3.1 с  — буквы подпрыгивают волной, рисуется подчёркивание
    дальше     — по буквам течёт градиент, иногда пробегает блик        */
 
-@property --zsh {
-  syntax: "<percentage>";
-  inherits: true;
-  initial-value: 0%;
-}
-
 .zh-w {
   display: inline-block;
   margin-bottom: -0.16em;
@@ -493,11 +487,6 @@ html.zpm-intro-lock body {
   display: inline-block;
   padding-bottom: 0.08em;
   white-space: nowrap;
-  animation: zh-flow 8s linear 3.2s infinite;
-}
-
-@keyframes zh-flow {
-  to { --zsh: 112.5%; }
 }
 
 .zh-l {
@@ -505,14 +494,13 @@ html.zpm-intro-lock body {
   color: transparent;
   background: linear-gradient(100deg, var(--cy), var(--blu) 30%, var(--vio) 62%, var(--cy));
   background-size: 900% 100%;
-  background-position: calc(var(--i) * 12.5% + var(--zsh)) 0;
+  background-position: calc(var(--i) * 12.5%) 0;
   -webkit-background-clip: text;
   background-clip: text;
   animation:
     zh-drop 0.65s cubic-bezier(0.2, 0.9, 0.3, 1.35) calc(0.6s + var(--i) * 0.055s) both,
     zh-shiver 0.5s linear calc(1.85s + var(--i) * 0.02s) both,
-    zh-jump 0.6s cubic-bezier(0.3, 0, 0.3, 1) calc(2.5s + var(--i) * 0.045s) both,
-    zh-shine 7s ease-in-out calc(4.5s + var(--i) * 0.07s) infinite;
+    zh-jump 0.6s cubic-bezier(0.3, 0, 0.3, 1) calc(2.5s + var(--i) * 0.045s) both;
 }
 
 /* разные свойства трансформации — чтобы анимации складывались, а не перебивали друг друга */
@@ -533,11 +521,6 @@ html.zpm-intro-lock body {
   0%, 100% { transform: translateY(0) scale(1); }
   35% { transform: translateY(-0.22em) scale(1.08, 0.94); }
   70% { transform: translateY(0.02em) scale(0.97, 1.04); }
-}
-
-@keyframes zh-shine {
-  0%, 90%, 100% { filter: none; }
-  94% { filter: brightness(1.9) drop-shadow(0 0 12px rgba(79, 209, 255, 0.9)); }
 }
 
 /* цепь: появляется слева направо, рвётся посередине */
@@ -2066,6 +2049,9 @@ html.zpm-intro-lock body {
   mask-composite: exclude;
   opacity: 0;
   transition: opacity 0.35s;
+}
+
+.zc:hover::before {
   animation: zc-spin 4s linear infinite;
 }
 
@@ -4409,4 +4395,12 @@ html.zcur-on textarea {
   margin: -23px 0 0 -23px;
   border-color: rgba(255, 107, 131, 0.6);
   background: rgba(255, 59, 92, 0.08);
+}
+
+/* блоки вне экрана стоят на паузе (класс ставит home.js): бесконечные анимации
+   не пересчитывают стили, пока их никто не видит */
+.zoff *,
+.zoff *::before,
+.zoff *::after {
+  animation-play-state: paused !important;
 }

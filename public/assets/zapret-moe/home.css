@@ -4903,3 +4903,341 @@ html.zpm-intro-on .zi:not(.zi-run) {
   }
 
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Своё контекстное меню (правая кнопка). Shift + ПКМ — меню браузера.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.zcm {
+  position: fixed;
+  z-index: 10001;
+  min-width: 250px;
+  max-width: 320px;
+  padding: 6px;
+  color: #e8efff;
+  font: 14px/1.3 "Onest", system-ui, sans-serif;
+  border: 1px solid rgba(120, 180, 255, 0.28);
+  border-radius: 16px;
+  background: rgba(8, 12, 28, 0.86);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(155, 123, 255, 0.12), 0 0 40px -10px rgba(79, 209, 255, 0.35);
+  backdrop-filter: blur(16px) saturate(1.4);
+  transform-origin: var(--ox, 0) var(--oy, 0);
+  animation: zcm-in 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  user-select: none;
+}
+
+.zcm[hidden] {
+  display: none;
+}
+
+@keyframes zcm-in {
+  from { opacity: 0; transform: scale(0.88); filter: blur(4px); }
+}
+
+.zcm-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 2px 2px 6px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  background: linear-gradient(100deg, rgba(79, 209, 255, 0.14), rgba(155, 123, 255, 0.12));
+}
+
+.zcm-head img {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #4fd1ff;
+}
+
+.zcm-head b {
+  display: block;
+  font: 700 13px "Unbounded", sans-serif;
+}
+
+.zcm-head small {
+  color: #8fa3d0;
+  font-size: 11.5px;
+}
+
+.zcm-row {
+  display: flex;
+  gap: 4px;
+  margin: 0 2px 4px;
+}
+
+.zcm-row button {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  height: 36px;
+  padding: 0;
+  color: #cbd6f5;
+  cursor: pointer;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.zcm-row button:hover,
+.zcm-row button.on {
+  color: #031024;
+  background: #4fd1ff;
+}
+
+.zcm-row button:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.zcm svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.zcm-sep {
+  height: 1px;
+  margin: 5px 8px;
+  background: rgba(120, 160, 255, 0.16);
+}
+
+.zcm-lbl {
+  padding: 6px 12px 3px;
+  overflow: hidden;
+  color: #5b6a90;
+  font: 11px ui-monospace, monospace;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.zcm-it {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 9px 12px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  transition: background 0.12s;
+}
+
+.zcm-it svg {
+  flex: none;
+  color: #4fd1ff;
+}
+
+.zcm-it kbd {
+  margin-left: auto;
+  color: #5b6a90;
+  font: 11px ui-monospace, monospace;
+}
+
+.zcm-it:hover,
+.zcm-it.on {
+  background: rgba(79, 209, 255, 0.14);
+}
+
+.zcm-it.on::before {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 0;
+  width: 3px;
+  content: "";
+  border-radius: 3px;
+  background: #4fd1ff;
+  box-shadow: 0 0 8px #4fd1ff;
+}
+
+.zcm-it.hot svg {
+  color: #ff6b83;
+}
+
+.zcm-it.hot {
+  background: linear-gradient(100deg, rgba(255, 59, 92, 0.14), transparent);
+}
+
+.zcm-it.hot:hover,
+.zcm-it.hot.on {
+  background: linear-gradient(100deg, rgba(255, 59, 92, 0.28), rgba(255, 59, 92, 0.06));
+}
+
+.zcm-foot {
+  padding: 6px 12px 4px;
+  color: #5b6a90;
+  font-size: 11px;
+}
+
+.zcm-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  z-index: 10002;
+  padding: 9px 16px;
+  color: #031024;
+  font: 600 13px "Onest", sans-serif;
+  border-radius: 999px;
+  background: #4fd1ff;
+  box-shadow: 0 0 24px rgba(79, 209, 255, 0.6);
+  transform: translateX(-50%);
+  animation: zcm-toast 1.8s ease forwards;
+  pointer-events: none;
+}
+
+@keyframes zcm-toast {
+  0% { opacity: 0; transform: translate(-50%, 12px); }
+  12%, 80% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zcm, .zcm-toast { animation: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Курсор-пакет и «блокировка» по клику (home.js включает на мыши)
+   ═══════════════════════════════════════════════════════════════════ */
+
+html.zcur-on,
+html.zcur-on body,
+html.zcur-on a,
+html.zcur-on button,
+html.zcur-on [role="button"],
+html.zcur-on .zi,
+html.zcur-on canvas,
+html.zcur-on .zlock-hit,
+html.zcur-on .zp-chart svg {
+  cursor: none !important;
+}
+
+html.zcur-on input,
+html.zcur-on textarea {
+  cursor: text !important;
+}
+
+.zcur-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 10003;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+.zcur-dot,
+.zcur-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10004;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.zcur-dot {
+  width: 12px;
+  height: 9px;
+  margin: -4.5px 0 0 -6px;
+  border-radius: 3px;
+  background: #bff0ff;
+  box-shadow: 0 0 6px #4fd1ff, 0 0 14px rgba(79, 209, 255, 0.7);
+  transition: width 0.2s, height 0.2s, margin 0.2s, background 0.2s, border-radius 0.2s, opacity 0.2s;
+}
+
+.zcur-ring {
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1.5px solid rgba(79, 209, 255, 0.55);
+  border-radius: 50%;
+  transition: width 0.25s cubic-bezier(0.3, 1.4, 0.5, 1), height 0.25s cubic-bezier(0.3, 1.4, 0.5, 1), margin 0.25s cubic-bezier(0.3, 1.4, 0.5, 1), border-color 0.2s, background 0.2s, border-radius 0.25s;
+}
+
+.zcur-link .zcur-ring {
+  width: 54px;
+  height: 54px;
+  margin: -27px 0 0 -27px;
+  border-color: #4fd1ff;
+  background: rgba(79, 209, 255, 0.1);
+  box-shadow: 0 0 18px rgba(79, 209, 255, 0.35);
+}
+
+.zcur-link .zcur-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+}
+
+/* над РКН-тян: вращающийся красный прицел ТСПУ.
+   Пунктир — conic-gradient с поворотом через --zang: свойство rotate
+   нельзя, оно повернуло бы и смещение курсора из transform. */
+.zcur-rkn .zcur-ring {
+  width: 62px;
+  height: 62px;
+  margin: -31px 0 0 -31px;
+  border: 0;
+  background: repeating-conic-gradient(from var(--zang), #ff3b5c 0 14deg, transparent 14deg 28deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  filter: drop-shadow(0 0 6px #ff3b5c);
+  animation: zcur-spin 2.2s linear infinite;
+}
+
+@keyframes zcur-spin {
+  to { --zang: 360deg; }
+}
+
+.zcur-rkn .zcur-dot {
+  background: #ffb3c0;
+  box-shadow: 0 0 8px #ff3b5c;
+}
+
+.zcur-rkn .zcur-dot::before,
+.zcur-rkn .zcur-dot::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  content: "";
+  background: rgba(255, 59, 92, 0.85);
+}
+
+.zcur-rkn .zcur-dot::before { width: 80px; height: 1px; margin-left: -40px; }
+.zcur-rkn .zcur-dot::after { width: 1px; height: 80px; margin-top: -40px; }
+
+.zcur-text .zcur-ring {
+  width: 3px;
+  height: 28px;
+  margin: -14px 0 0 -1.5px;
+  border: 0;
+  border-radius: 2px;
+  background: #4fd1ff;
+  box-shadow: 0 0 8px #4fd1ff;
+}
+
+.zcur-text .zcur-dot {
+  opacity: 0;
+}
+
+.zcur-down .zcur-ring {
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+}
+
+.zcur-hide .zcur-dot,
+.zcur-hide .zcur-ring {
+  opacity: 0;
+}

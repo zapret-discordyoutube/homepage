@@ -1065,4 +1065,205 @@
     var saved = 0; try { saved = +localStorage.getItem('zlock-lvl') || 0 } catch (e) {}
     set(Math.min(saved, 2));
   })();
+
+  /* ── Своё контекстное меню ──────────────────────────────────────────── */
+  (function () {
+    if (window.matchMedia && matchMedia('(pointer: coarse)').matches) return;   // на телефонах — системное
+    var sub = (pulse && pulse.getAttribute('data-heatmap') || '/api/').split('/api/')[0];
+    var I = {
+      back: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
+      fwd: '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>',
+      reload: '<svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>',
+      top: '<svg viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>',
+      open: '<svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+      copy: '<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>',
+      link: '<svg viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>',
+      search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
+      img: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>',
+      play: '<svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>',
+      heart: '<svg viewBox="0 0 24 24"><path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-3 4.5 4.5 0 0 1 8 3c0 6-8 11-8 11z"/></svg>',
+      repo: '<svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg>',
+      status: '<svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6z"/><path d="M8 12h2l1.5-3 2 6 1.5-3h1"/></svg>',
+      lock: '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0"/></svg>'
+    };
+    var menu = document.createElement('div'); menu.className = 'zcm'; menu.hidden = true; menu.setAttribute('role', 'menu');
+    document.body.appendChild(menu);
+    var items = [], cur = -1;
+    function toast(msg) { var t = document.createElement('div'); t.className = 'zcm-toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove() }, 1900) }
+    function copy(s, msg) {
+      (navigator.clipboard ? navigator.clipboard.writeText(s) : Promise.reject()).then(function () { toast(msg || 'Скопировано') }, function () {
+        var ta = document.createElement('textarea'); ta.value = s; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast(msg || 'Скопировано') } catch (e) {} ta.remove();
+      });
+    }
+    function close() { menu.hidden = true; cur = -1 }
+    function build(e) {
+      var a = e.target.closest('a[href]'), im = e.target.closest('img'), sel = String(getSelection() || '').trim();
+      var h = '<div class="zcm-head"><img src="' + sub + '/zapretdiscordyoutube.png" alt=""><div><b>Zapret.Moe</b><small>git-сервер сообщества</small></div></div>';
+      h += '<div class="zcm-row"><button data-a="back" title="Назад"' + (history.length < 2 ? ' disabled' : '') + '>' + I.back + '</button><button data-a="fwd" title="Вперёд">' + I.fwd + '</button><button data-a="reload" title="Обновить">' + I.reload + '</button><button data-a="top" title="Наверх">' + I.top + '</button></div>';
+      var body = [];
+      if (sel) body.push('<div class="zcm-lbl">«' + sel.slice(0, 40).replace(/</g, '&lt;') + (sel.length > 40 ? '…' : '') + '»</div>', it('copysel', I.copy, 'Копировать', 'Ctrl+C'), it('search', I.search, 'Найти в интернете'));
+      else if (a) body.push('<div class="zcm-lbl">' + a.href.replace(/^https?:\/\//, '').slice(0, 44) + '</div>', it('go', I.open, 'Открыть'), it('tab', I.open, 'Открыть в новой вкладке'), it('copylink', I.link, 'Копировать адрес ссылки'));
+      else if (im && im.currentSrc) body.push(it('imgopen', I.img, 'Открыть картинку'), it('imgcopy', I.link, 'Копировать адрес картинки'));
+      if (body.length) h += body.join('') + '<div class="zcm-sep"></div>';
+      h += it('intro', I.play, 'Посмотреть заставку') + it('lock', I.lock, 'Сломать замок РКН') + it('repos', I.repo, 'Все репозитории') + it('status', I.status, 'Статус сервисов');
+      h += '<div class="zcm-sep"></div>' + it('donate', I.heart, 'Поддержать проект', '', 'hot');
+      h += '<div class="zcm-foot">Shift + ПКМ — меню браузера</div>';
+      menu.innerHTML = h;
+      menu._ctx = { a: a, im: im, sel: sel };
+      items = Array.prototype.slice.call(menu.querySelectorAll('.zcm-it'));
+    }
+    function it(act, ico, label, kbd, cls) { return '<button class="zcm-it' + (cls ? ' ' + cls : '') + '" role="menuitem" data-a="' + act + '">' + ico + '<span>' + label + '</span>' + (kbd ? '<kbd>' + kbd + '</kbd>' : '') + '</button>' }
+    function act(name) {
+      var c = menu._ctx || {}; close();
+      var go = function (u, blank) { if (blank) open(u, '_blank', 'noopener'); else location.href = u };
+      switch (name) {
+        case 'back': history.back(); break;
+        case 'fwd': history.forward(); break;
+        case 'reload': location.reload(); break;
+        case 'top': scrollTo({ top: 0, behavior: 'smooth' }); break;
+        case 'copysel': copy(c.sel); break;
+        case 'search': go('https://duckduckgo.com/?q=' + encodeURIComponent(c.sel), 1); break;
+        case 'go': c.a.click(); break;
+        case 'tab': go(c.a.href, 1); break;
+        case 'copylink': copy(c.a.href, 'Ссылка скопирована'); break;
+        case 'imgopen': go(c.im.currentSrc, 1); break;
+        case 'imgcopy': copy(c.im.currentSrc, 'Адрес картинки скопирован'); break;
+        case 'intro': var r = document.getElementById('zpm-replay'); if (r) r.click(); break;
+        case 'lock': var l = document.getElementById('zlock'); if (l) l.scrollIntoView({ behavior: 'smooth', block: 'center' }); break;
+        case 'repos': go(sub + '/explore/repos'); break;
+        case 'status': go('https://status.zapret.moe/', 1); break;
+        case 'donate': go('https://t.me/zapretvpns_bot', 1); break;
+      }
+    }
+    function focusIt(i) { items.forEach(function (x, k) { x.classList.toggle('on', k === i) }); cur = i; if (items[i]) items[i].focus({ preventScroll: true }) }
+    document.addEventListener('contextmenu', function (e) {
+      if (e.shiftKey || e.target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"], .zcm')) return;
+      if (document.documentElement.classList.contains('zpm-intro-on')) return;
+      e.preventDefault();
+      build(e);
+      menu.hidden = false;
+      var w = menu.offsetWidth, hh = menu.offsetHeight;
+      var x = Math.min(e.clientX, innerWidth - w - 8), y = Math.min(e.clientY, innerHeight - hh - 8);
+      menu.style.left = Math.max(8, x) + 'px'; menu.style.top = Math.max(8, y) + 'px';
+      menu.style.setProperty('--ox', (e.clientX - x) + 'px'); menu.style.setProperty('--oy', (e.clientY - y) + 'px');
+      menu.style.animation = 'none'; void menu.offsetWidth; menu.style.animation = '';
+    });
+    menu.addEventListener('click', function (e) { var b = e.target.closest('[data-a]'); if (b) act(b.getAttribute('data-a')) });
+    menu.addEventListener('mousemove', function (e) { var b = e.target.closest('.zcm-it'); if (b) focusIt(items.indexOf(b)) });
+    document.addEventListener('mousedown', function (e) { if (!menu.hidden && !menu.contains(e.target)) close() }, true);
+    addEventListener('scroll', function () { if (!menu.hidden) close() }, { passive: true });
+    addEventListener('blur', close); addEventListener('resize', close);
+    document.addEventListener('keydown', function (e) {
+      if (menu.hidden) return;
+      if (e.key === 'Escape') { e.preventDefault(); close() }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); focusIt((cur + 1) % items.length) }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); focusIt((cur - 1 + items.length) % items.length) }
+      else if (e.key === 'Enter' && items[cur]) { e.preventDefault(); act(items[cur].getAttribute('data-a')) }
+    });
+  })();
+
+  /* ── Курсор-пакет и анимация «блокировка → обход» по клику ─────────── */
+  (function () {
+    if (!window.matchMedia || !matchMedia('(pointer: fine)').matches || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var root = document.documentElement, body = document.body;
+    var dot = document.createElement('div'), ring = document.createElement('div'), cv = document.createElement('canvas');
+    dot.className = 'zcur-dot'; ring.className = 'zcur-ring'; cv.className = 'zcur-fx';
+    body.appendChild(cv); body.appendChild(ring); body.appendChild(dot);
+    root.classList.add('zcur-on', 'zcur-hide');
+    var g = cv.getContext('2d'), dpr = 1, W = 0, H = 0;
+    function size() { dpr = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * dpr; cv.height = H * dpr }
+    size(); addEventListener('resize', size);
+    var mx = -100, my = -100, rx = -100, ry = -100, trail = [], fx = [], raf = 0, idle = 0;
+    function state(t) {
+      var c = root.classList, el = t && t.closest ? t : null;
+      c.toggle('zcur-link', !!(el && el.closest('a, button, [role="button"], .zbox, .zc-dl, .zp-lg, .zlock-hit, .zg-canvas, summary, label')));
+      c.toggle('zcur-rkn', !!(el && el.closest('.zr-rkn, .zi-rig-rkn')));
+      c.toggle('zcur-text', !!(el && !el.closest('a, button') && el.closest('p, h1, h2, h3, li span, dd, code, .zt-t') && !el.closest('.zr-rkn')));
+    }
+    addEventListener('pointermove', function (e) {
+      if (e.pointerType !== 'mouse') return;
+      mx = e.clientX; my = e.clientY; root.classList.remove('zcur-hide');
+      trail.push({ x: mx, y: my, t: performance.now() });
+      state(e.target); kick();
+    }, { passive: true });
+    document.addEventListener('mouseleave', function () { root.classList.add('zcur-hide') });
+    addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      root.classList.add('zcur-down');
+      var hot = e.target.closest && e.target.closest('a, button, [role="button"], .zbox, .zlock-hit, .zg-canvas, input, textarea, select');
+      if (hot) ripple(e.clientX, e.clientY); else block(e.clientX, e.clientY);
+      kick();
+    });
+    addEventListener('pointerup', function () { root.classList.remove('zcur-down') });
+    function ripple(x, y) {
+      fx.push({ k: 'ring', x: x, y: y, t: 0, dur: 0.5, col: '79,209,255' });
+      for (var i = 0; i < 8; i++) { var a = i / 8 * 6.28; fx.push({ k: 'spark', x: x, y: y, vx: Math.cos(a) * 160, vy: Math.sin(a) * 160, t: 0, dur: 0.4, col: '191,240,255' }) }
+    }
+    // «блокировка»: красная рамка ТСПУ схлопывается — пакет раскалывается и уходит в обход
+    function block(x, y) { fx.push({ k: 'block', x: x, y: y, t: 0, dur: 0.75, ang: Math.random() * 1.2 - 0.6 }) }
+    function kick() { if (!raf) raf = requestAnimationFrame(frame) }
+    var last = 0;
+    function frame(now) {
+      raf = 0;
+      var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016; last = now;
+      rx += (mx - rx) * Math.min(1, dt * 18); ry += (my - ry) * Math.min(1, dt * 18);
+      dot.style.transform = 'translate(' + mx + 'px,' + my + 'px)';
+      ring.style.transform = 'translate(' + rx + 'px,' + ry + 'px)';
+      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+      // шлейф-провод
+      while (trail.length && now - trail[0].t > 260) trail.shift();
+      if (trail.length > 1) {
+        g.lineCap = 'round'; g.lineJoin = 'round';
+        for (var i = 1; i < trail.length; i++) {
+          var p = trail[i - 1], q = trail[i], a = 1 - (now - q.t) / 260;
+          g.strokeStyle = 'rgba(' + (79 + (1 - a) * 76 | 0) + ',' + (209 - (1 - a) * 86 | 0) + ',255,' + (a * 0.55) + ')';
+          g.lineWidth = 1 + a * 2.5; g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke();
+        }
+      }
+      fx.forEach(function (f) {
+        f.t += dt; var k = f.t / f.dur;
+        if (f.k === 'ring') {
+          g.strokeStyle = 'rgba(' + f.col + ',' + (1 - k) + ')'; g.lineWidth = 2;
+          g.beginPath(); g.arc(f.x, f.y, 8 + k * 40, 0, 6.28); g.stroke();
+        } else if (f.k === 'spark') {
+          f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= 0.9; f.vy *= 0.9;
+          g.fillStyle = 'rgba(' + f.col + ',' + (1 - k) + ')'; g.fillRect(f.x - 1.5, f.y - 1.5, 3, 3);
+        } else if (f.k === 'block') {
+          g.save(); g.translate(f.x, f.y);
+          var s, close = Math.min(1, k / 0.3);
+          if (k < 0.42) {
+            // рамка схлопывается вокруг пакета
+            s = 44 - close * 26;
+            g.rotate(f.ang * (1 - close));
+            g.strokeStyle = 'rgba(255,59,92,' + (0.4 + close * 0.6) + ')'; g.lineWidth = 2.5; g.shadowColor = '#ff3b5c'; g.shadowBlur = 12;
+            g.strokeRect(-s / 2, -s / 2, s, s);
+            g.shadowBlur = 0; g.fillStyle = 'rgba(255,107,131,' + close + ')'; g.font = '700 9px ui-monospace, monospace'; g.textAlign = 'center';
+            g.fillText('ТСПУ', 0, -s / 2 - 5);
+            g.fillStyle = '#4fd1ff'; g.fillRect(-6, -4.5, 12, 9);
+            if (k > 0.3) { g.fillStyle = 'rgba(255,255,255,' + (1 - (k - 0.3) / 0.12) + ')'; g.beginPath(); g.arc(0, 0, 16, 0, 6.28); g.fill() }
+          } else {
+            // пакет раскалывается и уходит в обход, рамка ломается
+            var e = (k - 0.42) / 0.58, ease = 1 - Math.pow(1 - e, 3), d = ease * 46;
+            g.rotate(f.ang);
+            g.globalAlpha = 1 - e;
+            g.strokeStyle = '#ff3b5c'; g.lineWidth = 2.5;
+            [[-1, -1, 1, 0], [1, -1, 0, 1], [1, 1, -1, 0], [-1, 1, 0, -1]].forEach(function (c, j) {
+              g.save(); g.translate(c[0] * (9 + d * 0.8), c[1] * (9 + d * 0.8)); g.rotate((j % 2 ? 1 : -1) * ease * 1.2);
+              g.beginPath(); g.moveTo(-9, 0); g.lineTo(9, 0); g.stroke(); g.restore();
+            });
+            g.globalAlpha = 1 - e * 0.8;
+            g.fillStyle = '#4fd1ff'; g.shadowColor = '#4fd1ff'; g.shadowBlur = 10;
+            g.fillRect(-6 - d * 1.2, -4.5 - d * 0.5, 5.5, 9);
+            g.fillRect(0.5 + d * 1.2, -4.5 + d * 0.5, 5.5, 9);
+            g.shadowBlur = 0; g.fillStyle = 'rgba(79,209,255,' + (1 - e) + ')'; g.font = '700 10px ui-monospace, monospace'; g.textAlign = 'center';
+            g.fillText('обход ✓', 0, -20 - d * 0.4);
+          }
+          g.restore();
+        }
+      });
+      fx = fx.filter(function (f) { return f.t < f.dur });
+      if (Math.abs(mx - rx) + Math.abs(my - ry) > 0.3 || trail.length || fx.length) raf = requestAnimationFrame(frame);
+      else last = 0;
+    }
+  })();
 })();

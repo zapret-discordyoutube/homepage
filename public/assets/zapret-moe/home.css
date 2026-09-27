@@ -1570,8 +1570,8 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 @keyframes zr-rim {
-  from { opacity: 0.55; }
-  to { opacity: 1; }
+  from { opacity: 0.12; }
+  to { opacity: 0.3; }
 }
 
 @keyframes zr-rim-rkn {

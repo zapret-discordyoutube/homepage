@@ -761,6 +761,31 @@ html.zpm-intro-on .zi:not(.zi-run) {
 
 /* ── сцена: базовые состояния ── */
 
+/* слой с персонажами: его положение считает home.js так, чтобы он совпадал с SVG-сценой */
+.zi-stage {
+  position: absolute;
+  top: var(--ry, 0);
+  left: var(--rx, 0);
+  width: var(--rw, 100%);
+  aspect-ratio: 16 / 9;
+  transition: opacity 0.6s;
+}
+
+.zi-rig {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+/* края кадра растворяются в темноте — на узких экранах не видно «прямоугольника» */
+.zi-rig .zr {
+  height: 100%;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 80%, transparent), linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 80%, transparent), linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
 .zi-dust circle {
   fill: #9bb4ff;
   opacity: 0.4;
@@ -795,133 +820,9 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 .zi-rkn,
-.zi-gate,
-.zi-ava {
+.zi-gate {
   opacity: 0;
   transition: opacity 0.9s;
-}
-
-/* РКН-тян: тень с красными глазами */
-.zi-fig,
-.zi-eyes,
-.zi-pupils,
-.zi-shards path {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-.zi-fig {
-  opacity: 0;
-  transform: translateY(70px) scale(0.96);
-  transition: opacity 1.1s, transform 1.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.zi-body,
-.zi-tail path:first-child {
-  fill: url(#zi-shadow);
-  stroke: rgba(255, 70, 100, 0.32);
-  stroke-width: 1.5;
-}
-
-.zi-neck {
-  stroke: none !important;
-}
-
-.zi-body {
-  stroke: rgba(255, 70, 100, 0.22) !important;
-}
-
-.zi-face {
-  fill: #0b0610;
-  stroke: rgba(255, 90, 116, 0.18);
-  stroke-width: 1.2;
-}
-
-.zi-bangs {
-  fill: #140b1f;
-  stroke: rgba(255, 90, 116, 0.38);
-  stroke-width: 1.6;
-  stroke-linejoin: round;
-}
-
-.zi-finger {
-  stroke: rgba(255, 110, 135, 0.6) !important;
-  stroke-width: 3 !important;
-}
-
-.zi-brow {
-  stroke: rgba(255, 90, 116, 0.55) !important;
-  stroke-width: 2.4 !important;
-}
-
-.zi-strand {
-  fill: rgba(255, 70, 100, 0.07);
-}
-
-.zi-tail {
-  animation: zi-sway 4.2s ease-in-out infinite alternate;
-}
-
-.zi-tail-l {
-  transform-origin: 738px 104px;
-}
-
-.zi-tail-r {
-  transform-origin: 862px 104px;
-  animation-delay: -2.1s;
-}
-
-@keyframes zi-sway {
-  from { transform: rotate(-3.5deg); }
-  to { transform: rotate(3deg); }
-}
-
-.zi-rim path {
-  fill: none;
-  stroke: rgba(255, 90, 116, 0.42);
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.zi-rim path:last-child {
-  fill: rgba(255, 59, 92, 0.12);
-}
-
-.zi-band path {
-  fill: #2a0712;
-  stroke: rgba(255, 90, 116, 0.6);
-  stroke-width: 1.5;
-}
-
-.zi-band text {
-  fill: #ff6b83;
-  font: 700 13px var(--mono);
-  letter-spacing: 0.12em;
-}
-
-.zi-clips path {
-  fill: #ff3b5c;
-  filter: drop-shadow(0 0 6px #ff3b5c);
-  animation: zi-clip 2.4s ease-in-out infinite alternate;
-}
-
-@keyframes zi-clip {
-  to { opacity: 0.45; }
-}
-
-.zi-eyes {
-  opacity: 0;
-  transform: scaleY(0.05);
-}
-
-.zi-eye {
-  fill: #ff5a74;
-  filter: drop-shadow(0 0 6px #ff2b4f) drop-shadow(0 0 16px rgba(255, 43, 79, 0.8));
-}
-
-.zi-pupils ellipse {
-  fill: #fff2f4;
 }
 
 .zi-halo {
@@ -931,12 +832,12 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 @keyframes zi-halo {
-  to { opacity: 0.28; transform: scale(1.06); }
+  to { opacity: 0.3; transform: scale(1.06); }
 }
 
 .zi-mist ellipse {
   fill: url(#zi-glow-red);
-  opacity: 0.12;
+  opacity: 0.14;
   animation: zi-mist 7s ease-in-out infinite alternate;
 }
 
@@ -951,33 +852,11 @@ html.zpm-intro-on .zi:not(.zi-run) {
 .zi-gaze path {
   fill: none;
   stroke: #ff3b5c;
-  stroke-width: 2;
+  stroke-width: 2.5;
   stroke-linecap: round;
   stroke-dasharray: 8 10;
   opacity: 0;
-  filter: drop-shadow(0 0 4px #ff3b5c);
-}
-
-.zi-shards path {
-  fill: #140b1f;
-  stroke: #ff5a74;
-  stroke-width: 2;
-  opacity: 0;
-}
-
-.zi-strings path {
-  fill: none;
-  stroke: rgba(255, 90, 116, 0.7);
-  stroke-width: 2;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-}
-
-.zi-shards path {
-  fill: #2a0610;
-  stroke: #ff5a74;
-  stroke-width: 2;
-  opacity: 0;
+  filter: drop-shadow(0 0 5px #ff3b5c);
 }
 
 .zi-gate rect {
@@ -1012,8 +891,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 
 .zi-hit rect,
 .zi-trick > *,
-.zi-cut,
-.zi-sparks {
+.zi-cut {
   opacity: 0;
 }
 
@@ -1027,19 +905,6 @@ html.zpm-intro-on .zi:not(.zi-run) {
 .zi-fake text {
   fill: var(--vio);
   font: 600 16px var(--mono);
-}
-
-.zi-sparks path {
-  fill: none;
-  stroke: var(--gold);
-  stroke-width: 3;
-  stroke-linecap: round;
-}
-
-.zi-ava-ring {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: zi-spin 14s linear infinite;
 }
 
 /* ── шаг 1: интернет ── */
@@ -1085,69 +950,20 @@ html.zpm-intro-on .zi:not(.zi-run) {
   transition: opacity 0.5s;
 }
 
-/* ── шаг 2: РКН-тян ── */
+/* ── шаг 2: РКН-тян выходит из тьмы ── */
 
 .zi.s2 .zi-rkn {
   opacity: 1;
 }
 
-.zi.s2 .zi-fig {
-  opacity: 1;
-  transform: none;
+.zi.s2 .zi-rig-rkn {
+  animation: zi-emerge 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
 }
 
-/* нависает: медленно приближается, пока на неё смотрят */
-.zi[data-cur="2"] .zi-figin,
-.zi[data-cur="3"] .zi-figin {
-  animation: zi-loom 5s ease-in-out forwards;
-}
-
-.zi-figin {
-  transform-box: view-box;
-  transform-origin: 0 0;
-}
-
-@keyframes zi-loom {
-  from { transform: translate(800px, 60px) scale(1.3) translate(-800px, -60px); }
-  to { transform: translate(800px, 40px) scale(1.4) translate(-800px, -60px); }
-}
-
-.zi-grin {
-  opacity: 0;
-}
-
-.zi-grin-glow {
-  fill: #ff3b5c;
-  filter: drop-shadow(0 0 6px #ff2b4f) drop-shadow(0 0 14px rgba(255, 43, 79, 0.7));
-}
-
-.zi-teeth {
-  fill: none;
-  stroke: #0b0610;
-  stroke-width: 1.6;
-}
-
-.zi.s2 .zi-grin {
-  opacity: 1;
-  transition: opacity 0.6s 1.5s;
-}
-
-.zi.s2 .zi-eyes {
-  animation: zi-eyes-open 0.45s 0.9s forwards, zi-blink 4s 1.6s infinite;
-}
-
-@keyframes zi-eyes-open {
-  0% { opacity: 1; transform: scaleY(0.05); }
-  100% { opacity: 1; transform: scaleY(1); }
-}
-
-@keyframes zi-blink {
-  0%, 44%, 52%, 100% { opacity: 1; transform: scaleY(1); }
-  48% { opacity: 1; transform: scaleY(0.08); }
-}
-
-.zi.s2 .zi-strings path {
-  animation: zi-draw 0.9s 1.1s ease-in forwards;
+@keyframes zi-emerge {
+  0% { opacity: 0; transform: scale(1.22) translateY(4%); filter: brightness(0) saturate(0); }
+  45% { opacity: 1; filter: brightness(0.35) saturate(0.6); }
+  100% { opacity: 1; transform: none; filter: brightness(1) saturate(1); }
 }
 
 .zi.s2 .zi-gate {
@@ -1155,7 +971,21 @@ html.zpm-intro-on .zi:not(.zi-run) {
   transition-delay: 1.3s;
 }
 
-/* ── шаг 3: пакеты режут ── */
+/* ── шаг 3: смотрит в каждый пакет ── */
+
+.zi.s3 .zi-gaze path {
+  animation: zi-gaze 0.5s linear infinite, zi-gaze-on 2.2s forwards;
+}
+
+@keyframes zi-gaze {
+  to { stroke-dashoffset: -18; }
+}
+
+@keyframes zi-gaze-on {
+  0% { opacity: 0; }
+  15%, 85% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
 
 .zi.s3 .zi-hit rect {
   animation: zi-hit 1.5s cubic-bezier(0.3, 0, 0.6, 1) forwards;
@@ -1173,20 +1003,6 @@ html.zpm-intro-on .zi:not(.zi-run) {
   100% { opacity: 0; fill: var(--red); transform: translate(760px, 190px) rotate(-70deg); }
 }
 
-.zi.s3 .zi-gaze path {
-  animation: zi-gaze 0.5s linear infinite, zi-gaze-on 2.2s forwards;
-}
-
-@keyframes zi-gaze {
-  to { stroke-dashoffset: -18; }
-}
-
-@keyframes zi-gaze-on {
-  0% { opacity: 0; }
-  15%, 85% { opacity: 0.85; }
-  100% { opacity: 0; }
-}
-
 .zi.s3 .zi-cut {
   animation: zi-flash 0.32s 0.72s 4 ease-out;
 }
@@ -1197,7 +1013,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
   100% { opacity: 0; }
 }
 
-/* ── шаг 4: фейк летит РКН-тян, фрагменты проходят ── */
+/* ── шаг 4: фейк летит ей в лицо, она хватает пустоту ── */
 
 .zi.s4 .zi-fake {
   animation: zi-fake 2.6s cubic-bezier(0.4, 0, 0.4, 1) forwards;
@@ -1207,9 +1023,9 @@ html.zpm-intro-on .zi:not(.zi-run) {
   0% { opacity: 0; transform: translate(0, 0); }
   8% { opacity: 1; }
   34% { transform: translate(760px, 0); }
-  64% { opacity: 1; transform: translate(845px, -348px) scale(1); }
-  72% { opacity: 1; transform: translate(845px, -348px) scale(1.6); }
-  84%, 100% { opacity: 0; transform: translate(845px, -348px) scale(2.6); }
+  62% { opacity: 1; transform: translate(865px, -250px) scale(1); }
+  70% { opacity: 1; transform: translate(865px, -250px) scale(1.7); }
+  82%, 100% { opacity: 0; transform: translate(865px, -250px) scale(2.8); }
 }
 
 .zi.s4 .zi-fake rect {
@@ -1218,39 +1034,23 @@ html.zpm-intro-on .zi:not(.zi-run) {
 
 @keyframes zi-fake-red {
   0%, 60% { stroke: var(--vio); }
-  68%, 100% { stroke: var(--red); fill: rgba(255, 59, 92, 0.3); }
+  66%, 100% { stroke: var(--red); fill: rgba(255, 59, 92, 0.3); }
 }
 
-.zi.s4 .zi-eyes {
-  opacity: 1;
-  animation: zi-greedy 2.6s forwards;
+.zi.s4 .zi-rig-rkn > .zr {
+  animation: zi-lunge 2.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-@keyframes zi-greedy {
-  0%, 55% { transform: scale(1); }
-  66% { transform: scale(1.35, 1.6); }
-  100% { transform: scale(1.1); }
-}
-
-.zi.s4 .zi-pupils {
-  animation: zi-track 2.6s forwards;
-}
-
-@keyframes zi-track {
-  0%, 20% { transform: translate(0, 0); }
-  40% { transform: translate(0, 3px); }
-  62% { transform: translate(3px, 1px); }
-  100% { transform: translate(0, 0); }
-}
-
-.zi.s4 .zi-fig {
-  animation: zi-lean 2.6s forwards;
-}
-
-@keyframes zi-lean {
-  0%, 58% { transform: none; }
-  68% { transform: translateY(6px) rotate(-1.2deg); }
+@keyframes zi-lunge {
+  0%, 55% { transform: none; }
+  66% { transform: scale(1.1) translateY(2%); }
+  74% { transform: scale(1.07) translateY(1%) rotate(-0.6deg); }
   100% { transform: none; }
+}
+
+.zi.s4 .zi-rig-rkn .zr-eye::after {
+  animation: zr-streak 2.6s ease-out 1 forwards;
+  animation-delay: -1.4s;
 }
 
 .zi.s4 .zi-half-a {
@@ -1290,39 +1090,35 @@ html.zpm-intro-on .zi:not(.zi-run) {
   45%, 100% { transform: translateY(-74px); opacity: 0.4; }
 }
 
-/* ── шаг 5: Запрет-тян ── */
+/* ── шаг 5: РКН-тян глючит и исчезает, влетает Запрет-тян ── */
 
 .zi.s5 .zi-rkn {
   opacity: 0;
-  transition: opacity 0.7s 0.35s;
+  transition: opacity 0.6s;
 }
 
-.zi.s5 .zi-shards path {
-  animation: zi-shard 1.1s 0.15s cubic-bezier(0.2, 0.7, 0.4, 1) forwards;
+.zi.s5 .zi-rig-rkn {
+  animation: zi-glitch-out 0.9s steps(1) forwards;
 }
 
-.zi-shards path:nth-child(1) { --sx: -120px; --sy: -150px; --sr: -40deg; }
-.zi-shards path:nth-child(2) { --sx: 140px; --sy: -150px; --sr: 50deg; }
-.zi-shards path:nth-child(3) { --sx: 200px; --sy: 40px; --sr: 70deg; }
-.zi-shards path:nth-child(4) { --sx: 30px; --sy: 200px; --sr: -30deg; }
-.zi-shards path:nth-child(5) { --sx: -200px; --sy: 90px; --sr: 60deg; }
-.zi-shards path:nth-child(6) { --sx: -190px; --sy: -60px; --sr: -80deg; }
-
-@keyframes zi-shard {
-  0% { opacity: 1; transform: none; }
-  100% { opacity: 0; transform: translate(var(--sx), var(--sy)) rotate(var(--sr)); }
+@keyframes zi-glitch-out {
+  0% { opacity: 1; clip-path: inset(0); transform: none; filter: none; }
+  12% { clip-path: inset(10% 0 55% 0); transform: translateX(-3%); filter: hue-rotate(90deg); }
+  24% { clip-path: inset(40% 0 20% 0); transform: translateX(4%); filter: saturate(3); }
+  36% { clip-path: inset(0 0 70% 0); transform: translateX(-6%); }
+  48% { clip-path: inset(60% 0 5% 0); transform: translateX(5%); opacity: 0.8; }
+  60% { clip-path: inset(25% 0 45% 0); transform: translateX(-2%) scaleY(1.05); opacity: 0.6; }
+  72% { clip-path: inset(48% 0 48% 0); transform: scaleX(1.4); opacity: 0.5; }
+  84%, 100% { clip-path: inset(50% 0 50% 0); opacity: 0; }
 }
 
-.zi.s5 .zi-strings {
-  animation: zi-fall 0.9s 0.2s ease-in forwards;
+.zi.s5 .zi-rig-zt {
+  animation: zi-enter 1.2s 0.45s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
 }
 
-@keyframes zi-fall {
-  to { opacity: 0; transform: translateY(140px); }
-}
-
-.zi.s5 .zi-sparks {
-  animation: zi-flash 0.45s 0.1s 3 ease-out;
+@keyframes zi-enter {
+  from { opacity: 0; transform: translateX(-38%) rotate(-5deg) scale(0.9); }
+  to { opacity: 1; transform: none; }
 }
 
 .zi.s5 .zi-gate-top {
@@ -1341,17 +1137,32 @@ html.zpm-intro-on .zi:not(.zi-run) {
   transition: opacity 0.3s;
 }
 
-.zi.s5 .zi-ava {
-  opacity: 1;
-  transition: opacity 0.6s 0.5s;
-}
-
 .zi.s5 .zi-flow-2 rect {
   animation: zi-run 1.9s 0.8s linear infinite;
 }
 
+.zi[data-cur="6"] .zi-stage,
+.zi[data-cur="7"] .zi-stage,
+.zi[data-cur="8"] .zi-stage {
+  opacity: 0;
+}
+
+.zi[data-cur="9"] .zi-stage {
+  opacity: 0.32;
+}
+
 .zi[data-cur="9"] .zi-scene {
   opacity: 0.3;
+}
+
+/* лицо Запрет-тян в круге героя полёта */
+.zi-hero img {
+  position: absolute;
+  top: -78%;
+  left: -236%;
+  width: 540%;
+  max-width: none;
+  height: auto;
 }
 
 /* прогресс-полоски: текущая заполняется, пройденные — полные */
@@ -1713,134 +1524,382 @@ html.zpm-intro-on .zi:not(.zi-run) {
   text-align: center;
 }
 
-/* лента-провод */
-.zh-band {
+/* ═══════════════════════════════════════════════════════════════════
+   Персонажи: слоёные риги РКН-тян и Запрет-тян (заставка и дуэль)
+   Координаты слоёв — в системе 1600×900, как у сцены заставки.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.zr {
   position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.zr-in {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+  animation: zr-breathe 4.2s ease-in-out infinite;
+}
+
+.zpm-home .zr-l {
+  position: absolute;
+  top: calc(var(--y) / 9 * 1%);
+  left: calc(var(--x) / 16 * 1%);
+  width: calc(var(--w) / 16 * 1%);
+  max-width: none;
+  height: calc(var(--h) / 9 * 1%);
+  transform-origin: var(--o, 50% 50%);
+  pointer-events: none;
+  user-select: none;
+}
+
+@keyframes zr-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-0.6%) scale(1.008); }
+}
+
+/* контровой свет */
+.zr-rim {
+  mix-blend-mode: screen;
+  animation: zr-rim 2.8s ease-in-out infinite alternate;
+}
+
+.zr-rkn .zr-rim {
+  animation: zr-rim-rkn 3.4s linear infinite;
+}
+
+@keyframes zr-rim {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+@keyframes zr-rim-rkn {
+  0%, 18%, 22%, 60%, 100% { opacity: 0.9; }
+  20% { opacity: 0.35; }
+  61% { opacity: 0.5; }
+  63% { opacity: 1; }
+}
+
+/* волосы */
+.zr-hair {
+  animation: zr-sway var(--sd, 4.2s) ease-in-out infinite alternate;
+  animation-delay: var(--sdl, 0s);
+}
+
+@keyframes zr-sway {
+  from { transform: rotate(var(--sa, -1.4deg)) skewX(var(--sk, 0deg)); }
+  to { transform: rotate(var(--sb, 1.2deg)) skewX(calc(var(--sk, 0deg) * -1)); }
+}
+
+.zr-rkn .zr-hair-l { --sa: 1.6deg; --sb: -1.2deg; --sk: 0.8deg; --sd: 4.6s; }
+.zr-rkn .zr-hair-r { --sa: -1.6deg; --sb: 1.3deg; --sk: -0.8deg; --sd: 4.1s; --sdl: -1.7s; }
+.zr-rkn .zr-hair-t { --sa: -0.9deg; --sb: 0.9deg; --sd: 3.3s; --sdl: -0.8s; }
+.zr-zt .zr-hair-r { --sa: -2.2deg; --sb: 1.6deg; --sk: -1deg; --sd: 3.2s; }
+.zr-zt .zr-hair-t { --sa: -3deg; --sb: 2.4deg; --sd: 2.4s; --sdl: -0.6s; }
+.zr-zt .zr-hair-l { --sa: 1.8deg; --sb: -1.4deg; --sk: 0.8deg; --sd: 3.6s; --sdl: -1.2s; }
+
+/* руки */
+.zr-rkn .zr-hand {
+  animation: zr-grab 2.9s cubic-bezier(0.5, 0, 0.3, 1) infinite;
+}
+
+.zr-rkn .zr-hand-l { --r: -5deg; --r2: -2deg; }
+.zr-rkn .zr-hand-r { --r: 5deg; --r2: 2deg; animation-delay: -1.45s; }
+
+@keyframes zr-grab {
+  0%, 100% { transform: scale(1) rotate(0); }
+  38% { transform: scale(1.12) rotate(var(--r)); }
+  46% { transform: scale(1.1) rotate(var(--r2)); }
+  52% { transform: scale(1.13) rotate(var(--r)); }
+  70% { transform: scale(1.03) rotate(0); }
+}
+
+.zr-zt .zr-hand {
+  animation: zr-peace 1.15s ease-in-out infinite;
+}
+
+.zr-zt .zr-hand-l { --r: -4deg; }
+.zr-zt .zr-hand-r { --r: 3.5deg; animation-delay: -0.57s; }
+
+@keyframes zr-peace {
+  0%, 100% { transform: rotate(0) translateY(0) scale(1); }
+  50% { transform: rotate(var(--r)) translateY(-1.5%) scale(1.03); }
+}
+
+/* глаза */
+.zr-eye {
+  position: absolute;
+  top: calc(var(--ey) / 9 * 1%);
+  left: calc(var(--ex) / 16 * 1%);
+  width: 6.5%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 4%, var(--ec) 12%, color-mix(in srgb, var(--ec) 40%, transparent) 32%, transparent 68%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: zr-eye 2.2s ease-in-out infinite;
+}
+
+.zr-eye-1 {
+  animation-delay: -0.3s;
+}
+
+@keyframes zr-eye {
+  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(0.95); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
+}
+
+/* световой шлейф, как у светящихся глаз в аниме */
+.zr-eye::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 340%;
+  height: 12%;
+  content: "";
+  border-radius: 50%;
+  background: linear-gradient(90deg, transparent, var(--ec) 40%, #fff 50%, var(--ec) 60%, transparent);
+  opacity: 0;
+  transform: translate(-50%, -50%) scaleX(0);
+  animation: zr-streak 5.2s ease-out infinite;
+}
+
+.zr-zt .zr-eye::after {
+  width: 120%;
+  height: 120%;
+  background:
+    linear-gradient(90deg, transparent 44%, #fff 50%, transparent 56%),
+    linear-gradient(0deg, transparent 44%, #fff 50%, transparent 56%);
+  animation: zr-twinkle 3.1s ease-in-out infinite;
+}
+
+.zr-zt .zr-eye-1::after {
+  animation-delay: -1.5s;
+}
+
+@keyframes zr-streak {
+  0%, 78% { opacity: 0; transform: translate(-50%, -50%) scaleX(0); }
+  84% { opacity: 1; transform: translate(-50%, -50%) scaleX(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scaleX(1.5); }
+}
+
+@keyframes zr-twinkle {
+  0%, 70%, 100% { opacity: 0; transform: translate(-50%, -50%) rotate(0) scale(0.3); }
+  80% { opacity: 1; transform: translate(-50%, -50%) rotate(45deg) scale(1); }
+}
+
+/* ── дуэль на главной ── */
+
+.zd {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
   margin-top: clamp(40px, 6vw, 72px);
-  padding-bottom: 20px;
+  overflow: hidden;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(10, 16, 34, 0.6), rgba(10, 16, 34, 0.2));
+  background:
+    radial-gradient(38rem 24rem at 22% 62%, rgba(59, 130, 255, 0.24), transparent 70%),
+    radial-gradient(38rem 24rem at 78% 62%, rgba(255, 59, 92, 0.2), transparent 70%),
+    linear-gradient(180deg, #04060f, #070a18);
 }
 
-.zh-band svg {
-  display: block;
+.zd-side {
+  position: relative;
+  flex: none;
+  width: 60%;
+  transition: opacity 1.2s, transform 1.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.zd-left {
+  z-index: 1;
+  margin-right: -10%;
+}
+
+.zd-right {
+  margin-left: -10%;
+  transition-delay: 0.15s;
+}
+
+.zd-side .zr {
+  -webkit-mask-image: linear-gradient(to right, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
+  mask-image: linear-gradient(to right, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+.zd-right .zr {
+  -webkit-mask-image: linear-gradient(to left, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
+  mask-image: linear-gradient(to left, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
+}
+
+.zd-js .zd-left {
+  opacity: 0;
+  transform: translateX(-22%) rotate(-2deg);
+}
+
+.zd-js .zd-right {
+  opacity: 0;
+  transform: translateX(22%) rotate(2deg);
+}
+
+.zd-js.zd-on .zd-side {
+  opacity: 1;
+  transform: none;
+}
+
+.zd-on .zd-side .zr {
+  animation: zd-float 6s ease-in-out infinite alternate;
+}
+
+.zd-on .zd-right .zr {
+  animation-delay: -3s;
+}
+
+@keyframes zd-float {
+  from { transform: translateY(0); }
+  to { transform: translateY(-2%); }
+}
+
+.zd-card {
+  position: absolute;
+  bottom: 9%;
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  max-width: 280px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--line2);
+  border-radius: 16px;
+  background: rgba(4, 6, 15, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.zd-card b {
+  font: 700 18px var(--disp);
+}
+
+.zd-card span {
+  color: var(--mut);
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+.zd-card-zt {
+  left: 10%;
+  border-color: rgba(79, 209, 255, 0.45);
+}
+
+.zd-card-zt b {
+  color: var(--cy);
+}
+
+.zd-card-rkn {
+  right: 10%;
+  border-color: rgba(255, 59, 92, 0.45);
+}
+
+.zd-card-rkn b {
+  color: #ff6b83;
+}
+
+.zd-vs {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: clamp(70px, 9vw, 120px);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.zd-vs svg {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: 150px;
+  height: 100%;
 }
 
-.zh-band p {
-  color: var(--dim);
-  font: 13px var(--mono);
-  text-align: center;
-}
-
-.zb-k {
-  padding: 1px 8px;
-  border-radius: 4px;
-}
-
-.zb-k-fake {
-  color: var(--vio);
-  border: 1px dashed var(--vio);
-}
-
-.zb-k-real {
-  color: #031024;
-  background: var(--cy);
-}
-
-.zb-wire {
-  stroke: rgba(79, 209, 255, 0.5);
-  stroke-width: 3;
-}
-
-.zb-ticks {
-  stroke: var(--cy);
-  stroke-width: 10;
-  stroke-dasharray: 2 38;
-  opacity: 0.2;
-  animation: zi-ticks 1.2s linear infinite;
-}
-
-.zb-gate rect {
-  fill: #160a18;
-  stroke: var(--red);
-  stroke-width: 2;
-}
-
-.zb-gate .zb-beam {
-  fill: var(--red);
-  stroke: none;
-  animation: zb-scan 1.4s ease-in-out infinite alternate;
-}
-
-@keyframes zb-scan {
-  from { transform: translateY(-36px); }
-  to { transform: translateY(36px); }
-}
-
-.zb-gate text {
-  fill: #ff6b83;
-  font: 700 13px var(--mono);
-  letter-spacing: 0.2em;
-}
-
-.zb-pk {
-  animation: zb-move 6s linear infinite;
-  animation-delay: var(--d);
-}
-
-@keyframes zb-move {
-  from { transform: translateX(0); }
-  to { transform: translateX(1680px); }
-}
-
-.zb-real rect {
-  fill: var(--cy);
-  animation: zb-split-a 6s linear infinite;
-  animation-delay: var(--d);
-}
-
-.zb-real rect:last-child {
-  animation-name: zb-split-b;
-}
-
-@keyframes zb-split-a {
-  0%, 44% { transform: translateY(0); }
-  47%, 53% { transform: translate(-4px, -14px); }
-  56%, 100% { transform: translateY(0); }
-}
-
-@keyframes zb-split-b {
-  0%, 44% { transform: translateY(0); }
-  47%, 53% { transform: translate(4px, 14px); }
-  56%, 100% { transform: translateY(0); }
-}
-
-.zb-fake {
-  animation-name: zb-fake;
-}
-
-.zb-fake rect {
+.zd-bolt {
   fill: none;
-  stroke: var(--vio);
-  stroke-width: 2;
-  stroke-dasharray: 4 3;
-  animation: zb-fake-c 6s linear infinite;
-  animation-delay: var(--d);
+  stroke: #e8f6ff;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px #4fd1ff) drop-shadow(0 0 14px #ff3b5c);
+  opacity: 0;
+  animation: zd-bolt 1.9s steps(1) infinite;
 }
 
-@keyframes zb-fake {
-  0% { transform: translateX(0); opacity: 1; }
-  49% { transform: translateX(815px); opacity: 1; }
-  58% { transform: translate(815px, -40px); opacity: 0; }
-  100% { transform: translate(815px, -40px); opacity: 0; }
+.zd-bolt-b {
+  animation-delay: -0.95s;
 }
 
-@keyframes zb-fake-c {
-  0%, 47% { stroke: var(--vio); fill: none; }
-  50%, 100% { stroke: var(--red); fill: rgba(255, 59, 92, 0.35); }
+@keyframes zd-bolt {
+  0%, 60%, 100% { opacity: 0; }
+  62%, 70% { opacity: 1; }
+  66% { opacity: 0.2; }
+}
+
+.zd-vs span {
+  position: relative;
+  font: 900 clamp(28px, 4.2vw, 60px) var(--disp);
+  letter-spacing: -0.04em;
+  background: linear-gradient(100deg, var(--cy), #fff 50%, #ff5a74);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 18px rgba(155, 123, 255, 0.8));
+  animation: zd-vs 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes zd-vs {
+  to { transform: scale(1.08); }
+}
+
+@media (max-width: 760px) {
+  .zd {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .zd-side {
+    width: 100%;
+    margin: 0 !important;
+  }
+
+  .zd-side .zr,
+  .zd-right .zr {
+    -webkit-mask-image: linear-gradient(to top, transparent, #000 25%);
+    mask-image: linear-gradient(to top, transparent, #000 25%);
+  }
+
+  .zd-card {
+    right: auto;
+    left: 12px;
+    bottom: 5%;
+    max-width: 54%;
+    padding: 8px 12px;
+  }
+
+  .zd-card b {
+    font-size: 15px;
+  }
+
+  .zd-card span {
+    font-size: 12px;
+  }
+
+  .zd-card-rkn {
+    right: 16px;
+    left: auto;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -3172,10 +3231,6 @@ html.zpm-intro-on .zi:not(.zi-run) {
     display: none;
   }
 
-  .zh-band svg {
-    height: 110px;
-  }
-
   .zi-ctl {
     top: 30px;
     right: 12px;
@@ -3228,7 +3283,6 @@ html.zpm-intro-on .zi:not(.zi-run) {
   .zh-free::after,
   .zh-sparks,
   .zh-scan,
-  .zb-pk,
   .zci-box,
   .zci-track-lit {
     display: none;
@@ -3241,20 +3295,4 @@ html.zpm-intro-on .zi:not(.zi-run) {
   .zci-hash {
     clip-path: none;
   }
-}
-
-/* Временная РКН-тян: только тьма и глаза. Контур тела скрыт, пока нет
-   нормальной иллюстрации — её заменят отдельным коммитом. */
-.zi-body,
-.zi-tail path:first-child,
-.zi-face,
-.zi-bangs {
-  fill: #05030a;
-  stroke: none !important;
-}
-
-.zi-strand,
-.zi-rim,
-.zi-band {
-  display: none;
 }

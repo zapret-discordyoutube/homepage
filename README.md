@@ -24,6 +24,7 @@
 | `public/assets/zapret-moe/home.js` | заставка, синтезированная музыка к ней (Web Audio, без файлов) и «Пульс разработки» |
 | `public/assets/zapret-moe/site.css` | то немногое, что нужно на всех страницах |
 | `public/assets/zapret-moe/fonts/` | Unbounded и Onest (OFL), кириллица и латиница |
+| `public/assets/zapret-moe/chars/` | РКН-тян и Запрет-тян, нарезанные на слои для анимации: основа, кисти рук, пряди волос, контровой свет. Координаты слоёв — в системе 1600×900, их точки вращения прописаны в разметке ригов в `home.tmpl` |
 | `public/assets/zapret-moe/shot-gui.webp` | скриншот Zapret 2 GUI — единственная картинка, которой нет в репозитории проекта |
 | `public/assets/img/` | логотип и фавиконки всего сайта |
 | `public/robots.txt` | правила для поисковиков |

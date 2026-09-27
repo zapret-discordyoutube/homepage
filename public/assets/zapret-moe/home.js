@@ -248,79 +248,165 @@
   }).catch(function () {});
 
   /* ── Музыка: синтезируется на лету через Web Audio, без файлов ──────────
-     Медленная часть — тёмный пэд, суб-бас и «сердцебиение», пока РКН душит
-     провода. Быстрая — бочка, хэты, бас и арпеджио, когда появляется Запрет-тян. */
+     Интернет — тревожный пэд. РКН-тян — хоррор: гул в тритон, «браам»,
+     сердцебиение, скрежет. Запрет-тян — нарастание и барабаны.
+     Финал — медная тема «ту-ду ту-ту-ту ду-ду-ду» в ре мажоре: мы справились. */
   var music = (function () {
-    var ctx = null, master = null, noise = null, timer = null;
-    var mode = 'slow', step16 = 0, bar = 0, next = 0;
-    var CHORDS = [[45, 0], [41, 1], [48, 1], [43, 1]]; // Am F C G
+    var ctx = null, master = null, wet = null, noise = null, loop = null;
+    var mode = 'calm', held = [], next = 0, beat = 0, startId = 0;
 
     function hz(m) { return 440 * Math.pow(2, (m - 69) / 12) }
-    function tones(c) { return [c[0], c[0] + (c[1] ? 4 : 3), c[0] + 7] }
-    function env(g, t, a, peak, d) {
+    function now() { return ctx.currentTime }
+
+    function out(node, rev) {
+      node.connect(master);
+      if (rev) { var s = ctx.createGain(); s.gain.value = rev; node.connect(s); s.connect(wet) }
+    }
+    // голос: несколько расстроенных пил через фильтр — струнные, медь, пэды
+    function voice(o) {
+      var t = o.t, g = ctx.createGain(), f = ctx.createBiquadFilter();
+      f.type = 'lowpass'; f.Q.value = o.q || 0.7;
+      f.frequency.setValueAtTime(o.cut || 1200, t);
+      if (o.cutTo) f.frequency.linearRampToValueAtTime(o.cutTo, t + (o.cutAt || o.a || 0.1));
+      if (o.cutEnd) f.frequency.linearRampToValueAtTime(o.cutEnd, t + o.dur);
       g.gain.setValueAtTime(0.0001, t);
-      g.gain.exponentialRampToValueAtTime(peak, t + a);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
-    }
-    function osc(type, f, t, a, peak, d, cutoff) {
-      var o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = type; o.frequency.setValueAtTime(f, t);
-      if (cutoff) { var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = cutoff; o.connect(lp); lp.connect(g) } else o.connect(g);
-      g.connect(master);
-      env(g, t, a, peak, d);
-      o.start(t); o.stop(t + a + d + 0.05);
-    }
-    function kick(t, peak) {
-      var o = ctx.createOscillator(), g = ctx.createGain();
-      o.frequency.setValueAtTime(150, t);
-      o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
-      o.connect(g); g.connect(master);
-      env(g, t, 0.004, peak, 0.28);
-      o.start(t); o.stop(t + 0.35);
-    }
-    function hiss(t, type, f, peak, d) {
-      var s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
-      s.buffer = noise; fl.type = type; fl.frequency.value = f;
-      s.connect(fl); fl.connect(g); g.connect(master);
-      env(g, t, 0.002, peak, d);
-      s.start(t); s.stop(t + d + 0.05);
-    }
-    function tick(t, dur16) {
-      var s = step16 % 16, c = CHORDS[bar % 4], ch = tones(c);
-      if (mode === 'slow') {
-        if (s === 0) {
-          ch.forEach(function (m) {
-            osc('sawtooth', hz(m + 12), t, 1.2, 0.045, dur16 * 16, 700);
-            osc('sawtooth', hz(m + 12) * 1.004, t, 1.2, 0.03, dur16 * 16, 500);
-          });
-          osc('sine', hz(c[0] - 12), t, 0.6, 0.22, dur16 * 16, 0);
-        }
-        if (s === 0 || s === 3) kick(t, s === 0 ? 0.55 : 0.3);
-        if (s === 8) osc('triangle', 1760, t, 0.005, 0.045, 0.12, 0);
-        if (s === 10) osc('triangle', 1318.5, t, 0.005, 0.03, 0.1, 0);
-      } else if (mode === 'fast') {
-        if (s % 4 === 0) kick(t, 0.7);
-        if (s === 4 || s === 12) hiss(t, 'bandpass', 1600, 0.25, 0.16);
-        if (s % 2 === 1) hiss(t, 'highpass', 7500, s % 4 === 3 ? 0.08 : 0.04, 0.05);
-        if (s % 2 === 0) osc('sawtooth', hz(c[0] + (s % 8 === 6 ? 12 : 0)), t, 0.005, 0.16, dur16 * 1.6, 900);
-        var arp = [ch[0] + 24, ch[1] + 24, ch[2] + 24, ch[1] + 24];
-        osc('square', hz(arp[s % 4]), t, 0.004, 0.035, dur16 * 0.9, 2600);
-        if (s === 0) ch.forEach(function (m) { osc('sawtooth', hz(m + 12), t, 0.3, 0.025, dur16 * 15, 1200) });
+      g.gain.linearRampToValueAtTime(o.vol, t + (o.a || 0.05));
+      if (!o.hold) {
+        g.gain.setValueAtTime(o.vol, t + Math.max(o.a || 0.05, o.dur - (o.r || 0.3)));
+        g.gain.linearRampToValueAtTime(0.0001, t + o.dur);
       }
-      step16++;
-      if (step16 % 16 === 0) bar++;
+      f.connect(g); out(g, o.rev == null ? 0.35 : o.rev);
+      var oscs = (o.det || [-7, 7]).map(function (c) {
+        var s = ctx.createOscillator(); s.type = o.type || 'sawtooth';
+        s.frequency.setValueAtTime(o.f, t); s.detune.value = c;
+        if (o.glide) s.frequency.exponentialRampToValueAtTime(o.glide, t + o.dur);
+        if (o.vib) {
+          var l = ctx.createOscillator(), lg = ctx.createGain();
+          l.frequency.value = 5.5; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(o.vib, t + 0.25);
+          l.connect(lg); lg.connect(s.detune); l.start(t); l.stop(t + o.dur + 0.1);
+        }
+        s.connect(f); s.start(t); if (!o.hold) s.stop(t + o.dur + 0.05);
+        return s;
+      });
+      return { g: g, oscs: oscs };
     }
-    function schedule() {
-      if (mode === 'end' || ctx.state !== 'running') return;
-      var bpm = mode === 'fast' ? 132 : 72, dur16 = 60 / bpm / 4;
-      if (next < ctx.currentTime) next = ctx.currentTime + 0.05;
-      while (next < ctx.currentTime + 0.12) { tick(next, dur16); next += dur16 }
+    function release(v, sec) {
+      var t = now();
+      v.g.gain.cancelScheduledValues(t);
+      v.g.gain.setValueAtTime(v.g.gain.value, t);
+      v.g.gain.linearRampToValueAtTime(0.0001, t + sec);
+      v.oscs.forEach(function (s) { s.stop(t + sec + 0.05) });
     }
-    function finale() {
-      var t = ctx.currentTime + 0.05;
-      tones(CHORDS[0]).concat([57]).forEach(function (m) { osc('sawtooth', hz(m + 12), t, 0.05, 0.05, 2.4, 1800) });
-      kick(t, 0.6);
+    function hiss(t, type, f0, f1, vol, dur, q, rev) {
+      var s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = noise; s.loop = true; fl.type = type; fl.Q.value = q || 0.8;
+      fl.frequency.setValueAtTime(f0, t); fl.frequency.exponentialRampToValueAtTime(f1, t + dur);
+      g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + dur * 0.7); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+      s.connect(fl); fl.connect(g); out(g, rev == null ? 0.4 : rev);
+      s.start(t); s.stop(t + dur + 0.05);
     }
+    // удар: тайко/литавра — синус с падением высоты и шумовая «кожа»
+    function boom(t, vol, f) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.setValueAtTime(f || 90, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.5);
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+      o.connect(g); out(g, 0.3); o.start(t); o.stop(t + 1.2);
+      var s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), ng = ctx.createGain();
+      s.buffer = noise; fl.type = 'lowpass'; fl.frequency.value = 700;
+      ng.gain.setValueAtTime(vol * 0.5, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+      s.connect(fl); fl.connect(ng); out(ng, 0.3); s.start(t); s.stop(t + 0.3);
+    }
+    function heart(t) {
+      [0, 0.28].forEach(function (d, i) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.frequency.setValueAtTime(70, t + d); o.frequency.exponentialRampToValueAtTime(40, t + d + 0.15);
+        g.gain.setValueAtTime(i ? 0.35 : 0.5, t + d); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.3);
+        o.connect(g); out(g, 0.1); o.start(t + d); o.stop(t + d + 0.35);
+      });
+    }
+    // «браам» — низкая медь с раскрывающимся фильтром, как в трейлерах
+    function braam(t, vol) {
+      [26, 38, 45].forEach(function (m, i) {
+        voice({ t: t, f: hz(m), dur: 3.2, a: 0.08, r: 1.4, vol: (vol || 0.22) / (i + 1), cut: 120, cutTo: 1600, cutAt: 0.5, cutEnd: 180, det: [-12, 0, 12], rev: 0.5 });
+      });
+      voice({ t: t, f: hz(26), dur: 3, a: 0.05, r: 1.2, vol: 0.3, type: 'sine', det: [0], cut: 400, rev: 0.1 });
+      boom(t, 0.6, 70);
+    }
+    function scrape(t) { hiss(t, 'bandpass', 3200, 700, 0.12, 1.6, 14, 0.6) }
+
+    function stopHeld(sec) { held.forEach(function (v) { release(v, sec || 1.2) }); held = [] }
+
+    function enter(m) {
+      var t = now() + 0.05;
+      stopHeld(m === 'triumph' ? 0.6 : 1.4);
+      if (m === 'calm') {
+        [50, 53, 57, 64].forEach(function (n) { held.push(voice({ t: t, f: hz(n), a: 1.6, vol: 0.05, cut: 900, hold: 1, det: [-8, 8], rev: 0.6 })) });
+      }
+      if (m === 'horror') {
+        braam(t, 0.26);
+        held.push(voice({ t: t, f: hz(26), a: 2, vol: 0.12, cut: 260, hold: 1, det: [-10, 10] }));
+        held.push(voice({ t: t, f: hz(32), a: 2.5, vol: 0.07, cut: 300, hold: 1, det: [-14, 14] }));      // тритон
+        held.push(voice({ t: t + 0.8, f: hz(74), a: 2.5, vol: 0.018, cut: 3000, hold: 1, det: [-4, 4], rev: 0.8 }));
+        held.push(voice({ t: t + 0.8, f: hz(75), a: 2.5, vol: 0.015, cut: 3000, hold: 1, det: [-4, 4], rev: 0.8 })); // кластер полутоном
+      }
+      if (m === 'rise') {
+        hiss(t, 'highpass', 200, 9000, 0.3, 1.7, 1, 0.3);
+        voice({ t: t, f: hz(38), glide: hz(74), dur: 1.7, a: 1.4, r: 0.1, vol: 0.12, cut: 600, cutTo: 5000, cutAt: 1.6 });
+      }
+      if (m === 'drive') {
+        boom(t, 0.9, 100); braam(t, 0.12);
+        [38, 50, 53, 57].forEach(function (n) { held.push(voice({ t: t, f: hz(n), a: 0.8, vol: 0.05, cut: 1400, hold: 1, rev: 0.5 })) });
+        next = t + 0.3; beat = 0;
+      }
+      if (m === 'triumph') triumph(t);
+    }
+
+    // полёт: барабаны и остинато баса, 100 ударов в минуту
+    function tickDrive() {
+      var s8 = 60 / 100 / 2;
+      while (next < now() + 0.15) {
+        var b = beat % 16, t = next;
+        if (b === 0 || b === 3 || b === 6 || b === 8 || b === 11 || b === 14) boom(t, b === 0 || b === 8 ? 0.7 : 0.4, b % 8 ? 120 : 90);
+        if (b % 2 === 1) hiss(t, 'highpass', 6000, 7000, 0.05, 0.08, 1, 0.1);
+        var bass = [38, 38, 41, 38, 36, 38, 45, 38][b % 8];
+        voice({ t: t, f: hz(bass), dur: s8 * 0.9, a: 0.01, r: 0.1, vol: 0.14, cut: 500, cutTo: 900, cutAt: 0.02, cutEnd: 300, rev: 0.1 });
+        next += s8; beat++;
+      }
+    }
+    function tickHorror() {
+      while (next < now() + 0.15) {
+        var t = next;
+        heart(t);
+        if (beat % 3 === 2) scrape(t + 0.6);
+        if (beat % 2 === 1) voice({ t: t + 0.9, f: hz(86), dur: 0.5, a: 0.005, r: 0.45, vol: 0.02, type: 'sine', det: [0], cut: 8000, rev: 0.9 });
+        next += 1.6; beat++;
+      }
+    }
+
+    // финал: «ту-ду ту-ту-ту ду-ду-ду»
+    function triumph(t) {
+      var q = 0.36;
+      boom(t, 1, 80); hiss(t, 'highpass', 5000, 9000, 0.12, 2.6, 0.7, 0.6);
+      [50, 54, 57].forEach(function (n) { voice({ t: t, f: hz(n), dur: 1.9, a: 0.04, r: 0.6, vol: 0.07, cut: 500, cutTo: 2400, cutAt: 0.08, cutEnd: 1100, vib: 6 }) });
+      var mel = [[62, 0, 1], [69, 1, 1], [66, 2, 1 / 3], [67, 2 + 1 / 3, 1 / 3], [69, 2 + 2 / 3, 1 / 3], [74, 3, 1], [73, 4, 1], [74, 5, 3.5]];
+      mel.forEach(function (n) {
+        voice({ t: t + n[1] * q, f: hz(n[0]), dur: n[2] * q * 0.95 + (n[2] > 1 ? 0.6 : 0), a: 0.03, r: n[2] > 1 ? 0.9 : 0.08, vol: 0.11, cut: 700, cutTo: 3200, cutAt: 0.06, cutEnd: 1500, vib: n[2] > 1 ? 10 : 0, rev: 0.45 });
+      });
+      boom(t + 3 * q, 0.6, 90);
+      [43, 47, 50].forEach(function (n) { voice({ t: t + 3 * q, f: hz(n), dur: 0.8, a: 0.04, r: 0.3, vol: 0.06, cut: 600, cutTo: 2200, cutAt: 0.08 }) });
+      boom(t + 5 * q, 1, 70); braam(t + 5 * q, 0.1);
+      [38, 50, 54, 57, 62].forEach(function (n) { voice({ t: t + 5 * q, f: hz(n), dur: 2.6, a: 0.05, r: 1.4, vol: 0.06, cut: 600, cutTo: 2600, cutAt: 0.1, cutEnd: 900, vib: 8 }) });
+    }
+
+    function run() {
+      clearInterval(loop);
+      loop = setInterval(function () {
+        if (!ctx || ctx.state !== 'running') return;
+        if (mode === 'drive') tickDrive();
+        else if (mode === 'horror') tickHorror();
+      }, 40);
+    }
+
     return {
       running: function () { return !!(ctx && ctx.state === 'running') },
       start: function (m) {
@@ -331,31 +417,38 @@
           var comp = ctx.createDynamicsCompressor();
           master = ctx.createGain(); master.gain.value = 0.0001;
           master.connect(comp); comp.connect(ctx.destination);
-          noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
-          var d = noise.getChannelData(0);
-          for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+          // реверберация: свёртка со сгенерированным хвостом в 3 секунды
+          var len = ctx.sampleRate * 3, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+          for (var ch = 0; ch < 2; ch++) { var d = ir.getChannelData(ch); for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3) }
+          var conv = ctx.createConvolver(); conv.buffer = ir;
+          wet = ctx.createGain(); wet.gain.value = 0.8; wet.connect(conv); conv.connect(master);
+          noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+          var nd = noise.getChannelData(0);
+          for (var j = 0; j < nd.length; j++) nd[j] = Math.random() * 2 - 1;
         }
         var p = ctx.resume();
         mode = m || mode;
-        next = ctx.currentTime + 0.05; step16 = 0; bar = 0;
-        master.gain.cancelScheduledValues(ctx.currentTime);
-        master.gain.setTargetAtTime(0.55, ctx.currentTime, 0.3);
-        clearInterval(timer); timer = setInterval(schedule, 25);
+        master.gain.cancelScheduledValues(now());
+        master.gain.setTargetAtTime(0.7, now(), 0.3);
+        var id = ++startId;
+        var go = function () { if (id !== startId) return; next = now() + 0.1; beat = 0; enter(mode); run() };
+        if (ctx.state === 'running') go(); else if (p && p.then) p.then(go);
         return p;
       },
       mode: function (m) {
         if (m === mode) return;
-        var was = mode; mode = m;
+        mode = m;
         if (!ctx || ctx.state !== 'running') return;
-        if (m === 'fast' && was === 'slow') { step16 = 0; bar = 0; next = ctx.currentTime + 0.05; hiss(next, 'highpass', 900, 0.3, 0.6) }
-        if (m === 'end') finale();
+        next = now() + 0.1; beat = 0;
+        enter(m);
       },
       stop: function (fade) {
         if (!ctx) return;
-        clearInterval(timer);
-        master.gain.cancelScheduledValues(ctx.currentTime);
-        master.gain.setTargetAtTime(0.0001, ctx.currentTime, (fade || 0.4) / 3);
-        setTimeout(function () { if (ctx) ctx.suspend() }, (fade || 0.4) * 1000 + 200);
+        clearInterval(loop);
+        stopHeld(fade || 0.4);
+        master.gain.cancelScheduledValues(now());
+        master.gain.setTargetAtTime(0.0001, now(), (fade || 0.4) / 3);
+        setTimeout(function () { if (ctx) ctx.suspend() }, (fade || 0.4) * 1000 + 300);
       }
     };
   })();
@@ -364,12 +457,12 @@
   var intro = document.getElementById('zpm-intro');
   var replay = document.getElementById('zpm-replay');
   // длительность слайдов: 6–7 — полёт мимо проектов, 8 — год в цифрах
-  var steps = [1800, 2300, 2300, 2700, 3000, 3800, 3300, 4300, 2600];
+  var steps = [2200, 2600, 2400, 2800, 3000, 3800, 3300, 4300, 3900];
   var cur = 0, timer = null, running = false, muted = false;
   try { muted = localStorage.getItem('zpm-mute') === '1' } catch (e) {}
 
   function remember() { try { localStorage.setItem('zpm-intro', '1') } catch (e) {} }
-  function musicMode(n) { return n <= 4 ? 'slow' : n <= 8 ? 'fast' : 'end' }
+  function musicMode(n) { return n === 1 ? 'calm' : n <= 4 ? 'horror' : n === 5 ? 'rise' : n <= 8 ? 'drive' : 'triumph' }
 
   function warp() {
     var w = intro.querySelector('.zi-warp');
@@ -464,9 +557,21 @@
     if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); unlockSound(); go(cur + 1) }
   }
 
+  // слой с персонажами повторяет масштаб и сдвиг SVG-сцены (preserveAspectRatio: meet)
+  function layout() {
+    var scene = intro.querySelector('.zi-scene'), stage = intro.querySelector('.zi-stage');
+    var vb = innerWidth < innerHeight * 0.9 ? [420, 20, 760, 700] : [0, 0, 1600, 900];
+    if (scene) scene.setAttribute('viewBox', vb.join(' '));
+    if (!stage) return;
+    var W = innerWidth, H = innerHeight, s = Math.min(W / vb[2], H / vb[3]);
+    stage.style.setProperty('--rx', ((W - vb[2] * s) / 2 - vb[0] * s) + 'px');
+    stage.style.setProperty('--ry', ((H - vb[3] * s) / 2 - vb[1] * s) + 'px');
+    stage.style.setProperty('--rw', (1600 * s) + 'px');
+  }
+
   function start() {
-    var scene = intro.querySelector('.zi-scene');
-    if (scene) scene.setAttribute('viewBox', innerWidth < innerHeight * 0.9 ? '420 20 760 700' : '0 0 1600 900');
+    layout();
+    intro.querySelectorAll('.zi-stage img, .zi-hero img').forEach(function (im) { im.loading = 'eager' });
     warp();
     loadStats().catch(function () {});
     intro.className = 'zi';
@@ -476,9 +581,11 @@
     running = true;
     document.addEventListener('keydown', onKey);
     go(1);
-    if (!muted) music.start('slow');
+    if (!muted) music.start('calm');
     syncSoundUi();
   }
+
+  window.addEventListener('resize', function () { if (running) layout() });
 
   if (intro) {
     intro.addEventListener('click', function (e) {
@@ -496,5 +603,15 @@
     if (root.classList.contains('zpm-intro-on')) start();
     else if (replay) replay.hidden = false;
     if (replay) replay.addEventListener('click', function () { window.scrollTo(0, 0); start() });
+  }
+
+  /* ── Дуэль на главной: персонажи выплывают с боков ─────────────────── */
+  var duel = document.getElementById('zpm-duel');
+  if (duel && window.IntersectionObserver && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+    duel.classList.add('zd-js');
+    var dio = new IntersectionObserver(function (es) {
+      if (es[0].isIntersecting) { duel.classList.add('zd-on'); dio.disconnect() }
+    }, { threshold: 0.2 });
+    dio.observe(duel);
   }
 })();

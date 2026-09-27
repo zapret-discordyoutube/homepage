@@ -3282,6 +3282,21 @@ html.zpm-intro-on .zi:not(.zi-run) {
   to { transform: rotate(360deg); }
 }
 
+.zt-status .zt-beat {
+  stroke-dasharray: 42;
+  stroke-dashoffset: 42;
+  animation: zt-trace 2.2s linear infinite;
+}
+
+.zt-list a:hover .zt-status .zt-beat {
+  animation-duration: 0.9s;
+}
+
+@keyframes zt-trace {
+  0% { stroke-dashoffset: 42; }
+  60%, 100% { stroke-dashoffset: -42; }
+}
+
 .zt-book path:last-child {
   transform-origin: 20px 20px;
   transition: transform 0.5s;
@@ -3608,55 +3623,139 @@ html.zpm-intro-on .zi:not(.zi-run) {
     var(--bg2);
 }
 
+/* ── Объёмное сердце: 22 слоя-сечения на разной глубине ──────────────
+   Средние слои крупнее крайних — получается «надутая» форма, а не плоская
+   табличка. Сердце покачивается в 3D и бьётся в ритме ЭКГ под ним.       */
 .zj-heart {
-  width: clamp(130px, 18vw, 210px);
-  height: auto;
+  --heart: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 110'%3E%3Cpath d='M60 104C20 76 6 56 6 34 6 18 18 6 33 6c12 0 21 7 27 18C66 13 75 6 87 6c15 0 27 12 27 28 0 22-14 42-54 70z'/%3E%3C/svg%3E");
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(170px, 20vw, 240px);
+  aspect-ratio: 1;
+  perspective: 700px;
+}
+
+.zh3-glow {
+  position: absolute;
+  inset: 5%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 59, 92, 0.55), rgba(255, 59, 92, 0.12) 45%, transparent 70%);
+  filter: blur(10px);
+  animation: zh3-glow 1.4s ease-in-out infinite;
+}
+
+.zh3-spin {
+  width: 72%;
+  aspect-ratio: 120 / 110;
+  transform-style: preserve-3d;
+  animation: zh3-spin 7s ease-in-out infinite;
+}
+
+.zh3-beat {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: zh3-beat 1.4s cubic-bezier(0.3, 0, 0.3, 1) infinite;
+}
+
+.zh3-beat i,
+.zh3-face {
+  position: absolute;
+  inset: 0;
+  -webkit-mask: var(--heart) center / contain no-repeat;
+  mask: var(--heart) center / contain no-repeat;
+}
+
+.zh3-beat i {
+  transform: translateZ(calc((var(--z) - 10.5) * 2.4px)) scale(var(--k));
+  background: linear-gradient(160deg,
+    hsl(350 85% calc(22% + var(--z) * 1.4%)),
+    hsl(345 80% calc(12% + var(--z) * 0.9%)));
+}
+
+/* лицевая поверхность: глянец, блик и тонкая неоновая кромка */
+.zh3-face {
+  transform: translateZ(26px) scale(0.99);
+  background:
+    radial-gradient(ellipse 34% 26% at 32% 26%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 60% 55% at 40% 38%, #ff7a92, transparent 70%),
+    linear-gradient(160deg, #ff4d6d, #c3113a 55%, #6d0620);
+  filter: drop-shadow(0 0 1px #ffb3c0);
+}
+
+.zh3-face::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 48%, transparent 60%);
+  background-size: 300% 100%;
+  animation: zh3-shine 4.2s ease-in-out infinite;
+}
+
+@keyframes zh3-spin {
+  0%, 100% { transform: rotateY(-32deg) rotateX(8deg); }
+  50% { transform: rotateY(32deg) rotateX(-4deg); }
+}
+
+@keyframes zh3-beat {
+  0%, 100% { transform: scale(1); }
+  8% { transform: scale(1.12); }
+  16% { transform: scale(0.98); }
+  26% { transform: scale(1.07); }
+  40% { transform: scale(1); }
+}
+
+@keyframes zh3-glow {
+  0%, 45%, 100% { opacity: 0.55; transform: scale(0.95); }
+  10% { opacity: 1; transform: scale(1.12); }
+  28% { opacity: 0.85; transform: scale(1.04); }
+}
+
+@keyframes zh3-shine {
+  0%, 55% { background-position: 150% 0; }
+  85%, 100% { background-position: -50% 0; }
+}
+
+/* ЭКГ под сердцем: пик совпадает с ударом */
+.zh3-ecg {
+  position: absolute;
+  right: -8%;
+  bottom: -2%;
+  left: -8%;
+  width: 116%;
+  height: 22%;
   overflow: visible;
-  animation: zj-beat 1.6s ease-in-out infinite;
 }
 
-@keyframes zj-beat {
-  0%, 40%, 100% { transform: scale(1); }
-  10% { transform: scale(1.06); }
-  20% { transform: scale(0.98); }
-  30% { transform: scale(1.04); }
-}
-
-.zj-heart-base {
-  fill: rgba(255, 59, 92, 0.1);
-  stroke: rgba(255, 90, 116, 0.35);
-  stroke-width: 3;
-}
-
-.zj-heart-flow {
+.zh3-ecg path {
   fill: none;
-  stroke: var(--cy);
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-dasharray: 0.12 0.88;
-  filter: drop-shadow(0 0 6px var(--cy));
-  animation: zj-flow 2.4s linear infinite;
-}
-
-@keyframes zj-flow {
-  to { stroke-dashoffset: -1; }
-}
-
-.zj-pulse {
-  fill: none;
-  stroke: #ff6b83;
-  stroke-width: 3;
-  stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 140;
-  stroke-dashoffset: 140;
-  animation: zj-ecg 1.6s linear infinite;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 
-@keyframes zj-ecg {
-  0% { stroke-dashoffset: 140; opacity: 1; }
-  60% { stroke-dashoffset: 0; opacity: 1; }
-  100% { stroke-dashoffset: 0; opacity: 0; }
+.zh3-ecg-base {
+  stroke: rgba(255, 90, 116, 0.18);
+  stroke-width: 1.5;
+}
+
+.zh3-ecg-line {
+  stroke: #ff6b83;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 5px #ff3b5c);
+  animation: zh3-trace 1.4s linear -0.18s infinite;
+}
+
+.zh3-ecg-line {
+  stroke-dasharray: 60 460;
+  stroke-dashoffset: 60;
+}
+
+@keyframes zh3-trace {
+  0% { stroke-dashoffset: -60; }
+  100% { stroke-dashoffset: -440; }
 }
 
 .zj-help-copy h2 {
@@ -3984,6 +4083,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
   .zh-free::after,
   .zh-sparks,
   .zh-scan,
+  .zh3-ecg-line,
   .zci-box,
   .zci-track-lit {
     display: none;

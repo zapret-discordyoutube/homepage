@@ -1599,32 +1599,35 @@ html.zpm-intro-on .zi:not(.zi-run) {
 .zr-zt .zr-hair-t { --sa: -3deg; --sb: 2.4deg; --sd: 2.4s; --sdl: -0.6s; }
 .zr-zt .zr-hair-l { --sa: 1.8deg; --sb: -1.4deg; --sk: 0.8deg; --sd: 3.6s; --sdl: -1.2s; }
 
-/* руки */
+/* руки: только увеличение от запястья — рука всегда накрывает саму себя в основе,
+   поэтому под ней никогда не видно дыр или дорисовки */
 .zr-rkn .zr-hand {
   animation: zr-grab 2.9s cubic-bezier(0.5, 0, 0.3, 1) infinite;
 }
 
-.zr-rkn .zr-hand-l { --r: -5deg; --r2: -2deg; }
-.zr-rkn .zr-hand-r { --r: 5deg; --r2: 2deg; animation-delay: -1.45s; }
+.zr-rkn .zr-hand-r {
+  animation-delay: -1.45s;
+}
 
 @keyframes zr-grab {
-  0%, 100% { transform: scale(1) rotate(0); }
-  38% { transform: scale(1.12) rotate(var(--r)); }
-  46% { transform: scale(1.1) rotate(var(--r2)); }
-  52% { transform: scale(1.13) rotate(var(--r)); }
-  70% { transform: scale(1.03) rotate(0); }
+  0%, 100% { transform: scale(1); }
+  38% { transform: scale(1.1); }
+  46% { transform: scale(1.07); }
+  52% { transform: scale(1.11); }
+  72% { transform: scale(1.02); }
 }
 
 .zr-zt .zr-hand {
   animation: zr-peace 1.15s ease-in-out infinite;
 }
 
-.zr-zt .zr-hand-l { --r: -4deg; }
-.zr-zt .zr-hand-r { --r: 3.5deg; animation-delay: -0.57s; }
+.zr-zt .zr-hand-r {
+  animation-delay: -0.57s;
+}
 
 @keyframes zr-peace {
-  0%, 100% { transform: rotate(0) translateY(0) scale(1); }
-  50% { transform: rotate(var(--r)) translateY(-1.5%) scale(1.03); }
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 /* глаза */

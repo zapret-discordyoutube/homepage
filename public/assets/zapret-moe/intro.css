@@ -467,14 +467,13 @@ html.zpm-intro-on .zx:not(.zx-run) {
   transform: translateX(-50%);
 }
 
-/* 2. конверт */
+/* 2. конверт: закрыт → клапан откидывается назад → письмо выезжает вверх */
 .zx-envl {
   position: absolute;
-  top: 250px;
+  top: 330px;
   left: 520px;
   width: 560px;
   height: 340px;
-  perspective: 1200px;
 }
 
 .zx-env-back,
@@ -485,41 +484,54 @@ html.zpm-intro-on .zx:not(.zx-run) {
 }
 
 .zx-env-back {
-  background: #182247;
+  z-index: 0;
+  background: #141c3e;
+}
+
+/* открытый клапан — позади письма, треугольником вверх */
+.zx-env-flap2 {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  z-index: 1;
+  height: 200px;
+  margin-bottom: -2px;
+  background: linear-gradient(0deg, #1c2858, #2a3a80);
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+  transform: scaleY(0);
+  transform-origin: 50% 100%;
 }
 
 .zx-env-letter {
   position: absolute;
-  top: 26px;
-  right: 30px;
-  left: 30px;
-  height: 260px;
+  top: 24px;
+  right: 34px;
+  left: 34px;
+  z-index: 2;
+  height: 280px;
   display: grid;
-  gap: 16px;
+  gap: 10px;
   align-content: start;
-  padding: 28px;
+  padding: 26px 28px;
   border-radius: 10px;
   background: #e8efff;
-  transform: translateY(0);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
 }
 
-.zx-env-letter i {
-  height: 12px;
-  border-radius: 6px;
-  background: #aab6d6;
-}
-
-.zx-env-letter i:nth-child(2) { width: 80%; }
-.zx-env-letter i:nth-child(3) { width: 90%; }
-.zx-env-letter i:nth-child(4) { width: 60%; }
-
-.zx-env-letter b {
+.zx-lock {
   color: #2b3a66;
-  font: 700 22px var(--mono);
+  font: 700 26px var(--txt);
+}
+
+.zx-env-letter code {
+  color: #7d8bb3;
+  font: 500 19px var(--mono);
+  letter-spacing: 0.04em;
 }
 
 .zx-env-front {
-  z-index: 2;
+  z-index: 3;
   display: grid;
   align-content: end;
   gap: 4px;
@@ -544,13 +556,14 @@ html.zpm-intro-on .zx:not(.zx-run) {
   font: normal 15px var(--mono);
 }
 
+/* закрытый клапан — поверх всего, складывается к верхнему краю */
 .zx-env-flap {
   position: absolute;
   top: 0;
   right: 0;
   left: 0;
-  z-index: 3;
-  height: 60%;
+  z-index: 4;
+  height: 62%;
   background: linear-gradient(180deg, #2a3a80, #1c2858);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   transform-origin: 50% 0;
@@ -565,23 +578,39 @@ html.zpm-intro-on .zx:not(.zx-run) {
 }
 
 .zx-s.zx-env.on .zx-env-flap {
-  animation: zx-flap 0.7s ease-in-out 1.4s forwards;
+  animation: zx-flap-close 0.35s ease-in 1.5s forwards;
 }
 
-@keyframes zx-flap {
-  to { transform: rotateX(180deg); z-index: 0; }
+@keyframes zx-flap-close {
+  to { transform: scaleY(0); }
+}
+
+.zx-s.zx-env.on .zx-env-flap2 {
+  animation: zx-flap-open 0.35s ease-out 1.85s forwards;
+}
+
+@keyframes zx-flap-open {
+  to { transform: scaleY(1); }
+}
+
+.zx-env-letter {
+  opacity: 0;
 }
 
 .zx-s.zx-env.on .zx-env-letter {
-  animation: zx-letter 0.8s cubic-bezier(0.3, 1.2, 0.5, 1) 2s forwards;
+  animation: zx-letter-show 0.2s 1.8s forwards, zx-letter 0.9s cubic-bezier(0.3, 1.2, 0.5, 1) 2.3s forwards;
+}
+
+@keyframes zx-letter-show {
+  to { opacity: 1; }
 }
 
 @keyframes zx-letter {
-  to { transform: translateY(-180px); }
+  to { transform: translateY(-230px); }
 }
 
 .zx-s.zx-env.on .zx-env-front strong {
-  animation: zx-glowtxt 1.2s ease-in-out 0.8s 2 alternate;
+  animation: zx-glowtxt 0.8s ease-in-out 0.9s 2 alternate;
 }
 
 @keyframes zx-glowtxt {
@@ -592,16 +621,25 @@ html.zpm-intro-on .zx:not(.zx-run) {
   position: absolute;
   display: grid;
   gap: 4px;
-  max-width: 290px;
+  width: 300px;
   padding: 14px 18px;
   border-left: 4px solid;
   border-radius: 6px;
-  background: rgba(8, 12, 28, 0.85);
+  background: rgba(8, 12, 28, 0.9);
   opacity: 0;
 }
 
+/* стрелка от подписи к тому, о чём она */
+.zx-note::after {
+  position: absolute;
+  top: 50%;
+  height: 2px;
+  content: "";
+  background: currentColor;
+}
+
 .zx-note b {
-  font: 700 22px var(--disp);
+  font: 700 24px var(--disp);
 }
 
 .zx-note span {
@@ -610,27 +648,31 @@ html.zpm-intro-on .zx:not(.zx-run) {
 }
 
 .zx-note-red {
+  color: #ff6b83;
   border-color: #ff5a74;
 }
 
-.zx-note-red b {
-  color: #ff6b83;
+.zx-note-red::after {
+  left: 100%;
+  width: 90px;
 }
 
 .zx-note-cy {
+  color: var(--cy);
   border-color: var(--cy);
 }
 
-.zx-note-cy b {
-  color: var(--cy);
+.zx-note-cy::after {
+  right: 100%;
+  width: 90px;
 }
 
 .zx-s.zx-env.on .zx-note-red {
-  animation: zx-note 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) 1s both;
+  animation: zx-note 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) 0.9s both;
 }
 
 .zx-s.zx-env.on .zx-note-cy {
-  animation: zx-note 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) 2.8s both;
+  animation: zx-note 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.2) 3.2s both;
 }
 
 @keyframes zx-note {
@@ -2197,8 +2239,12 @@ html.zpm-intro-on .zx:not(.zx-run) {
   display: none;
 }
 
-.zx.portrait .zx-note-red { left: 230px !important; top: 640px !important; }
-.zx.portrait .zx-note-cy { left: 830px !important; top: 640px !important; }
+.zx.portrait .zx-envl { top: 380px; }
+.zx.portrait .zx-note-red { left: 230px !important; top: 740px !important; width: 520px; }
+.zx.portrait .zx-note-cy { left: 850px !important; top: 740px !important; width: 520px; }
+.zx.portrait .zx-note::after { display: none; }
+.zx.portrait .zx-note b { font-size: 36px; }
+.zx.portrait .zx-note span { font-size: 26px; }
 
 .zx.portrait .zx-mapsvg,
 .zx.portrait .zx-map .zx-svg {

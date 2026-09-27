@@ -1,0 +1,9 @@
+[Unit]
+Description=Обновлять статистику главной раз в полчаса
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=30min
+
+[Install]
+WantedBy=timers.target

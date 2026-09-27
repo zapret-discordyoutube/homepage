@@ -1,0 +1,9 @@
+[Unit]
+Description=Статистика «Пульса» для главной git.zapret.moe
+After=forgejo.service postgresql.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/zapret-homepage-stats.py
+Nice=15
+IOSchedulingClass=idle

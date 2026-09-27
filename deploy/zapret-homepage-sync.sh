@@ -7,6 +7,7 @@
 #  * Репозиторий — единственный источник правды. templates/ и public/ в
 #    /var/lib/forgejo/custom зеркалируют ветку main целиком: файлы, которых нет
 #    в git, удаляются. Правки прямо на сервере не живут дольше одной выкладки.
+#    Исключение — PRESERVE: статистика, которую пишет zapret-homepage-stats.py.
 #  * @ASSETS_VER@ в шаблонах заменяется хешем home.css, home.js и site.css,
 #    поэтому браузеры получают новые CSS/JS сразу, несмотря на кеш статики Forgejo.
 #  * Шаблоны Forgejo читает при старте: при их изменении сервис
@@ -26,6 +27,8 @@ RESTART_CMD=${RESTART_CMD:-systemctl restart forgejo}
 OWNER=${OWNER:-git}
 LOCK=${LOCK:-/run/zapret-homepage-sync.lock}
 MANAGED="templates public"
+# Генерируемое на сервере (не из git) — переживает выкладку.
+PRESERVE="public/assets/zapret-moe-stats"
 ASSET_FILES="public/assets/zapret-moe/home.css public/assets/zapret-moe/home.js public/assets/zapret-moe/site.css"
 
 exec 9>"$LOCK"
@@ -79,6 +82,15 @@ for dir in $MANAGED; do
     [ -e "$CUSTOM_DIR/$dir" ] && mv "$CUSTOM_DIR/$dir" "$backup/$dir"
     mv "$stage/$dir" "$CUSTOM_DIR/$dir"
 done
+keep_generated() {  # $1 — откуда, $2 — куда
+    for p in $PRESERVE; do
+        if [ -e "$1/$p" ] && [ ! -e "$2/$p" ]; then
+            mkdir -p "$(dirname "$2/$p")"
+            mv "$1/$p" "$2/$p"
+        fi
+    done
+}
+keep_generated "$backup" "$CUSTOM_DIR"
 
 echo "homepage-sync: ${deployed:0:8} -> ${rev:0:8} (assets $assets_ver, templates_changed=$templates_changed)"
 
@@ -97,6 +109,7 @@ if [ "$templates_changed" = 1 ]; then
     $RESTART_CMD
     if ! healthy; then
         echo "homepage-sync: после выкладки ${rev:0:8} сайт не отвечает, откат" >&2
+        keep_generated "$CUSTOM_DIR" "$backup"
         for dir in $MANAGED; do
             rm -rf "$CUSTOM_DIR/$dir"
             [ -e "$backup/$dir" ] && mv "$backup/$dir" "$CUSTOM_DIR/$dir"

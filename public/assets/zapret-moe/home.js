@@ -707,4 +707,42 @@
       } else setTimeout(go, 1500);
     });
   }).catch(function () {});
+
+  /* ── Персонажи: следят за курсором и реагируют на касание ────────────── */
+  (function () {
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var rigs = Array.prototype.slice.call(document.querySelectorAll('.zrig'));
+    if (!rigs.length) return;
+    var mx = innerWidth / 2, my = innerHeight / 2, raf = 0;
+    var state = rigs.map(function () { return { x: 0, y: 0 } });
+    function tick() {
+      raf = 0;
+      var moving = false;
+      rigs.forEach(function (r, i) {
+        var b = r.getBoundingClientRect();
+        if (!b.width || b.bottom < 0 || b.top > innerHeight) return;
+        var tx = Math.max(-1, Math.min(1, (mx - (b.left + b.width / 2)) / (b.width * 0.6)));
+        var ty = Math.max(-1, Math.min(1, (my - (b.top + b.height / 2)) / (b.height * 0.6)));
+        var s = state[i];
+        s.x += (tx - s.x) * 0.08; s.y += (ty - s.y) * 0.08;
+        if (Math.abs(tx - s.x) > 0.002 || Math.abs(ty - s.y) > 0.002) moving = true;
+        r.style.setProperty('--px', s.x.toFixed(3));
+        r.style.setProperty('--py', s.y.toFixed(3));
+      });
+      if (moving) raf = requestAnimationFrame(tick);
+    }
+    function kick() { if (!raf) raf = requestAnimationFrame(tick) }
+    addEventListener('pointermove', function (e) { mx = e.clientX; my = e.clientY; kick() }, { passive: true });
+    addEventListener('scroll', kick, { passive: true });
+    function poke(r) {
+      if (r.classList.contains('zr-poke')) return;
+      r.classList.add('zr-poke');
+      setTimeout(function () { r.classList.remove('zr-poke') }, 800);
+    }
+    rigs.forEach(function (r) {
+      var last = 0;
+      r.addEventListener('pointerenter', function () { if (Date.now() - last > 1500) { last = Date.now(); poke(r) } });
+      r.addEventListener('pointerdown', function () { poke(r) });
+    });
+  })();
 })();

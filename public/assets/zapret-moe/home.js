@@ -661,7 +661,7 @@
     if (!window.IntersectionObserver || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
     var groups = [
       ['.zsec-head', ''], ['.zp-kpi', 'rv-pop'], ['.zp-panel', ''], ['.zc', 'rv-card'],
-      ['.zt-list li', 'rv-side'], ['.zr-fdroid', ''], ['.zr-row li', 'rv-pop'], ['.zci-pipe', ''],
+      ['.zt-list li', 'rv-side'], ['.zbox', 'rv-drop'], ['.zfd', ''], ['.zci-term', 'rv-card'], ['.zci-hash', 'rv-card'],
       ['.zci-points > div', ''], ['.zj-help', 'rv-card'], ['.zj-join > h2', ''], ['.zj-steps li', 'rv-pop'], ['.zj-cta', ''],
       ['.zci > .zs > .zb', 'rv-pop']
     ];
@@ -828,5 +828,87 @@
     addEventListener('resize', function () { size(); nextShape = 0 });
     document.addEventListener('visibilitychange', kick);
     new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) { size(); kick() } }).observe(duel);
+  })();
+
+  /* ── Стеллаж сборок: последние релизы из API ────────────────────────── */
+  (function () {
+    var shelf = document.getElementById('zr-shelf');
+    if (!shelf || !window.fetch) return;
+    function ago(ts) {
+      var d = Math.floor((Date.now() - ts) / 864e5);
+      if (d < 1) return 'сегодня';
+      if (d < 2) return 'вчера';
+      if (d < 14) return d + ' ' + plural(d, 'день', 'дня', 'дней') + ' назад';
+      if (d < 60) { var w = Math.floor(d / 7); return w + ' ' + plural(w, 'неделю', 'недели', 'недель') + ' назад' }
+      var m = Math.floor(d / 30); return m + ' ' + plural(m, 'месяц', 'месяца', 'месяцев') + ' назад';
+    }
+    function load() {
+      shelf.querySelectorAll('.zbox[data-repo]').forEach(function (b) {
+        fetch(shelf.getAttribute('data-api') + b.getAttribute('data-repo') + '/releases/latest')
+          .then(function (r) { return r.ok ? r.json() : null })
+          .then(function (r) {
+            if (!r || !r.tag_name) return;
+            var ver = String(r.tag_name).replace(/^(zsg-|v)/i, '');
+            var ts = Date.parse(r.published_at || r.created_at);
+            var dl = (r.assets || []).reduce(function (a, x) { return a + (x.download_count || 0) }, 0);
+            b.querySelector('[data-f="ver"]').textContent = 'v' + ver;
+            if (ts) b.querySelector('[data-f="age"]').textContent = ago(ts);
+            if (dl) b.querySelector('[data-f="dl"]').textContent = '↓ ' + short(dl);
+            if (ts && Date.now() - ts < 3 * 864e5) b.classList.add('zbox-fresh');
+          }).catch(function () {});
+      });
+    }
+    if (window.IntersectionObserver) {
+      var io = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { io.disconnect(); load() } }, { rootMargin: '600px 0px' });
+      io.observe(shelf);
+    } else load();
+  })();
+
+  /* ── Лаборатория доверия: сборка по шагам и сверка sha256 ───────────── */
+  (function () {
+    var lab = document.getElementById('zci-lab');
+    if (!lab || !window.IntersectionObserver || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    var items = lab.querySelectorAll('.zci-log li'), codes = lab.querySelectorAll('.zci-h code'), stamp = lab.querySelector('.zci-stamp');
+    var HEX = '0123456789abcdef', visible = false, busy = false, timers = [];
+    function later(fn, ms) { timers.push(setTimeout(fn, ms)) }
+    function hex(n) { var s = ''; for (var i = 0; i < n; i++) s += HEX[Math.floor(Math.random() * 16)]; return s }
+    function run() {
+      if (busy || !visible) return;
+      busy = true;
+      lab.classList.add('zci-live'); lab.classList.remove('zci-match'); stamp.classList.remove('on');
+      var hash = hex(64);
+      codes.forEach(function (c) { c.innerHTML = hash.split('').map(function (_, n) { return '<i style="--n:' + n + '">·</i>' }).join('') });
+      items.forEach(function (li) { li.className = 'pending' });
+      var t = 300;
+      items.forEach(function (li, i) {
+        later(function () { li.className = 'run' }, t);
+        t += i === 2 ? 1500 : 600 + Math.random() * 300;
+        later(function () { li.className = 'ok' }, t);
+      });
+      later(function () { scramble(hash) }, t + 200);
+    }
+    function scramble(hash) {
+      var spans = [codes[0].children, codes[1].children], locked = [0, -14], tick = setInterval(function () {
+        for (var k = 0; k < 2; k++) {
+          locked[k] += 2;
+          for (var i = 0; i < 64; i++) {
+            var s = spans[k][i];
+            if (i < locked[k]) { if (!s.classList.contains('lk')) { s.textContent = hash[i]; s.classList.add('lk') } }
+            else s.textContent = HEX[Math.floor(Math.random() * 16)];
+          }
+        }
+        if (locked[1] >= 64) {
+          clearInterval(tick);
+          lab.classList.add('zci-match');
+          later(function () { stamp.classList.add('on') }, 250);
+          later(function () { busy = false; run() }, 5200);
+        }
+      }, 45);
+      timers.push({ clear: function () { clearInterval(tick) } });
+    }
+    new IntersectionObserver(function (es) {
+      visible = es[0].isIntersecting;
+      if (visible) run();
+    }, { threshold: 0.35 }).observe(lab);
   })();
 })();

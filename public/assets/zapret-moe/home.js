@@ -911,4 +911,158 @@
       if (visible) run();
     }, { threshold: 0.35 }).observe(lab);
   })();
+
+  /* ── Мини-игра «Спасите пакеты» ──────────────────────────────────────── */
+  (function () {
+    var box = document.getElementById('zg-packets');
+    var cv = box && box.querySelector('canvas');
+    if (!cv || !cv.getContext || !window.IntersectionObserver) return;
+    var g = cv.getContext('2d'), W = 0, H = 0, dpr = 1, wireY = 0, visible = false, raf = 0, last = 0;
+    var pk = [], claws = [], fx = [], nextPk = 0, nextClaw = 1.5, clock = 0;
+    var score = { saved: 0, lost: 0, best: 0 }, toast = box.querySelector('.zg-toast'), shown = {};
+    try { score.best = +localStorage.getItem('zg-best') || 0 } catch (e) {}
+    function ui() { for (var k in score) box.querySelector('[data-g="' + k + '"]').textContent = score[k] }
+    ui();
+    function size() {
+      var r = cv.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1);
+      W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); wireY = H * 0.68;
+    }
+    function spawn() { pk.push({ x: -20, v: 70 + Math.random() * 60 + Math.min(60, score.saved * 1.5), s: 0, out: 0, grab: null }) }
+    function attack() {
+      var cand = pk.filter(function (p) { return !p.s && !p.grab && p.x > W * 0.25 && p.x < W * 0.8 });
+      if (!cand.length) return;
+      var t = cand[Math.floor(Math.random() * cand.length)];
+      claws.push({ target: t, x: t.x + t.v * 0.9, st: 'warn', t: 0 });
+    }
+    function burst(x, y, col, n) { for (var i = 0; i < n; i++) { var a = Math.random() * 6.28, v = 60 + Math.random() * 140; fx.push({ x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.6, col: col }) } }
+    function milestone() {
+      var m = [10, 25, 50, 100].filter(function (n) { return score.saved >= n && !shown[n] })[0];
+      if (!m) return;
+      shown[m] = 1;
+      toast.querySelector('b').textContent = m + ' ' + plural(m, 'пакет спасён!', 'пакета спасены!', 'пакетов спасено!');
+      toast.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(function () { toast.hidden = true }, 7000);
+    }
+    function drawClaw(x, y, a) {
+      g.save(); g.translate(x, y); g.globalAlpha = a;
+      g.shadowColor = '#ff2b4f'; g.shadowBlur = 18;
+      g.fillStyle = '#e9b8a4'; g.beginPath(); g.ellipse(0, -46, 26, 30, 0, 0, 6.28); g.fill();
+      [-18, -6, 6, 18].forEach(function (dx, i) {
+        g.fillStyle = '#e9b8a4'; g.beginPath(); g.ellipse(dx, -18, 6, 16, dx / 60, 0, 6.28); g.fill();
+        g.fillStyle = '#1a0a18'; g.beginPath(); g.moveTo(dx - 5, -6); g.quadraticCurveTo(dx + dx * 0.15, 14, dx + dx * 0.25, 20); g.quadraticCurveTo(dx + 6, 6, dx + 5, -6); g.fill();
+      });
+      g.restore();
+    }
+    function frame(now) {
+      raf = 0; if (!visible || document.hidden) { last = 0; return }
+      var dt = last ? Math.min(0.05, (now - last) / 1000) : 0; last = now; clock += dt;
+      if (clock > nextPk) { spawn(); nextPk = clock + 0.55 + Math.random() * 0.6 }
+      if (clock > nextClaw) { attack(); nextClaw = clock + Math.max(0.9, 2.6 - score.saved * 0.03) + Math.random() * 1.2 }
+      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+      // провод
+      var grd = g.createLinearGradient(0, 0, W, 0); grd.addColorStop(0, 'rgba(79,209,255,0)'); grd.addColorStop(0.1, 'rgba(79,209,255,.7)'); grd.addColorStop(0.9, 'rgba(155,123,255,.7)'); grd.addColorStop(1, 'rgba(155,123,255,0)');
+      g.strokeStyle = grd; g.lineWidth = 3; g.beginPath(); g.moveTo(0, wireY); g.lineTo(W, wireY); g.stroke();
+      // когти
+      claws.forEach(function (c) {
+        c.t += dt;
+        if (c.st === 'warn') {
+          g.strokeStyle = 'rgba(255,59,92,' + (0.4 + 0.4 * Math.sin(c.t * 30)) + ')'; g.setLineDash([6, 6]); g.lineWidth = 2;
+          g.beginPath(); g.moveTo(c.x, 0); g.lineTo(c.x, wireY); g.stroke(); g.setLineDash([]);
+          if (c.t > 0.9) { c.st = 'down'; c.t = 0 }
+        } else if (c.st === 'down') {
+          var y = -40 + (wireY + 40) * Math.min(1, c.t / 0.22);
+          drawClaw(c.x, y, 1);
+          if (c.t >= 0.22) {
+            c.st = 'up'; c.t = 0;
+            pk.forEach(function (p) { if (!p.grab && !p.s && Math.abs(p.x - c.x) < 34) { p.grab = c; c.got = p; score.lost++; ui(); burst(p.x, wireY, '#ff3b5c', 14) } });
+            pk.forEach(function (p) { if (p.s && Math.abs(p.x - c.x) < 34) { burst(p.x, wireY, '#4fd1ff', 10); c.blocked = 1 } });
+          }
+        } else {
+          var y2 = wireY - (wireY + 60) * Math.min(1, c.t / 0.5);
+          drawClaw(c.x, y2, 1);
+          if (c.got) c.got.y = y2 + 16;
+          if (c.t > 0.5) c.dead = 1;
+        }
+      });
+      claws = claws.filter(function (c) { if (c.dead && c.got) c.got.gone = 1; return !c.dead });
+      // пакеты
+      pk.forEach(function (p) {
+        if (!p.grab) p.x += p.v * dt * (p.s ? 1.6 : 1);
+        var y = p.grab ? p.y : wireY;
+        if (p.s) {
+          g.strokeStyle = 'rgba(79,209,255,.9)'; g.lineWidth = 2; g.shadowColor = '#4fd1ff'; g.shadowBlur = 14;
+          g.beginPath(); g.arc(p.x, y, 17, 0, 6.28); g.stroke();
+        }
+        g.shadowColor = p.grab ? '#ff3b5c' : '#4fd1ff'; g.shadowBlur = 12;
+        g.fillStyle = p.grab ? '#ff5a74' : (p.s ? '#bff0ff' : '#4fd1ff');
+        g.beginPath(); g.roundRect ? g.roundRect(p.x - 9, y - 7, 18, 14, 4) : g.rect(p.x - 9, y - 7, 18, 14); g.fill(); g.shadowBlur = 0;
+        if (p.x > W + 20) { p.gone = 1; if (p.s) { score.saved++; if (score.saved > score.best) { score.best = score.saved; try { localStorage.setItem('zg-best', score.best) } catch (e) {} } ui(); milestone() } }
+      });
+      pk = pk.filter(function (p) { return !p.gone });
+      // искры
+      fx.forEach(function (f) { f.life -= dt; f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 300 * dt; g.globalAlpha = Math.max(0, f.life / 0.6); g.fillStyle = f.col; g.fillRect(f.x - 2, f.y - 2, 4, 4) });
+      g.globalAlpha = 1; fx = fx.filter(function (f) { return f.life > 0 });
+      raf = requestAnimationFrame(frame);
+    }
+    cv.addEventListener('pointerdown', function (e) {
+      var r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, best = null, d = 40;
+      pk.forEach(function (p) { var dd = Math.hypot(p.x - x, (p.grab ? p.y : wireY) - y); if (!p.s && !p.grab && dd < d) { d = dd; best = p } });
+      if (best) { best.s = 1; burst(best.x, wireY, '#4fd1ff', 12) }
+      claws.forEach(function (c) { if (c.st !== 'warn' && Math.abs(c.x - x) < 40 && y < wireY + 10) { if (c.got) { c.got.grab = null; c.got.s = 1; c.got = null } c.st = 'up'; c.t = 0.3; burst(c.x, y, '#ffcf5a', 16) } });
+    });
+    new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) { size(); if (!raf) raf = requestAnimationFrame(frame) } }).observe(box);
+    addEventListener('resize', size);
+    document.addEventListener('visibilitychange', function () { if (visible && !raf) raf = requestAnimationFrame(frame) });
+  })();
+
+  /* ── Мини-игра «Сломайте замок РКН» ─────────────────────────────────── */
+  (function () {
+    var lock = document.getElementById('zlock');
+    if (!lock) return;
+    var btn = lock.querySelector('.zlock-hit'), fx = lock.querySelector('.zlock-fx'), bar = lock.querySelector('.zlock-hp i');
+    var hpEl = lock.querySelector('[data-l="hp"]'), name = lock.querySelector('.zlock-name'), label = lock.querySelector('.zl-label');
+    var win = lock.querySelector('.zlock-win'), cracks = lock.querySelectorAll('.zl-crack');
+    var LEVELS = [['Сломайте замок РКН', 'РКН', 15], ['Теперь замок ТСПУ', 'ТСПУ', 25], ['Финальный босс: реестр', 'РЕЕСТР', 40]];
+    var lvl = 0, hp = 0, max = 0;
+    function set(l) {
+      lvl = l; max = hp = LEVELS[Math.min(l, 2)][2] + Math.max(0, l - 2) * 15;
+      name.textContent = LEVELS[Math.min(l, 2)][0] + (l > 2 ? ' ×' + (l - 1) : '');
+      label.textContent = LEVELS[Math.min(l, 2)][1];
+      lock.classList.remove('broken'); win.hidden = true; upd();
+    }
+    function upd() {
+      hpEl.textContent = hp; bar.style.width = (hp / max * 100) + '%';
+      var k = hp / max; cracks.forEach(function (c) { c.classList.toggle('on', k <= +c.getAttribute('data-at')) });
+    }
+    function add(el, ms) { fx.appendChild(el); setTimeout(function () { el.remove() }, ms) }
+    function hit() {
+      if (hp <= 0) return;
+      var crit = Math.random() < 0.15, dmg = crit ? 3 : 1;
+      hp = Math.max(0, hp - dmg); upd();
+      lock.classList.remove('hit'); void lock.offsetWidth; lock.classList.add('hit');
+      var n = document.createElement('b'); n.textContent = crit ? 'КРИТ −3!' : '−1'; if (crit) n.className = 'crit';
+      n.style.setProperty('--dx', (Math.random() * 60 - 30) + 'px'); add(n, 800);
+      for (var i = 0; i < (crit ? 12 : 6); i++) {
+        var s = document.createElement('i'), a = Math.random() * 6.28, v = 40 + Math.random() * 70;
+        s.style.setProperty('--dx', Math.cos(a) * v + 'px'); s.style.setProperty('--dy', Math.sin(a) * v + 'px'); add(s, 600);
+      }
+      if (navigator.vibrate) try { navigator.vibrate(crit ? 30 : 10) } catch (e) {}
+      if (hp === 0) boom();
+    }
+    function boom() {
+      lock.classList.add('broken');
+      var cols = ['#4fd1ff', '#9b7bff', '#37e39a', '#ffcf5a', '#ff6bb3'];
+      for (var i = 0; i < 60; i++) {
+        var c = document.createElement('i'), a = -Math.PI / 2 + (Math.random() - 0.5) * 2.6, v = 90 + Math.random() * 220;
+        c.className = 'cf'; c.style.setProperty('--c', cols[i % 5]);
+        c.style.setProperty('--dx', Math.cos(a) * v + 'px'); c.style.setProperty('--dy', (Math.sin(a) * v + 160) + 'px'); c.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
+        add(c, 1600);
+      }
+      setTimeout(function () { win.hidden = false }, 500);
+      try { localStorage.setItem('zlock-lvl', lvl + 1) } catch (e) {}
+    }
+    btn.addEventListener('click', hit);
+    lock.querySelector('.zlock-again').addEventListener('click', function () { set(lvl + 1) });
+    var saved = 0; try { saved = +localStorage.getItem('zlock-lvl') || 0 } catch (e) {}
+    set(Math.min(saved, 2));
+  })();
 })();

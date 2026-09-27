@@ -2096,7 +2096,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
   z-index: 3;
   display: grid;
   place-items: center;
-  width: clamp(70px, 9vw, 120px);
+  width: clamp(90px, 11vw, 170px);
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -2108,24 +2108,78 @@ html.zpm-intro-on .zi:not(.zi-run) {
   height: 100%;
 }
 
-.zd-bolt {
+.zd-glow,
+.zd-bolt,
+.zd-branch {
   fill: none;
-  stroke: #e8f6ff;
-  stroke-width: 3;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 6px #4fd1ff) drop-shadow(0 0 14px #ff3b5c);
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* мягкий ореол — горит всегда */
+.zd-glow {
+  stroke: rgba(160, 200, 255, 0.35);
+  stroke-width: 14;
+  filter: blur(6px);
+  animation: zd-hum 0.18s steps(2) infinite;
+}
+
+/* основной разряд — горит всегда и потрескивает */
+.zd-bolt {
+  stroke: #f2f9ff;
+  stroke-width: 4;
+  filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px #4fd1ff) drop-shadow(0 0 22px #ff3b5c);
+}
+
+.zd-bolt-a {
+  animation: zd-crackle 0.9s steps(1) infinite;
+}
+
+/* второй разряд и ответвления — короткими вспышками */
+.zd-bolt-b,
+.zd-branch {
   opacity: 0;
   animation: zd-bolt 1.9s steps(1) infinite;
 }
 
-.zd-bolt-b {
-  animation-delay: -0.95s;
+.zd-branch {
+  stroke: #dff4ff;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 6px #4fd1ff);
+}
+
+.zd-bolt-b { animation-delay: -0.95s; }
+.zd-br-2 { animation-delay: -0.5s; }
+.zd-br-3 { animation-delay: -1.3s; }
+.zd-br-4 { animation-delay: -0.2s; }
+
+@keyframes zd-hum {
+  50% { opacity: 0.7; }
+}
+
+@keyframes zd-crackle {
+  0%, 100% { opacity: 1; }
+  30% { opacity: 0.55; }
+  34% { opacity: 1; }
+  70% { opacity: 0.75; }
 }
 
 @keyframes zd-bolt {
   0%, 60%, 100% { opacity: 0; }
   62%, 70% { opacity: 1; }
   66% { opacity: 0.2; }
+}
+
+/* в момент столкновения молния вспыхивает во всю силу */
+.zd-on .zd-vs svg {
+  animation: zd-surge 6s ease-out 1.5s infinite;
+}
+
+@keyframes zd-surge {
+  0%, 86%, 100% { filter: none; transform: scaleX(1); }
+  88% { filter: brightness(1.8); transform: scaleX(1.6); }
+  92% { filter: brightness(1.2); transform: scaleX(1.1); }
 }
 
 .zd-vs span {
@@ -2159,6 +2213,29 @@ html.zpm-intro-on .zi:not(.zi-run) {
   .zd-right .zrig {
     -webkit-mask-image: linear-gradient(to top, transparent, #000 25%);
     mask-image: linear-gradient(to top, transparent, #000 25%);
+  }
+
+  /* девушки друг над другом — молния горизонтально на стыке */
+  .zd-vs {
+    top: 50%;
+    bottom: auto;
+    left: 0;
+    width: 100%;
+    height: 110px;
+    transform: translateY(-50%);
+  }
+
+  .zd-vs svg {
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: 110px;
+    height: 100vw;
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+
+  .zd-on .zd-vs svg {
+    animation: none;
   }
 
   .zd-card {

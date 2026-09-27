@@ -1159,14 +1159,20 @@ html.zpm-intro-on .zi:not(.zi-run) {
   to { opacity: 1; transform: none; }
 }
 
+/* ТСПУ разваливается: половинки разлетаются и полностью исчезают */
+.zi.s5 .zi-gate {
+  opacity: 0;
+  transition: opacity 0.5s 0.55s;
+}
+
 .zi.s5 .zi-gate-top {
-  opacity: 0.25;
-  transform: translate(-40px, -120px) rotate(-28deg);
+  opacity: 0;
+  transform: translate(-160px, -260px) rotate(-50deg);
 }
 
 .zi.s5 .zi-gate-bot {
-  opacity: 0.25;
-  transform: translate(30px, 110px) rotate(24deg);
+  opacity: 0;
+  transform: translate(140px, 260px) rotate(45deg);
 }
 
 .zi.s5 .zi-gate text,

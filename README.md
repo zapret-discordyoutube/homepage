@@ -20,6 +20,8 @@
 | `templates/custom/header.tmpl` | вставляется в `<head>` **каждой** страницы: фавиконки и `site.css` |
 | `templates/custom/footer.tmpl` | полоса ссылок на вики внизу **каждой** страницы |
 | `templates/user/auth/signup_inner.tmpl` | регистрация без почты |
+| `templates/user/dashboard/dashboard.tmpl` | лента вошедшего пользователя; при `/?date=home` вместо неё рисует главную (вошедшим Forgejo всегда отдаёт на `/` ленту). При обновлении Forgejo сверить с оригиналом |
+| `templates/custom/extra_links.tmpl` | пункт «Главная» в верхнем меню для вошедших |
 | `public/assets/zapret-moe/home.css` | стили главной; подключается только из `home.tmpl`, на другие страницы не влияет |
 | `public/assets/zapret-moe/home.js` | заставка, синтезированная музыка к ней (Web Audio, без файлов) и «Пульс разработки» |
 | `public/assets/zapret-moe/site.css` | то немногое, что нужно на всех страницах |

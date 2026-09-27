@@ -1,0 +1,25 @@
+{{/* Лента вошедшего пользователя (Forgejo 16.0.2, оригинал — templates/user/dashboard/dashboard.tmpl).
+     Вошедшим Forgejo всегда отдаёт на «/» ленту, поэтому главная для них живёт
+     по адресу /?date=home (параметр date лента уже понимает, он доходит сюда как .Date).
+     При обновлении Forgejo сверить ветку else с новым оригиналом. */}}
+{{if eq .Date "home"}}
+{{template "home" .}}
+{{else}}
+{{template "base/head" .}}
+<div role="main" aria-label="{{.Title}}" class="page-content dashboard feeds">
+	{{template "user/dashboard/navbar" .}}
+	<div class="ui container flex-container">
+		<div class="flex-container-main">
+			{{template "base/alert" .}}
+			{{template "user/heatmap" .}}
+			{{if .Feeds}}
+				{{template "user/dashboard/feeds" .}}
+			{{else}}
+				{{template "user/dashboard/guide" .}}
+			{{end}}
+		</div>
+		{{template "user/dashboard/repolist" .}}
+	</div>
+</div>
+{{template "base/footer" .}}
+{{end}}

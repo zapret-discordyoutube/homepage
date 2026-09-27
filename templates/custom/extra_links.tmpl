@@ -1,0 +1,2 @@
+{{/* «Главная» в верхнем меню: вошедшим «/» показывает ленту, а главная — на /?date=home */}}
+{{if .IsSigned}}<a class="item{{if eq .Date "home"}} active{{end}}" href="{{AppSubUrl}}/?date=home">Главная</a>{{end}}

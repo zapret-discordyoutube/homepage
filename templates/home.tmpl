@@ -142,7 +142,7 @@
 				<div class="zh-actions">
 					<a class="zb zb-main" href="#zpm-arsenal">к инструментам<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m-4-5 5 5-5 5"/></svg></a>
 					<a class="zb" href="{{AppSubUrl}}/explore/repos">все репозитории</a>
-					{{if not .IsSigned}}<a class="zb zb-ghost" href="{{AppSubUrl}}/user/sign_up">аккаунт без почты</a>{{end}}
+					{{if .IsSigned}}<a class="zb zb-ghost" href="{{AppSubUrl}}/">моя лента</a>{{else}}<a class="zb zb-ghost" href="{{AppSubUrl}}/user/sign_up">аккаунт без почты</a>{{end}}
 				</div>
 				<button class="zh-replay" type="button" id="zpm-replay" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>посмотреть заставку ещё раз</button>
 			</div>

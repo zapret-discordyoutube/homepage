@@ -8,6 +8,48 @@ html.zpm-intro-lock body {
   overflow: hidden;
 }
 
+/* пока идёт заставка, всё остальное (шапка Forgejo, страница, подвал) не рисуется.
+   visibility, а не display: размеры блоков сохраняются для графиков и холстов */
+html.zpm-intro-lock body > :not(.zx):not(.zcur-fx):not(.zcur-dot):not(.zcur-ring):not(.zcm):not(.zcm-toast) {
+  visibility: hidden;
+}
+
+/* заставка живёт прямо в body, поэтому переменные темы — свои */
+.zx {
+  --bg: #04060f;
+  --bg2: #0a1022;
+  --bg3: #10183a;
+  --ink: #e8efff;
+  --mut: #97a6c9;
+  --dim: #5b6a90;
+  --blu: #3b82ff;
+  --cy: #4fd1ff;
+  --vio: #9b7bff;
+  --red: #ff3b5c;
+  --gold: #ffcf5a;
+  --line: rgba(120, 160, 255, 0.14);
+  --line2: rgba(120, 180, 255, 0.32);
+  --disp: "Unbounded", "Onest", system-ui, sans-serif;
+  --txt: "Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "SF Mono", Consolas, monospace;
+  --line: rgba(120, 160, 255, 0.14);
+}
+
+.zx *,
+.zx *::before,
+.zx *::after {
+  box-sizing: border-box;
+}
+
+.zx :where(h2, h3, p) {
+  margin: 0;
+}
+
+.zx a {
+  color: inherit;
+  text-decoration: none;
+}
+
 .zx {
   position: fixed;
   inset: 0;
@@ -1763,7 +1805,6 @@ html.zpm-intro-on .zx:not(.zx-run) {
   stroke: var(--cy);
   stroke-width: 3;
   stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
 }
 
 /* 20. битва */

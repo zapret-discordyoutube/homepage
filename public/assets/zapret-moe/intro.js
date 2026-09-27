@@ -502,6 +502,8 @@
   }
 
   function start(mode) {
+    // заставка — прямой потомок body: ни один родитель не обрежет и не сместит её слой
+    if (intro.parentNode !== document.body) document.body.appendChild(intro);
     list = mode === 'short' ? SHORT : FULL;
     layout();
     intro.querySelectorAll('img[loading="lazy"]').forEach(function (im) { im.loading = 'eager' });

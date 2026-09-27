@@ -1017,7 +1017,8 @@ html.zpm-intro-lock body {
   animation: zr-breathe 4.2s ease-in-out infinite;
 }
 
-.zpm-home .zr-l {
+.zpm-home .zr-l,
+.zx .zr-l {
   position: absolute;
   top: calc(var(--y) / 9 * 1%);
   left: calc(var(--x) / 16 * 1%);

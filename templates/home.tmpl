@@ -1,271 +1,398 @@
 {{template "base/head" .}}
+<link rel="preload" href="{{AppSubUrl}}/assets/zapret-moe/fonts/unbounded-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{AppSubUrl}}/assets/zapret-moe/home.css?v=@ASSETS_VER@">
+<script>
+	/* Заставка показывается один раз. Решение принимается до отрисовки, чтобы не мигала. */
+	(function () {
+		var seen = false;
+		try { seen = localStorage.getItem('zpm-intro') === '1' } catch (e) {}
+		var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+		if (!seen && !calm) document.documentElement.classList.add('zpm-intro-on');
+	})();
+</script>
 <div role="main" aria-label="{{if .IsSigned}}{{ctx.Locale.Tr "dashboard"}}{{else}}{{ctx.Locale.Tr "home"}}{{end}}" class="page-content home zpm-home">
 
-	<section class="zpm-mast" aria-labelledby="zpm-title">
-		<div class="zpm-motto" aria-hidden="true">
-			<div class="zpm-motto-track">
-				<span>Keep thinking. Keep searching. Keep learning.&nbsp;·&nbsp;Keep thinking. Keep searching. Keep learning.&nbsp;·&nbsp;</span>
-				<span>Keep thinking. Keep searching. Keep learning.&nbsp;·&nbsp;Keep thinking. Keep searching. Keep learning.&nbsp;·&nbsp;</span>
-			</div>
+	<!-- ── Заставка-презентация ─────────────────────────────── -->
+	<div class="zi" id="zpm-intro" aria-hidden="true">
+		<div class="zi-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+		<div class="zi-ctl">
+			<button class="zi-sound" type="button" tabindex="-1"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 8h3l4-4v12l-4-4H3z"/><path class="zi-sound-waves" d="M13 7c1.3 1.6 1.3 4.4 0 6M15.5 5c2.6 3 2.6 7 0 10"/></svg><span class="zi-sound-off">со звуком</span><span class="zi-sound-on">звук включён</span></button>
+			<button class="zi-skip" type="button" tabindex="-1">пропустить <span>esc</span></button>
 		</div>
-		<div class="zpm-shell zpm-mast-grid">
-			<div class="zpm-mast-copy">
-				<p class="zpm-status"><span class="zpm-dot" aria-hidden="true"></span>git.zapret.moe · сервер сообщества · Forgejo</p>
-				<h1 id="zpm-title">Интернет должен быть <span class="zpm-gl" data-text="свободным">свободным</span><span class="zpm-h1-sub"><b aria-hidden="true">$</b> как и код<span class="zpm-caret" aria-hidden="true">_</span></span></h1>
-				<p class="zpm-lead">Мы держим свой git-сервер, чтобы инструменты обхода блокировок нельзя было убрать одной жалобой на платформу. Здесь живут исходники, сборки и обсуждения: zapret, Xray, sing-box, клиенты для Android, Windows и Telegram.</p>
-				<div class="zpm-actions" aria-label="Основные разделы">
-					<a class="zpm-btn zpm-btn-main" href="{{AppSubUrl}}/zapretdiscordyoutube">проекты</a>
-					<a class="zpm-btn" href="{{AppSubUrl}}/explore/repos">репозитории</a>
-					{{if not .IsSigned}}<a class="zpm-btn" href="{{AppSubUrl}}/user/sign_up">аккаунт</a>{{end}}
-				</div>
-				<p class="zpm-note">весь код открыт · сборки рядом с исходниками · регистрация без почты</p>
-			</div>
+		<svg class="zi-scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+			<defs>
+				<radialGradient id="zi-glow-red"><stop offset="0" stop-color="#ff3b5c" stop-opacity=".9"/><stop offset="1" stop-color="#ff3b5c" stop-opacity="0"/></radialGradient>
+				<radialGradient id="zi-glow-blue"><stop offset="0" stop-color="#4fd1ff" stop-opacity=".55"/><stop offset="1" stop-color="#4fd1ff" stop-opacity="0"/></radialGradient>
+				<linearGradient id="zi-wire" x1="0" x2="1"><stop offset="0" stop-color="#3b82ff" stop-opacity="0"/><stop offset=".15" stop-color="#4fd1ff"/><stop offset=".85" stop-color="#9b7bff"/><stop offset="1" stop-color="#9b7bff" stop-opacity="0"/></linearGradient>
+				<clipPath id="zi-ava-clip"><circle cx="800" cy="215" r="150"/></clipPath>
+			</defs>
 
-			<div class="zpm-term" aria-hidden="true">
-				<div class="zpm-term-bar"><i></i><i></i><i></i><span>zapret@moe: ~</span></div>
-				<div class="zpm-term-body">
-					<p class="l1"><b>$</b> <span class="zpm-type t1">git clone https://git.zapret.moe/zapret-kvn.git</span></p>
-					<p class="o l2">Клонирование в «zapret-kvn»… готово.</p>
-					<p class="l3"><b>$</b> <span class="zpm-type t2">./zapret-kvn --strategy auto</span></p>
-					<p class="o l4"><em>[ ok ]</em> стратегия найдена: fake,split2</p>
-					<p class="o l5"><em>[ ok ]</em> youtube.com — доступен</p>
-					<p class="o l6"><em>[ ok ]</em> discord.com — доступен</p>
-					<p class="l7"><b>$</b> <span class="zpm-block"></span></p>
-				</div>
-			</div>
-		</div>
-	</section>
+			<!-- звёздная пыль -->
+			<g class="zi-dust">
+				<circle cx="140" cy="120" r="2"/><circle cx="310" cy="260" r="1.5"/><circle cx="520" cy="90" r="1.2"/><circle cx="1090" cy="140" r="1.6"/>
+				<circle cx="1330" cy="80" r="2"/><circle cx="1480" cy="300" r="1.3"/><circle cx="220" cy="420" r="1.2"/><circle cx="1400" cy="460" r="1.5"/>
+				<circle cx="690" cy="760" r="1.3"/><circle cx="1010" cy="820" r="1.8"/><circle cx="380" cy="820" r="1.4"/><circle cx="1250" cy="760" r="1.2"/>
+			</g>
 
-	<div class="zpm-tick" aria-hidden="true">
-		<div class="zpm-tick-track">
-			<span>свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄ свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄ свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄&nbsp;</span>
-			<span>свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄ свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄ свободный интернет ⁄⁄ открытый код ⁄⁄ zapret.moe ⁄⁄&nbsp;</span>
+			<!-- цифровой РКН -->
+			<g class="zi-rkn">
+				<ellipse class="zi-rkn-halo" cx="800" cy="210" rx="330" ry="210" fill="url(#zi-glow-red)" opacity=".13"/>
+				<path class="zi-rkn-body" d="M520 390 C 540 300 640 262 720 256 L 730 250 C 700 226 688 196 690 160 C 694 96 742 58 800 58 C 858 58 906 96 910 160 C 912 196 900 226 870 250 L 880 256 C 960 262 1060 300 1080 390 Z"/>
+				<g class="zi-eyes">
+					<ellipse cx="764" cy="162" rx="34" ry="16" fill="url(#zi-glow-red)"/>
+					<ellipse cx="836" cy="162" rx="34" ry="16" fill="url(#zi-glow-red)"/>
+					<ellipse cx="764" cy="162" rx="15" ry="5" fill="#ff5a74"/>
+					<ellipse cx="836" cy="162" rx="15" ry="5" fill="#ff5a74"/>
+				</g>
+				<g class="zi-strings">
+					<path pathLength="1" d="M600 330 L 430 596"/>
+					<path pathLength="1" d="M700 300 L 792 520"/>
+					<path pathLength="1" d="M900 300 L 808 520"/>
+					<path pathLength="1" d="M1000 330 L 1170 596"/>
+				</g>
+			</g>
+
+			<!-- Запрет-тян -->
+			<g class="zi-ava">
+				<circle cx="800" cy="215" r="176" fill="url(#zi-glow-blue)"/>
+				<image href="{{AppSubUrl}}/zapretdiscordyoutube.png" x="650" y="65" width="300" height="300" clip-path="url(#zi-ava-clip)" preserveAspectRatio="xMidYMid slice"/>
+				<circle cx="800" cy="215" r="150" fill="none" stroke="#4fd1ff" stroke-width="3"/>
+				<circle class="zi-ava-ring" cx="800" cy="215" r="166" fill="none" stroke="#9b7bff" stroke-width="2" stroke-dasharray="4 14"/>
+			</g>
+
+			<!-- провод -->
+			<path class="zi-wire" pathLength="1" d="M-20 600 H 1620" stroke="url(#zi-wire)" stroke-width="4" fill="none"/>
+			<path class="zi-wire-ticks" d="M-20 600 H 1620" stroke="#4fd1ff" stroke-width="12" stroke-dasharray="2 38" fill="none" opacity=".25"/>
+
+			<!-- DPI-шлюз -->
+			<g class="zi-gate">
+				<text x="800" y="500" text-anchor="middle">DPI</text>
+				<g class="zi-gate-top"><rect x="784" y="520" width="32" height="80" rx="6"/></g>
+				<g class="zi-gate-bot"><rect x="784" y="600" width="32" height="80" rx="6"/></g>
+				<rect class="zi-beam" x="776" y="596" width="48" height="8" rx="4"/>
+			</g>
+
+			<!-- 1: свободный поток -->
+			<g class="zi-flow zi-flow-1">
+				<rect x="-60" y="593" width="28" height="14" rx="4"/><rect x="-60" y="593" width="28" height="14" rx="4"/>
+				<rect x="-60" y="593" width="28" height="14" rx="4"/><rect x="-60" y="593" width="28" height="14" rx="4"/>
+				<rect x="-60" y="593" width="28" height="14" rx="4"/><rect x="-60" y="593" width="28" height="14" rx="4"/>
+			</g>
+
+			<!-- 3: пакеты режут -->
+			<g class="zi-hit">
+				<rect x="-60" y="593" width="28" height="14" rx="4"/><rect x="-60" y="593" width="28" height="14" rx="4"/>
+				<rect x="-60" y="593" width="28" height="14" rx="4"/><rect x="-60" y="593" width="28" height="14" rx="4"/>
+			</g>
+			<g class="zi-cut">
+				<path d="M770 560 L 830 640 M 830 560 L 770 640" stroke="#ff3b5c" stroke-width="6" stroke-linecap="round"/>
+			</g>
+
+			<!-- 4: фейк и фрагменты -->
+			<g class="zi-trick">
+				<g class="zi-fake"><rect x="-60" y="591" width="30" height="18" rx="4"/><text x="-45" y="582" text-anchor="middle">fake</text></g>
+				<rect class="zi-half zi-half-a" x="-60" y="593" width="13" height="14" rx="3"/>
+				<rect class="zi-half zi-half-b" x="-45" y="593" width="13" height="14" rx="3"/>
+			</g>
+
+			<!-- 8: искры и свобода -->
+			<g class="zi-sparks">
+				<g transform="translate(792 520)"><path d="M0 0 L -40 -30 M0 0 L -48 6 M0 0 L -30 34 M0 0 L 10 -46 M0 0 L 38 -26 M0 0 L 44 18"/></g>
+				<g transform="translate(430 596)"><path d="M0 0 L -30 -30 M0 0 L -40 8 M0 0 L 8 -40 M0 0 L 34 -18"/></g>
+				<g transform="translate(1170 596)"><path d="M0 0 L 30 -30 M0 0 L 40 8 M0 0 L -8 -40 M0 0 L -34 -18"/></g>
+			</g>
+			<g class="zi-flow zi-flow-2">
+				<rect x="-60" y="593" width="28" height="14" rx="4"/><rect x="-60" y="593" width="28" height="14" rx="4"/>
+				<rect x="-60" y="593" width="28" height="14" rx="4"/><rect x="-60" y="593" width="28" height="14" rx="4"/>
+				<rect x="-60" y="593" width="28" height="14" rx="4"/><rect x="-60" y="593" width="28" height="14" rx="4"/>
+				<rect x="-60" y="593" width="28" height="14" rx="4"/><rect x="-60" y="593" width="28" height="14" rx="4"/>
+			</g>
+		</svg>
+
+		<!-- слайды проектов: РКН-тян против наших инструментов -->
+		<div class="zi-proj zi-proj-5" style="--pos:38% 30%"><img src="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/media/branch/dev/docs/assets/zastogram-overview.png" width="2000" height="850" alt="" loading="lazy"><span class="zi-stamp">ZaStoGram</span></div>
+		<div class="zi-proj zi-proj-6" style="--pos:50% 30%"><img src="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2/media/branch/main/docs/assets/zapret2-control-ui.png" width="2000" height="850" alt="" loading="lazy"><span class="zi-stamp">Magisk Zapret 2</span></div>
+		<div class="zi-proj zi-proj-7" style="--pos:52% 35%"><img src="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/media/branch/main/docs/assets/zapret-kvn-android-overview.png" width="2000" height="850" alt="" loading="lazy"><span class="zi-stamp">Zapret KVN</span></div>
+
+		<div class="zi-caps">
+			<p class="zi-cap"><strong>Жил-был интернет.</strong><span>Быстрый, общий и ничей.</span></p>
+			<p class="zi-cap"><strong>Потом пришёл цифровой РКН.</strong><span>И привязал к проводам свои ниточки.</span></p>
+			<p class="zi-cap"><strong>Он заглядывает в каждый пакет.</strong><span>Не понравился — обрыв.</span></p>
+			<p class="zi-cap"><strong>Но пакеты научились хитрить.</strong><span>Фейк — для РКН, настоящие фрагменты — мимо.</span></p>
+			<p class="zi-cap"><strong>РКН-тян держит дверь.</strong><span>ZaStoGram всё равно проходит: Telegram с FakeTLS и WSS для Android и ПК.</span></p>
+			<p class="zi-cap"><strong>РКН-тян недовольна.</strong><span>Magisk Zapret 2 обходит DPI на уровне системы Android.</span></p>
+			<p class="zi-cap"><strong>И сама открывает дверь.</strong><span>Zapret KVN сам решает, что пустить в туннель, а что — напрямую.</span></p>
+			<p class="zi-cap"><strong>А за всем этим — Запрет-тян.</strong><span>И болгарка.</span></p>
+			<p class="zi-cap zi-cap-final"><strong>zapret.moe</strong><span>Добро пожаловать в мир обхода блокировок.</span></p>
 		</div>
+		<p class="zi-hint">нажмите, чтобы листать</p>
 	</div>
 
-	<section class="zpm-sec zpm-statsec" aria-labelledby="zpm-stats-title">
-		<div class="zpm-shell">
-			<div class="zpm-sec-head">
-				<h2 id="zpm-stats-title"><span aria-hidden="true">//</span> Пульс разработки</h2>
-			</div>
-			<div class="zpm-stats" id="zpm-stats" hidden>
-				<div class="zpm-stat"><b id="zpm-st-week">—</b><span>действий за 7 дней</span></div>
-				<div class="zpm-stat"><b id="zpm-st-month">—</b><span>за 30 дней</span></div>
-				<div class="zpm-stat"><b id="zpm-st-year">—</b><span>за 12 месяцев</span></div>
-				<div class="zpm-weeks" id="zpm-weeks" title="Активность по неделям, последние полгода"></div>
-			</div>
-		</div>
-	</section>
-
-	<script>
-	(function () {
-		fetch('{{AppSubUrl}}/api/v1/users/loop-uh/heatmap').then(function (r) { return r.json() }).then(function (data) {
-			var now = Date.now() / 1000, day = 86400;
-			var w = 0, m = 0, y = 0, weeks = new Array(26).fill(0);
-			data.forEach(function (p) {
-				var age = now - p.timestamp;
-				if (age < 7 * day) w += p.contributions;
-				if (age < 30 * day) m += p.contributions;
-				if (age < 365 * day) y += p.contributions;
-				var wi = Math.floor(age / (7 * day));
-				if (wi >= 0 && wi < 26) weeks[25 - wi] += p.contributions;
-			});
-			var fmt = function (n) { return n.toLocaleString('ru-RU') };
-			document.getElementById('zpm-st-week').textContent = fmt(w);
-			document.getElementById('zpm-st-month').textContent = fmt(m);
-			document.getElementById('zpm-st-year').textContent = fmt(y);
-			var max = Math.max.apply(null, weeks.concat([1]));
-			var box = document.getElementById('zpm-weeks');
-			weeks.forEach(function (v) {
-				var i = document.createElement('i');
-				i.style.height = Math.max(6, Math.round(v / max * 100)) + '%';
-				i.title = v + ' действий';
-				box.appendChild(i);
-			});
-			document.getElementById('zpm-stats').hidden = false;
-		}).catch(function () {});
-	})();
-	</script>
-
-	<section class="zpm-sec" aria-labelledby="zpm-feat-title">
-		<div class="zpm-shell">
-			<div class="zpm-sec-head">
-				<h2 id="zpm-feat-title"><span aria-hidden="true">//</span> Главные проекты</h2>
-			</div>
-
-			<div class="zpm-flag">
-				<div class="zpm-flag-info">
-					<p class="zpm-flag-badge">флагман · windows</p>
-					<h3>Zapret 2 GUI</h3>
-					<p class="zpm-flag-desc">Лаунчер и профили обхода DPI-блокировок: YouTube, Discord и заблокированные сайты. Поставил, выбрал профиль — работает.</p>
-					<div class="zpm-flag-btns">
-						<a class="zpm-btn zpm-btn-main" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/releases">сборки</a>
-						<a class="zpm-btn" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui">код</a>
-					</div>
-					<div class="zpm-eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+	<!-- ── Шапка ─────────────────────────────────────────────── -->
+	<section class="zh" aria-labelledby="zpm-title">
+		<div class="zs zh-grid">
+			<div class="zh-copy">
+				<p class="zh-kicker"><span class="zh-live" aria-hidden="true"></span>git-сервер сообщества Zapret.Moe</p>
+				<h1 id="zpm-title">Интернет должен быть <span class="zh-free">свободным<svg class="zh-chain" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true"><g class="zh-chain-l"><path d="M0 20 H 196"/></g><g class="zh-chain-r"><path d="M204 20 H 400"/></g></svg><svg class="zh-under" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M4 16 C 80 4, 150 22, 220 12 S 350 6, 396 14"/></svg></span></h1>
+				<p class="zh-lead">Цифровой РКН режет провода, а мы их сращиваем. Здесь живут открытые инструменты обхода блокировок: исходники, сборки и обсуждения. Держим сервер сами, чтобы код нельзя было убрать одной жалобой на платформу.</p>
+				<div class="zh-actions">
+					<a class="zb zb-main" href="#zpm-arsenal">к инструментам<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m-4-5 5 5-5 5"/></svg></a>
+					<a class="zb" href="{{AppSubUrl}}/explore/repos">все репозитории</a>
+					{{if not .IsSigned}}<a class="zb zb-ghost" href="{{AppSubUrl}}/user/sign_up">аккаунт без почты</a>{{end}}
 				</div>
-				<a class="zpm-flag-shot" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui" aria-label="Открыть репозиторий Zapret 2 GUI">
-					<img src="{{AppSubUrl}}/assets/zapret-moe/shot-gui.webp" width="1200" height="804" alt="Окно Zapret 2 GUI: статус обхода, пресеты и настройки программы" loading="lazy">
-				</a>
+				<button class="zh-replay" type="button" id="zpm-replay" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>посмотреть заставку ещё раз</button>
 			</div>
 
-			<div class="zpm-duo-grid">
-				<article class="zpm-duo">
-					<header><h3>Zapret KVN</h3><span class="zpm-duo-tag">2 версии</span></header>
-					<p class="zpm-duo-desc">VPN-клиент с выборочной маршрутизацией: сами решаете, какие приложения и сайты идут через туннель.</p>
-					<div class="zpm-ver">
-						<a class="v-main" href="{{AppSubUrl}}/zapretkvn/ZapretKVN-android"><span class="t">android</span><span class="v-name">ZapretKVN</span><span class="v-d">на движке sing-box-extended, без root</span></a>
-						<a class="v-rel" href="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/releases">сборки ↓</a>
+			<figure class="zh-art">
+				<div class="zh-art-frame">
+					<img src="{{AppSubUrl}}/zapretdiscordyoutube.png" width="640" height="640" alt="Запрет-тян болгаркой перерезает цепи на кабеле «интернет», над ней нависает цифровой РКН с красными глазами" fetchpriority="high">
+					<svg class="zh-art-fx" viewBox="0 0 640 640" aria-hidden="true">
+						<g class="zh-eyes"><ellipse cx="302" cy="62" rx="16" ry="7"/><ellipse cx="342" cy="62" rx="16" ry="7"/></g>
+						<g class="zh-sparks" transform="translate(338 500)">
+							<path d="M0 0 L -46 22"/><path d="M0 0 L -60 -6"/><path d="M0 0 L -38 40"/><path d="M0 0 L -22 52"/><path d="M0 0 L -70 12"/><path d="M0 0 L -52 34"/>
+						</g>
+						<path class="zh-scan" d="M0 0 H 640"/>
+					</svg>
+				</div>
+				<figcaption>Запрет-тян за работой</figcaption>
+			</figure>
+		</div>
+
+		<!-- лента-провод с DPI-шлюзом -->
+		<div class="zh-band" aria-hidden="true">
+			<svg viewBox="0 0 1600 150" preserveAspectRatio="xMidYMid slice">
+				<path class="zb-wire" d="M0 75 H 1600"/>
+				<path class="zb-ticks" d="M0 75 H 1600"/>
+				<g class="zb-gate">
+					<rect x="786" y="30" width="28" height="90" rx="6"/>
+					<rect class="zb-beam" x="778" y="71" width="44" height="8" rx="4"/>
+					<text x="800" y="20" text-anchor="middle">DPI</text>
+				</g>
+				<g class="zb-pk zb-real" style="--d:0s"><rect x="-44" y="68" width="14" height="14" rx="3"/><rect x="-30" y="68" width="14" height="14" rx="3"/></g>
+				<g class="zb-pk zb-real" style="--d:-1.2s"><rect x="-44" y="68" width="14" height="14" rx="3"/><rect x="-30" y="68" width="14" height="14" rx="3"/></g>
+				<g class="zb-pk zb-fake" style="--d:-2.4s"><rect x="-44" y="66" width="30" height="18" rx="4"/></g>
+				<g class="zb-pk zb-real" style="--d:-3.6s"><rect x="-44" y="68" width="14" height="14" rx="3"/><rect x="-30" y="68" width="14" height="14" rx="3"/></g>
+				<g class="zb-pk zb-real" style="--d:-4.8s"><rect x="-44" y="68" width="14" height="14" rx="3"/><rect x="-30" y="68" width="14" height="14" rx="3"/></g>
+			</svg>
+			<p><span class="zb-k zb-k-fake">фейк</span> ловит РКН · <span class="zb-k zb-k-real">фрагменты</span> проходят</p>
+		</div>
+	</section>
+
+	<!-- ── Пульс ────────────────────────────────────────────── -->
+	<section class="zp" id="zpm-stats" data-api="{{AppSubUrl}}/api/v1/users/loop-uh/heatmap" hidden aria-labelledby="zpm-stats-title">
+		<div class="zs zp-grid">
+			<div class="zp-head">
+				<p class="zeb">пульс разработки</p>
+				<h2 id="zpm-stats-title">Сопротивление не спит</h2>
+			</div>
+			<dl class="zp-nums">
+				<div><dt>за 7 дней</dt><dd id="zpm-st-week">—</dd></div>
+				<div><dt>за 30 дней</dt><dd id="zpm-st-month">—</dd></div>
+				<div><dt>за год</dt><dd id="zpm-st-year">—</dd></div>
+			</dl>
+			<figure class="zp-graph">
+				<svg viewBox="0 0 520 120" preserveAspectRatio="none" aria-hidden="true">
+					<path class="zp-grid-lines" d="M0 30 H520 M0 60 H520 M0 90 H520"/>
+					<path class="zp-area" id="zpm-st-area" d=""/>
+					<path class="zp-line" id="zpm-st-line" pathLength="1" d=""/>
+				</svg>
+				<figcaption>действий в git по неделям за полгода</figcaption>
+			</figure>
+		</div>
+	</section>
+
+	<!-- ── Арсенал ──────────────────────────────────────────── -->
+	<section class="za" id="zpm-arsenal" aria-labelledby="zpm-arsenal-title">
+		<div class="zs">
+			<div class="zsec-head">
+				<p class="zeb">арсенал Запрет-тян</p>
+				<h2 id="zpm-arsenal-title">Чем мы режем ниточки</h2>
+			</div>
+
+			<div class="za-grid">
+				<article class="zc zc-gui">
+					<div class="zc-body">
+						<p class="zc-tags"><span>windows</span><span>флагман</span></p>
+						<h3>Zapret 2 GUI</h3>
+						<p>Лаунчер и профили обхода DPI: YouTube, Discord и заблокированные сайты. Поставил, выбрал профиль — работает.</p>
+						<div class="zc-links">
+							<a class="zb zb-main zb-sm" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/releases">скачать</a>
+							<a class="zb zb-sm" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui">исходники</a>
+						</div>
 					</div>
-					<div class="zpm-ver">
-						<a class="v-main" href="{{AppSubUrl}}/zapretkvn/zapret-kvn"><span class="t">windows</span><span class="v-name">Zapret KVN</span><span class="v-d">Xray-core, sing-box и Zapret под одним капотом</span></a>
-						<a class="v-rel" href="{{AppSubUrl}}/zapretkvn/zapret-kvn/releases">сборки ↓</a>
+					<a class="zc-win" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui" aria-label="Открыть репозиторий Zapret 2 GUI">
+						<span class="zc-win-bar" aria-hidden="true"><i></i><i></i><i></i></span>
+						<img src="{{AppSubUrl}}/assets/zapret-moe/shot-gui.webp" width="1200" height="804" alt="Окно Zapret 2 GUI: статус обхода, пресеты и настройки программы" loading="lazy">
+					</a>
+				</article>
+
+				<article class="zc zc-art">
+					<img class="zc-cover" src="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/media/branch/main/docs/assets/zapret-kvn-android-overview.png" width="2000" height="850" alt="Обложка Zapret KVN" loading="lazy">
+					<div class="zc-body">
+						<p class="zc-tags"><span>android</span><span>windows</span></p>
+						<h3>Zapret KVN</h3>
+						<p>VPN-клиент с выборочной маршрутизацией: сами решаете, какие приложения и сайты идут через туннель.</p>
+						<ul class="zc-vers">
+							<li><a href="{{AppSubUrl}}/zapretkvn/ZapretKVN-android"><b>android</b>на sing-box-extended, без root</a><a class="zc-dl" href="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/releases" aria-label="Сборки Zapret KVN для Android">↓</a></li>
+							<li><a href="{{AppSubUrl}}/zapretkvn/zapret-kvn"><b>windows</b>Xray, sing-box и Zapret вместе</a><a class="zc-dl" href="{{AppSubUrl}}/zapretkvn/zapret-kvn/releases" aria-label="Сборки Zapret KVN для Windows">↓</a></li>
+						</ul>
 					</div>
 				</article>
 
-				<article class="zpm-duo">
-					<header><h3>ZaStoGram</h3><span class="zpm-duo-tag">2 версии</span></header>
-					<p class="zpm-duo-desc">Форк Telegram для сетей с DPI: MTProxy FakeTLS, WSS-транспорт и защита приватности.</p>
-					<div class="zpm-ver">
-						<a class="v-main" href="{{AppSubUrl}}/zastogram/ZaStoGram"><span class="t">android</span><span class="v-name">ZaStoGram</span><span class="v-d">мобильный форк: FakeTLS, WSS, приватность</span></a>
-						<a class="v-rel" href="{{AppSubUrl}}/zastogram/ZaStoGram/releases">сборки ↓</a>
+				<article class="zc zc-art">
+					<img class="zc-cover" src="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/media/branch/dev/docs/assets/zastogram-overview.png" width="2000" height="850" alt="Обложка ZaStoGram" loading="lazy">
+					<div class="zc-body">
+						<p class="zc-tags"><span>android</span><span>desktop</span></p>
+						<h3>ZaStoGram</h3>
+						<p>Форк Telegram для сетей с DPI: MTProxy FakeTLS, WSS-транспорт и защита приватности.</p>
+						<ul class="zc-vers">
+							<li><a href="{{AppSubUrl}}/zastogram/ZaStoGram"><b>android</b>FakeTLS, WSS, приватность</a><a class="zc-dl" href="{{AppSubUrl}}/zastogram/ZaStoGram/releases" aria-label="Сборки ZaStoGram для Android">↓</a></li>
+							<li><a href="{{AppSubUrl}}/zastogram/ZaStoGram_desktop"><b>desktop</b>форк Telegram Desktop</a><a class="zc-dl" href="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/releases" aria-label="Сборки ZaStoGram Desktop">↓</a></li>
+						</ul>
 					</div>
-					<div class="zpm-ver">
-						<a class="v-main" href="{{AppSubUrl}}/zastogram/ZaStoGram_desktop"><span class="t">desktop</span><span class="v-name">ZaStoGram Desktop</span><span class="v-d">форк Telegram Desktop с теми же транспортами</span></a>
-						<a class="v-rel" href="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/releases">сборки ↓</a>
+				</article>
+
+				<article class="zc zc-art zc-wide">
+					<img class="zc-cover" src="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2/media/branch/main/docs/assets/zapret2-control-ui.png" width="2000" height="850" alt="Обложка Magisk Zapret 2" loading="lazy">
+					<div class="zc-body">
+						<p class="zc-tags"><span>android</span><span>root</span></p>
+						<h3>Magisk Zapret 2</h3>
+						<p>Модуль Magisk: zapret2 работает на уровне системы, а панель управления настраивает стратегии прямо с телефона.</p>
+						<div class="zc-links">
+							<a class="zb zb-main zb-sm" href="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2/releases">скачать</a>
+							<a class="zb zb-sm" href="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2">исходники</a>
+						</div>
 					</div>
 				</article>
 			</div>
 		</div>
 	</section>
 
-	<section class="zpm-sec" aria-labelledby="zpm-shots-title">
-		<div class="zpm-shell">
-			<div class="zpm-sec-head">
-				<h2 id="zpm-shots-title"><span aria-hidden="true">//</span> Как это выглядит</h2>
+	<!-- ── Инвентарь ────────────────────────────────────────── -->
+	<section class="zt" aria-labelledby="zpm-tools-title">
+		<div class="zs zt-grid">
+			<div class="zsec-head zt-head">
+				<p class="zeb">по карманам</p>
+				<h2 id="zpm-tools-title">Мелкий инвентарь</h2>
+				<a class="zmore" href="{{AppSubUrl}}/zapretdiscordyoutube">вся организация →</a>
 			</div>
-			<div class="zpm-shots">
-				<a class="zpm-shot" href="{{AppSubUrl}}/zapretkvn/ZapretKVN-android">
-					<img src="{{AppSubUrl}}/assets/zapret-moe/shot-kvn.webp" width="1200" height="514" alt="Интерфейс Zapret KVN для Android" loading="lazy">
-					<span class="zpm-shot-label"><strong>Zapret KVN</strong><span>android</span></span>
-				</a>
-				<a class="zpm-shot" href="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2">
-					<img src="{{AppSubUrl}}/assets/zapret-moe/shot-magisk.webp" width="1200" height="514" alt="Панель управления Magisk Zapret 2" loading="lazy">
-					<span class="zpm-shot-label"><strong>Magisk Zapret 2</strong><span>android · root</span></span>
-				</a>
-				<a class="zpm-shot" href="{{AppSubUrl}}/zastogram/ZaStoGram_desktop">
-					<img src="{{AppSubUrl}}/assets/zapret-moe/shot-zsg.webp" width="1200" height="675" alt="Окно ZaStoGram Desktop" loading="lazy">
-					<span class="zpm-shot-label"><strong>ZaStoGram Desktop</strong><span>desktop</span></span>
-				</a>
-			</div>
-		</div>
-	</section>
-
-	<section class="zpm-sec" aria-labelledby="zpm-idx-title">
-		<div class="zpm-shell">
-			<div class="zpm-sec-head">
-				<h2 id="zpm-idx-title"><span aria-hidden="true">//</span> Ещё инструменты</h2>
-				<a class="zpm-more" href="{{AppSubUrl}}/zapretdiscordyoutube">вся организация →</a>
-			</div>
-			<ul class="zpm-index">
+			<ul class="zt-list">
 				<li><a href="{{AppSubUrl}}/zapretdiscordyoutube/zapret2-youtube-discord">
-					<span class="n">01</span><strong>Zapret для YouTube и Discord</strong><span class="t">windows</span><span class="d">портативный zapret2 с готовыми BAT-профилями</span><span class="a" aria-hidden="true">↗</span></a></li>
+					<svg class="zt-ico" viewBox="0 0 40 40" aria-hidden="true"><rect x="5" y="9" width="30" height="22" rx="7"/><path class="zt-fill" d="M17 15v10l9-5z"/></svg>
+					<span class="zt-t"><strong>Zapret для YouTube и Discord</strong><span>портативный zapret2 с готовыми BAT-профилями</span></span><em>windows</em></a></li>
 				<li><a href="{{AppSubUrl}}/zapretdiscordyoutube/roskomfree">
-					<span class="n">02</span><strong>RoskomFree</strong><span class="t">прокси</span><span class="d">HTTP-прокси на Tor и WebTunnel-мостах</span><span class="a" aria-hidden="true">↗</span></a></li>
+					<svg class="zt-ico zt-onion" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="22" r="13"/><circle cx="20" cy="22" r="8.5"/><circle class="zt-fill" cx="20" cy="22" r="4"/><path d="M20 9c0-3 2-5 5-5"/></svg>
+					<span class="zt-t"><strong>RoskomFree</strong><span>HTTP-прокси на Tor и WebTunnel-мостах</span></span><em>прокси</em></a></li>
 				<li><a href="{{AppSubUrl}}/zapretkvn/yourvpndead">
-					<span class="n">03</span><strong>YourVPNDead</strong><span class="t">android</span><span class="d">показывает, как приложения обнаруживают ваш VPN</span><span class="a" aria-hidden="true">↗</span></a></li>
+					<svg class="zt-ico zt-eye" viewBox="0 0 40 40" aria-hidden="true"><path d="M4 20s6-10 16-10 16 10 16 10-6 10-16 10S4 20 4 20z"/><circle class="zt-fill zt-pupil" cx="20" cy="20" r="4.5"/></svg>
+					<span class="zt-t"><strong>YourVPNDead</strong><span>показывает, как приложения замечают ваш VPN</span></span><em>android</em></a></li>
 				<li><a href="{{AppSubUrl}}/zapretdiscordyoutube/youtube_59second">
-					<span class="n">04</span><strong>YouTube 59second</strong><span class="t">userscript</span><span class="d">возвращает YouTube через альтернативный embed-плеер</span><span class="a" aria-hidden="true">↗</span></a></li>
-				<li><a href="https://wiki.zapret.moe/" target="_blank" rel="noopener noreferrer">
-					<span class="n">05</span><strong>База знаний</strong><span class="t">web</span><span class="d">статьи об обходе DPI, VPN и приватности</span><span class="a" aria-hidden="true">↗</span></a></li>
+					<svg class="zt-ico zt-clock" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="21" r="14"/><path class="zt-hand" d="M20 21V11"/><path d="M16 4h8"/></svg>
+					<span class="zt-t"><strong>YouTube 59second</strong><span>возвращает YouTube через альтернативный embed-плеер</span></span><em>userscript</em></a></li>
+				<li><a href="https://wiki.zapret.moe/Zapret/home" target="_blank" rel="noopener noreferrer">
+					<svg class="zt-ico zt-book" viewBox="0 0 40 40" aria-hidden="true"><path d="M6 9c5-2 10-2 14 1v22c-4-3-9-3-14-1z"/><path d="M34 9c-5-2-10-2-14 1v22c4-3 9-3 14-1z"/></svg>
+					<span class="zt-t"><strong>База знаний</strong><span>статьи об обходе DPI, VPN и приватности</span></span><em>wiki</em></a></li>
 			</ul>
 		</div>
 	</section>
 
-	<section class="zpm-sec zpm-rel" aria-labelledby="zpm-rel-title">
-		<div class="zpm-shell">
-			<div class="zpm-sec-head">
-				<h2 id="zpm-rel-title"><span aria-hidden="true">//</span> Свежие сборки</h2>
-				<p class="zpm-sec-note">APK и архивы лежат в Releases того же репозитория. Не доверяете сборке — соберите сами: код рядом.</p>
+	<!-- ── Сборки ───────────────────────────────────────────── -->
+	<section class="zr" aria-labelledby="zpm-rel-title">
+		<div class="zs">
+			<div class="zsec-head">
+				<p class="zeb">забрать сборку</p>
+				<h2 id="zpm-rel-title">Свежее — в Releases</h2>
+				<p class="zsec-note">APK и архивы лежат рядом с исходниками. Не доверяете сборке — соберите сами.</p>
 			</div>
-			<a class="zpm-fdroid" href="/fdroid/repo/">
-				<span class="zpm-fdroid-icon" aria-hidden="true">
-					<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84 1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48C13.85 1.23 12.95 1 12 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31C6.97 3.26 6 5.01 6 7h12c0-1.99-.97-3.75-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/></svg>
-				</span>
-				<span class="zpm-fdroid-copy">
-					<span class="zpm-fdroid-tag">android · автообновления</span>
+			<a class="zr-fdroid" href="/fdroid/repo/">
+				<svg class="zr-droid" viewBox="0 0 64 64" aria-hidden="true">
+					<g class="zr-droid-head"><path d="M14 30a18 18 0 0 1 36 0z"/><circle class="zr-droid-eye" cx="25" cy="22" r="2.4"/><circle class="zr-droid-eye" cx="39" cy="22" r="2.4"/><path class="zr-droid-ant" d="M22 13l-4-6m24 6 4-6"/></g>
+					<rect x="14" y="33" width="36" height="22" rx="5"/>
+					<path class="zr-droid-arrow" d="M32 38v11m-5-5 5 5 5-5"/>
+				</svg>
+				<span class="zr-fd-copy">
+					<span class="zr-fd-tag">android · обновления сами</span>
 					<strong>F-Droid-репозиторий</strong>
-					<span class="zpm-fdroid-d">добавьте репозиторий в клиент F-Droid — обновления ZaStoGram, Zapret KVN и Zapret2 Control будут приходить сами</span>
+					<span>Добавьте его в клиент F-Droid — ZaStoGram, Zapret KVN и Zapret2 Control будут обновляться без вашего участия.</span>
 				</span>
-				<b aria-hidden="true">→</b>
+				<b class="zr-go" aria-hidden="true">→</b>
 			</a>
-			<div class="zpm-relrow">
-				<a href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/releases"><span>windows · gui</span><strong>Zapret 2 GUI</strong><b aria-hidden="true">→</b></a>
-				<a href="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/releases"><span>android</span><strong>Zapret KVN</strong><b aria-hidden="true">→</b></a>
-				<a href="{{AppSubUrl}}/zapretkvn/zapret-kvn/releases"><span>windows</span><strong>Zapret KVN</strong><b aria-hidden="true">→</b></a>
-				<a href="{{AppSubUrl}}/zastogram/ZaStoGram/releases"><span>android</span><strong>ZaStoGram</strong><b aria-hidden="true">→</b></a>
-				<a href="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/releases"><span>desktop</span><strong>ZaStoGram</strong><b aria-hidden="true">→</b></a>
-			</div>
+			<ul class="zr-row">
+				<li><a href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/releases"><span>windows</span><strong>Zapret 2 GUI</strong></a></li>
+				<li><a href="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/releases"><span>android</span><strong>Zapret KVN</strong></a></li>
+				<li><a href="{{AppSubUrl}}/zapretkvn/zapret-kvn/releases"><span>windows</span><strong>Zapret KVN</strong></a></li>
+				<li><a href="{{AppSubUrl}}/zastogram/ZaStoGram/releases"><span>android</span><strong>ZaStoGram</strong></a></li>
+				<li><a href="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/releases"><span>desktop</span><strong>ZaStoGram</strong></a></li>
+				<li><a href="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2/releases"><span>android · root</span><strong>Magisk Zapret 2</strong></a></li>
+			</ul>
 		</div>
 	</section>
 
-	<section class="zpm-sec zpm-ci" aria-labelledby="zpm-ci-title">
-		<div class="zpm-shell">
-			<div class="zpm-sec-head">
-				<h2 id="zpm-ci-title"><span aria-hidden="true">//</span> Сборкам можно доверять</h2>
-				<p class="zpm-sec-note">Релизы собирает Forgejo Actions из открытых исходников: видно, что код не подменён и в сборку не подложено ничего лишнего.</p>
+	<!-- ── Доверие ──────────────────────────────────────────── -->
+	<section class="zci" aria-labelledby="zpm-ci-title">
+		<div class="zs">
+			<div class="zsec-head">
+				<p class="zeb">без сюрпризов</p>
+				<h2 id="zpm-ci-title">Сборке можно доверять</h2>
+				<p class="zsec-note">Релизы собирает Forgejo Actions из открытых исходников. Видно, что код не подменён и в архив не подложено лишнего.</p>
 			</div>
-			<div class="zpm-pipe" aria-hidden="true">
-				<div class="zpm-node n1"><b>01</b><span>checkout</span></div>
-				<i class="zpm-pipe-line"></i>
-				<div class="zpm-node n2"><b>02</b><span>build</span></div>
-				<i class="zpm-pipe-line"></i>
-				<div class="zpm-node n3"><b>03</b><span>checksum</span></div>
-				<i class="zpm-pipe-line"></i>
-				<div class="zpm-node n4"><b>04</b><span>release</span></div>
+			<div class="zci-pipe" aria-hidden="true">
+				<svg viewBox="0 0 1040 150">
+					<path class="zci-track" d="M100 60 H 940"/>
+					<path class="zci-track-lit" pathLength="1" d="M100 60 H 940"/>
+					<g class="zci-st" style="--i:0"><circle cx="100" cy="60" r="24"/><text x="100" y="118">checkout</text></g>
+					<g class="zci-st" style="--i:1"><circle cx="380" cy="60" r="24"/><text x="380" y="118">build</text></g>
+					<g class="zci-st" style="--i:2"><circle cx="660" cy="60" r="24"/><text x="660" y="118">sha256</text></g>
+					<g class="zci-st" style="--i:3"><circle cx="940" cy="60" r="24"/><text x="940" y="118">release</text></g>
+					<g class="zci-box"><path d="M-12 -6 0 -13 12 -6 12 8 0 15 -12 8Z M-12 -6 0 1 12 -6 M0 1v14"/></g>
+					<text class="zci-hash" x="660" y="142">9f2c…e41a ✓</text>
+				</svg>
 			</div>
-			<div class="zpm-ci-points">
-				<div><em>[ ok ]</em><div><strong>Из этого же кода</strong><p>Сборку запускает Actions прямо из коммита в репозитории — руками в артефакт никто не лезет.</p></div></div>
-				<div><em>[ ok ]</em><div><strong>Публичные логи</strong><p>Каждый шаг открыт: видно окружение, команды и из какого коммита собран файл.</p></div></div>
-				<div><em>[ ok ]</em><div><strong>Воспроизводимо</strong><p>Те же шаги можно повторить у себя и сравнить результат — вирусам и скрытым артефактам негде спрятаться.</p></div></div>
+			<div class="zci-points">
+				<div><strong>Из этого же кода</strong><p>Сборку запускает Actions прямо из коммита в репозитории — руками в артефакт никто не лезет.</p></div>
+				<div><strong>Публичные логи</strong><p>Каждый шаг открыт: окружение, команды и коммит, из которого собран файл.</p></div>
+				<div><strong>Воспроизводимо</strong><p>Повторите шаги у себя и сравните контрольные суммы — подложить что-то незаметно не выйдет.</p></div>
 			</div>
-			<div class="zpm-ci-btns"><a class="zpm-btn" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/actions">смотреть actions</a></div>
+			<a class="zb" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/actions">смотреть Actions</a>
 		</div>
 	</section>
 
-	<section class="zpm-sec zpm-help" aria-labelledby="zpm-help-title">
-		<div class="zpm-wm zpm-wm-help" aria-hidden="true">ZAPRET.MOE</div>
-		<div class="zpm-shell zpm-help-in">
-			<p class="zpm-help-kick">// поддержка проекта</p>
-			<h2 id="zpm-help-title">Нам нужна ваша помощь, чтобы создавать продукты бесплатно</h2>
-			<p class="zpm-help-desc">Донаты и премиум-опции — в боте <b>@zapretvpns_bot</b>. Код остаётся открытым, а сборки — бесплатными для всех.</p>
-			<a class="zpm-btn zpm-btn-main" href="https://t.me/zapretvpns_bot" target="_blank" rel="noopener noreferrer">поддержать в telegram</a>
-		</div>
-	</section>
-
-	<section class="zpm-sec zpm-join" aria-labelledby="zpm-join-title">
-		<div class="zpm-shell">
-			<div class="zpm-sec-head">
-				<h2 id="zpm-join-title"><span aria-hidden="true">//</span> Как участвовать</h2>
-			</div>
-			<ol class="zpm-steps">
-				<li><span aria-hidden="true">1</span><p><strong>Смотрите и скачивайте.</strong>Код и релизы открыты, аккаунт не нужен.</p></li>
-				<li><span aria-hidden="true">2</span><p><strong>Регистрируйтесь.</strong>Достаточно логина и пароля — почту подтверждать не нужно.</p></li>
-				<li><span aria-hidden="true">3</span><p><strong>Открывайте Issue.</strong>Ошибки, идеи и вопросы обсуждаются прямо в проектах.</p></li>
-			</ol>
-			<div class="zpm-cta">
-				<img src="{{AppSubUrl}}/assets/zapret-moe/community-avatar.jpg" width="72" height="72" alt="Эмблема сообщества Zapret.Moe" loading="lazy">
-				<div>
-					<p class="zpm-cta-brand">Zapret.Moe</p>
-					<p class="zpm-cta-line">Мы против гегемонии GitHub: открытый код нельзя выключить одним решением платформы.</p>
+	<!-- ── Поддержка и участие ──────────────────────────────── -->
+	<section class="zj" aria-labelledby="zpm-help-title">
+		<div class="zs">
+			<div class="zj-help">
+				<svg class="zj-heart" viewBox="0 0 120 110" aria-hidden="true">
+					<path class="zj-heart-base" d="M60 100 C 20 72 6 52 6 32 C 6 16 18 6 32 6 C 44 6 54 13 60 24 C 66 13 76 6 88 6 C 102 6 114 16 114 32 C 114 52 100 72 60 100 Z"/>
+					<path class="zj-heart-flow" pathLength="1" d="M60 100 C 20 72 6 52 6 32 C 6 16 18 6 32 6 C 44 6 54 13 60 24 C 66 13 76 6 88 6 C 102 6 114 16 114 32 C 114 52 100 72 60 100 Z"/>
+					<path class="zj-pulse" d="M22 52 H 44 L 52 36 L 62 70 L 70 46 L 76 52 H 98"/>
+				</svg>
+				<div class="zj-help-copy">
+					<p class="zeb">поддержка</p>
+					<h2 id="zpm-help-title">Запрет-тян нужна ваша помощь</h2>
+					<p>Донаты и премиум-опции — в боте <b>@zapretvpns_bot</b>. Код остаётся открытым, а сборки — бесплатными для всех.</p>
+					<a class="zb zb-main" href="https://t.me/zapretvpns_bot" target="_blank" rel="noopener noreferrer">поддержать в Telegram</a>
 				</div>
-				{{if .IsSigned}}
-					<a class="zpm-btn zpm-btn-main" href="{{AppSubUrl}}/explore/repos">к проектам</a>
-				{{else}}
-					<a class="zpm-btn zpm-btn-main" href="{{AppSubUrl}}/user/sign_up">создать аккаунт</a>
-				{{end}}
+			</div>
+
+			<div class="zj-join">
+				<h2>Как присоединиться</h2>
+				<ol class="zj-steps">
+					<li><b>1</b><strong>Смотрите и качайте</strong><span>Код и релизы открыты, аккаунт не нужен.</span></li>
+					<li><b>2</b><strong>Регистрируйтесь</strong><span>Логин и пароль — почта не нужна.</span></li>
+					<li><b>3</b><strong>Пишите в Issues</strong><span>Ошибки, идеи и вопросы обсуждаются прямо в проектах.</span></li>
+				</ol>
+				<div class="zj-cta">
+					<p>Мы против монополии GitHub: открытый код нельзя выключить одним решением платформы.</p>
+					{{if .IsSigned}}
+						<a class="zb zb-main" href="{{AppSubUrl}}/explore/repos">к проектам</a>
+					{{else}}
+						<a class="zb zb-main" href="{{AppSubUrl}}/user/sign_up">создать аккаунт</a>
+					{{end}}
+				</div>
 			</div>
 		</div>
 	</section>
 </div>
+
+<script src="{{AppSubUrl}}/assets/zapret-moe/home.js?v=@ASSETS_VER@" defer></script>
 {{template "base/footer" .}}

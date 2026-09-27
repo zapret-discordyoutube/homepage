@@ -1,0 +1,35 @@
+/* Стили, которые нужны на КАЖДОЙ странице git.zapret.moe.
+   Подключаются из templates/custom/header.tmpl. Главная грузит свой home.css
+   отдельно, поэтому здесь нет ничего, что относится только к ней. */
+
+/* ── Полоса ссылок на вики (templates/custom/footer.tmpl) ── */
+
+.zpm-wikibar {
+  border-top: 1px solid var(--color-secondary, rgba(128, 128, 128, 0.25));
+  background: var(--color-footer, transparent);
+  font-size: 13px;
+}
+
+.zpm-wikibar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 16px;
+}
+
+.zpm-wikibar-label {
+  color: var(--color-text-light-2, #888);
+}
+
+.zpm-wikibar a {
+  color: var(--color-text-light, inherit);
+  text-decoration: none;
+}
+
+.zpm-wikibar a:hover {
+  color: var(--color-primary, inherit);
+  text-decoration: underline;
+}

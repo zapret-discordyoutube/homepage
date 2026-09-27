@@ -43,6 +43,50 @@
 		</div>
 	</div>
 
+	<section class="zpm-sec zpm-statsec" aria-labelledby="zpm-stats-title">
+		<div class="zpm-shell">
+			<div class="zpm-sec-head">
+				<h2 id="zpm-stats-title"><span aria-hidden="true">//</span> Пульс разработки</h2>
+			</div>
+			<div class="zpm-stats" id="zpm-stats" hidden>
+				<div class="zpm-stat"><b id="zpm-st-week">—</b><span>действий за 7 дней</span></div>
+				<div class="zpm-stat"><b id="zpm-st-month">—</b><span>за 30 дней</span></div>
+				<div class="zpm-stat"><b id="zpm-st-year">—</b><span>за 12 месяцев</span></div>
+				<div class="zpm-weeks" id="zpm-weeks" title="Активность по неделям, последние полгода"></div>
+			</div>
+		</div>
+	</section>
+
+	<script>
+	(function () {
+		fetch('{{AppSubUrl}}/api/v1/users/loop-uh/heatmap').then(function (r) { return r.json() }).then(function (data) {
+			var now = Date.now() / 1000, day = 86400;
+			var w = 0, m = 0, y = 0, weeks = new Array(26).fill(0);
+			data.forEach(function (p) {
+				var age = now - p.timestamp;
+				if (age < 7 * day) w += p.contributions;
+				if (age < 30 * day) m += p.contributions;
+				if (age < 365 * day) y += p.contributions;
+				var wi = Math.floor(age / (7 * day));
+				if (wi >= 0 && wi < 26) weeks[25 - wi] += p.contributions;
+			});
+			var fmt = function (n) { return n.toLocaleString('ru-RU') };
+			document.getElementById('zpm-st-week').textContent = fmt(w);
+			document.getElementById('zpm-st-month').textContent = fmt(m);
+			document.getElementById('zpm-st-year').textContent = fmt(y);
+			var max = Math.max.apply(null, weeks.concat([1]));
+			var box = document.getElementById('zpm-weeks');
+			weeks.forEach(function (v) {
+				var i = document.createElement('i');
+				i.style.height = Math.max(6, Math.round(v / max * 100)) + '%';
+				i.title = v + ' действий';
+				box.appendChild(i);
+			});
+			document.getElementById('zpm-stats').hidden = false;
+		}).catch(function () {});
+	})();
+	</script>
+
 	<section class="zpm-sec" aria-labelledby="zpm-feat-title">
 		<div class="zpm-shell">
 			<div class="zpm-sec-head">

@@ -1686,3 +1686,91 @@
   }
 }
 
+
+/* ── Пульс разработки ─────────────────────────────────── */
+
+.zpm-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+
+.zpm-stats[hidden] {
+  display: none;
+}
+
+.zpm-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  border: 1px solid var(--zpm-line);
+  border-radius: 14px;
+  background: rgba(8, 20, 44, 0.5);
+}
+
+.zpm-stat b {
+  font-family: var(--zpm-sans);
+  font-size: clamp(28px, 4vw, 40px);
+  color: var(--zpm-neon);
+}
+
+.zpm-stat span {
+  color: var(--zpm-mut);
+  font-size: 13px;
+}
+
+.zpm-weeks {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 90px;
+}
+
+.zpm-weeks i {
+  flex: 1;
+  min-height: 4px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(to top, var(--zpm-blu), var(--zpm-neon));
+  opacity: 0.8;
+}
+
+@media (max-width: 760px) {
+  .zpm-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Полоса ссылок на вики (на всех страницах) ────────── */
+
+.zpm-wikibar {
+  border-top: 1px solid var(--color-secondary, rgba(128, 128, 128, 0.25));
+  background: var(--color-footer, transparent);
+  font-size: 13px;
+}
+
+.zpm-wikibar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 16px;
+}
+
+.zpm-wikibar-label {
+  color: var(--color-text-light-2, #888);
+}
+
+.zpm-wikibar a {
+  color: var(--color-text-light, inherit);
+  text-decoration: none;
+}
+
+.zpm-wikibar a:hover {
+  color: var(--color-primary, inherit);
+  text-decoration: underline;
+}

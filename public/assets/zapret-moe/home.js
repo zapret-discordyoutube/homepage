@@ -1180,6 +1180,7 @@
       var c = root.classList, el = t && t.closest ? t : null;
       c.toggle('zcur-link', !!(el && el.closest('a, button, [role="button"], .zbox, .zc-dl, .zp-lg, .zlock-hit, .zg-canvas, summary, label')));
       c.toggle('zcur-rkn', !!(el && el.closest('.zr-rkn, .zi-rig-rkn')));
+      c.toggle('zcur-love', !!(el && el.closest('.zj-help, .zlock, a[href*="zapretvpns_bot"]')));
       c.toggle('zcur-text', !!(el && !el.closest('a, button') && el.closest('p, h1, h2, h3, li span, dd, code, .zt-t') && !el.closest('.zr-rkn')));
     }
     addEventListener('pointermove', function (e) {
@@ -1193,13 +1194,17 @@
       if (e.pointerType !== 'mouse' || e.button !== 0) return;
       root.classList.add('zcur-down');
       var hot = e.target.closest && e.target.closest('a, button, [role="button"], .zbox, .zlock-hit, .zg-canvas, input, textarea, select');
-      if (hot) ripple(e.clientX, e.clientY); else block(e.clientX, e.clientY);
+      if (root.classList.contains('zcur-love')) hearts(e.clientX, e.clientY);
+      else if (hot) ripple(e.clientX, e.clientY); else block(e.clientX, e.clientY);
       kick();
     });
     addEventListener('pointerup', function () { root.classList.remove('zcur-down') });
     function ripple(x, y) {
       fx.push({ k: 'ring', x: x, y: y, t: 0, dur: 0.5, col: '79,209,255' });
       for (var i = 0; i < 8; i++) { var a = i / 8 * 6.28; fx.push({ k: 'spark', x: x, y: y, vx: Math.cos(a) * 160, vy: Math.sin(a) * 160, t: 0, dur: 0.4, col: '191,240,255' }) }
+    }
+    function hearts(x, y) {
+      for (var i = 0; i < 10; i++) { var a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2, v = 90 + Math.random() * 150; fx.push({ k: 'heart', x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, t: 0, dur: 0.9 + Math.random() * 0.4, s: 6 + Math.random() * 7, h: [350, 335, 320][i % 3] }) }
     }
     // «блокировка»: красная рамка ТСПУ схлопывается — пакет раскалывается и уходит в обход
     function block(x, y) { fx.push({ k: 'block', x: x, y: y, t: 0, dur: 0.75, ang: Math.random() * 1.2 - 0.6 }) }
@@ -1214,11 +1219,12 @@
       g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
       // шлейф-провод
       while (trail.length && now - trail[0].t > 260) trail.shift();
+      var love = root.classList.contains('zcur-love');
       if (trail.length > 1) {
         g.lineCap = 'round'; g.lineJoin = 'round';
         for (var i = 1; i < trail.length; i++) {
           var p = trail[i - 1], q = trail[i], a = 1 - (now - q.t) / 260;
-          g.strokeStyle = 'rgba(' + (79 + (1 - a) * 76 | 0) + ',' + (209 - (1 - a) * 86 | 0) + ',255,' + (a * 0.55) + ')';
+          g.strokeStyle = love ? 'rgba(255,' + (107 + (1 - a) * 60 | 0) + ',131,' + (a * 0.6) + ')' : 'rgba(' + (79 + (1 - a) * 76 | 0) + ',' + (209 - (1 - a) * 86 | 0) + ',255,' + (a * 0.55) + ')';
           g.lineWidth = 1 + a * 2.5; g.beginPath(); g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.stroke();
         }
       }
@@ -1230,6 +1236,14 @@
         } else if (f.k === 'spark') {
           f.x += f.vx * dt; f.y += f.vy * dt; f.vx *= 0.9; f.vy *= 0.9;
           g.fillStyle = 'rgba(' + f.col + ',' + (1 - k) + ')'; g.fillRect(f.x - 1.5, f.y - 1.5, 3, 3);
+        } else if (f.k === 'heart') {
+          f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 160 * dt; f.vx *= 0.97;
+          var s = f.s * (k < 0.15 ? k / 0.15 : 1);
+          g.save(); g.translate(f.x, f.y); g.rotate(f.vx * 0.002); g.globalAlpha = 1 - k * k;
+          g.fillStyle = 'hsl(' + f.h + ',90%,66%)'; g.shadowColor = '#ff3b5c'; g.shadowBlur = 8;
+          g.beginPath(); g.moveTo(0, s * 0.9);
+          g.bezierCurveTo(-s * 1.4, 0, -s * 0.9, -s, 0, -s * 0.35);
+          g.bezierCurveTo(s * 0.9, -s, s * 1.4, 0, 0, s * 0.9); g.fill(); g.restore();
         } else if (f.k === 'block') {
           g.save(); g.translate(f.x, f.y);
           var s, close = Math.min(1, k / 0.3);

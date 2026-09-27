@@ -651,7 +651,7 @@
   if (duel && window.IntersectionObserver && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) {
     duel.classList.add('zd-js');
     var dio = new IntersectionObserver(function (es) {
-      if (es[0].isIntersecting) { duel.classList.add('zd-on'); dio.disconnect() }
+      if (es[0].isIntersecting) { duel.classList.add('zd-on'); duel._onAt = performance.now(); dio.disconnect() }
     }, { threshold: 0.2 });
     dio.observe(duel);
   }
@@ -744,5 +744,89 @@
       r.addEventListener('pointerenter', function () { if (Date.now() - last > 1500) { last = Date.now(); poke(r) } });
       r.addEventListener('pointerdown', function () { poke(r) });
     });
+  })();
+
+  /* ── Молния дуэли: фрактальный разряд на canvas ─────────────────────── */
+  (function () {
+    var duel = document.getElementById('zpm-duel');
+    var cv = duel && duel.querySelector('.zd-canvas');
+    if (!cv || !cv.getContext || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    var g = cv.getContext('2d'), W = 0, H = 0, dpr = 1, horiz = false, visible = false, raf = 0, nextShape = 0, bolts = [], flick = 1;
+    duel.classList.add('zd-live');
+
+    function size() {
+      var r = cv.getBoundingClientRect();
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      W = r.width; H = r.height;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      horiz = W > H;
+    }
+    // смещение средней точки: ломаная с убывающим разбросом
+    function crack(x1, y1, x2, y2, rough, depth, out) {
+      if (depth === 0) { out.push([x2, y2]); return }
+      var mx = (x1 + x2) / 2, my = (y1 + y2) / 2, len = Math.hypot(x2 - x1, y2 - y1);
+      var nx = -(y2 - y1) / len, ny = (x2 - x1) / len, off = (Math.random() - 0.5) * len * rough;
+      mx += nx * off; my += ny * off;
+      crack(x1, y1, mx, my, rough, depth - 1, out);
+      crack(mx, my, x2, y2, rough, depth - 1, out);
+    }
+    function shape(boost) {
+      var L = horiz ? W : H, T = horiz ? H : W, main = [];
+      var a = horiz ? [-10, H / 2] : [W / 2, -10], b = horiz ? [W + 10, H / 2] : [W / 2, H + 10];
+      main.push(a); crack(a[0], a[1], b[0], b[1], 0.32, 8, main);
+      // держим ствол в пределах полосы
+      var ax = horiz ? 1 : 0, c = T / 2, dev = 1;
+      main.forEach(function (p) { dev = Math.max(dev, Math.abs(p[ax] - c)) });
+      var f = Math.min(1, T * 0.38 / dev);      // сжимаем разброс равномерно, а не обрезаем по краю
+      main.forEach(function (p) { p[ax] = c + (p[ax] - c) * f });
+      var list = [{ pts: main, w: 1 }];
+      var nb = (boost ? 7 : 3) + Math.floor(Math.random() * 3);
+      for (var i = 0; i < nb; i++) {
+        var s = main[4 + Math.floor(Math.random() * (main.length - 8))];
+        var ang = (horiz ? Math.PI / 2 : 0) + (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.9) + (horiz ? 0 : (Math.random() < 0.5 ? 0 : Math.PI));
+        var bl = L * (0.08 + Math.random() * (boost ? 0.22 : 0.14));
+        var e = [s[0] + Math.sin(ang) * bl * (horiz ? 1 : 0.9), s[1] + Math.cos(ang) * bl];
+        if (!horiz) e = [s[0] + (Math.random() < 0.5 ? -1 : 1) * bl * 0.6, s[1] + bl * (Math.random() < 0.3 ? -0.5 : 0.8)];
+        else e = [s[0] + bl * (Math.random() < 0.5 ? -0.6 : 0.8), s[1] + (Math.random() < 0.5 ? -1 : 1) * bl * 0.6];
+        var pts = [s]; crack(s[0], s[1], e[0], e[1], 0.45, 5, pts);
+        list.push({ pts: pts, w: 0.45 });
+      }
+      return list;
+    }
+    function stroke(pts, width, color, blur) {
+      g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
+      for (var i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+      g.lineWidth = width; g.strokeStyle = color; g.shadowBlur = blur; g.shadowColor = color; g.stroke();
+    }
+    function frame(now) {
+      raf = 0;
+      if (!visible || document.hidden) return;
+      var boost = false;
+      if (duel._onAt) { var ph = (now - duel._onAt - 1500) % 6000; boost = ph > 5230 && ph < 5750 }
+      if (now > nextShape) {
+        bolts = shape(boost);
+        nextShape = now + (boost ? 45 : 70 + Math.random() * 60);
+        flick = Math.random() < 0.06 ? 0.25 : 0.75 + Math.random() * 0.25;
+      }
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.clearRect(0, 0, W, H);
+      g.lineCap = 'round'; g.lineJoin = 'round';
+      g.globalCompositeOperation = 'lighter';
+      var k = (boost ? 1.9 : 1.2) * flick, sh = horiz ? [0, 2] : [2, 0];
+      bolts.forEach(function (b) {
+        var w = b.w * k;
+        g.save(); g.translate(-sh[0], -sh[1]); stroke(b.pts, 9 * w, 'rgba(79,209,255,' + (0.22 * k) + ')', 26); g.restore();
+        g.save(); g.translate(sh[0], sh[1]); stroke(b.pts, 9 * w, 'rgba(255,59,92,' + (0.2 * k) + ')', 26); g.restore();
+        stroke(b.pts, 3.2 * w, 'rgba(190,225,255,' + (0.8 * k) + ')', 12);
+        stroke(b.pts, 1.3 * w + 0.4, 'rgba(255,255,255,' + Math.min(1, k) + ')', 4);
+      });
+      g.globalCompositeOperation = 'source-over';
+      raf = requestAnimationFrame(frame);
+    }
+    function kick() { if (!raf && visible) raf = requestAnimationFrame(frame) }
+    size();
+    addEventListener('resize', function () { size(); nextShape = 0 });
+    document.addEventListener('visibilitychange', kick);
+    new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) { size(); kick() } }).observe(duel);
   })();
 })();

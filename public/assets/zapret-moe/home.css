@@ -2171,6 +2171,23 @@ html.zpm-intro-on .zi:not(.zi-run) {
   66% { opacity: 0.2; }
 }
 
+/* живая молния на canvas (home.js); SVG остаётся запасным вариантом без JS */
+.zd-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+
+.zd-live .zd-canvas {
+  display: block;
+}
+
+.zd-live .zd-vs svg {
+  display: none;
+}
+
 /* в момент столкновения молния вспыхивает во всю силу */
 .zd-on .zd-vs svg {
   animation: zd-surge 6s ease-out 1.5s infinite;
@@ -2236,6 +2253,10 @@ html.zpm-intro-on .zi:not(.zi-run) {
 
   .zd-on .zd-vs svg {
     animation: none;
+  }
+
+  .zd-vs .zd-canvas {
+    inset: 0;
   }
 
   .zd-card {

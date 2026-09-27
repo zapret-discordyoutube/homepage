@@ -788,6 +788,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 
 /* слой с персонажами: его положение считает home.js так, чтобы он совпадал с SVG-сценой */
 .zi-stage {
+  will-change: transform, opacity;
   position: absolute;
   top: var(--ry, 0);
   left: var(--rx, 0);
@@ -802,23 +803,50 @@ html.zpm-intro-on .zi:not(.zi-run) {
   opacity: 0;
 }
 
-/* края кадра растворяются в темноте — на узких экранах не видно «прямоугольника» */
+/* края кадра растворяются в темноте. Раньше это была mask-image, но маска
+   на контейнере с анимированными слоями заставляла браузер заново растрировать
+   всю сцену каждый кадр. Статичная виньетка поверх выглядит так же и ничего не стоит. */
 .zi-rig .zrig {
   height: 100%;
-  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 80%, transparent), linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
-  mask-image: linear-gradient(to bottom, transparent, #000 9%, #000 80%, transparent), linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
 }
 
-.zi-dust circle {
-  fill: #9bb4ff;
+.zi-rig::after {
+  position: absolute;
+  inset: -1px;
+  z-index: 5;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, #03040b, rgba(3, 4, 11, 0) 10%, rgba(3, 4, 11, 0) 78%, #03040b),
+    linear-gradient(to right, #03040b, rgba(3, 4, 11, 0) 6%, rgba(3, 4, 11, 0) 94%, #03040b);
+}
+
+/* звёздная пыль: два слоя точек-теней, мерцают только прозрачностью (видеокарта) */
+.zi-dust2 {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.zi-dust2 i {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  box-shadow: 9vw 13vh #9bb4ff, 19vw 29vh #9bb4ff, 33vw 10vh #9bb4ff, 68vw 16vh #9bb4ff, 83vw 9vh #9bb4ff, 92vw 33vh #9bb4ff,
+    14vw 47vh #9bb4ff, 87vw 51vh #9bb4ff, 43vw 84vh #9bb4ff, 63vw 91vh #9bb4ff, 24vw 91vh #9bb4ff, 78vw 84vh #9bb4ff;
   opacity: 0.4;
+  will-change: opacity;
   animation: zi-twinkle 3s ease-in-out infinite alternate;
 }
 
-.zi-dust circle:nth-child(3n) { animation-delay: -1s; }
-.zi-dust circle:nth-child(3n + 1) { animation-delay: -2s; }
+.zi-dust2 i + i {
+  box-shadow: 5vw 70vh #cfd9ff, 27vw 62vh #cfd9ff, 55vw 5vh #cfd9ff, 72vw 40vh #cfd9ff, 96vw 72vh #cfd9ff, 38vw 30vh #cfd9ff,
+    58vw 58vh #cfd9ff, 12vw 24vh #cfd9ff, 90vw 18vh #cfd9ff, 48vw 96vh #cfd9ff;
+  animation-delay: -1.5s;
+}
 
 @keyframes zi-twinkle {
   to { opacity: 0.08; }
@@ -851,9 +879,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 .zi-halo {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: zi-halo 3.6s ease-in-out infinite alternate;
+  opacity: 0.22;
 }
 
 @keyframes zi-halo {
@@ -863,7 +889,6 @@ html.zpm-intro-on .zi:not(.zi-run) {
 .zi-mist ellipse {
   fill: url(#zi-glow-red);
   opacity: 0.14;
-  animation: zi-mist 7s ease-in-out infinite alternate;
 }
 
 .zi-mist ellipse:nth-child(2) { animation-duration: 9s; animation-direction: alternate-reverse; }
@@ -999,9 +1024,8 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 @keyframes zi-emerge {
-  0% { opacity: 0; transform: scale(1.22) translateY(4%); filter: brightness(0) saturate(0); }
-  45% { opacity: 1; filter: brightness(0.35) saturate(0.6); }
-  100% { opacity: 1; transform: none; filter: brightness(1) saturate(1); }
+  0% { opacity: 0; transform: scale(1.22) translateY(4%); }
+  100% { opacity: 1; transform: none; }
 }
 
 .zi.s2 .zi-gate {
@@ -1140,9 +1164,9 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 @keyframes zi-glitch-out {
-  0% { opacity: 1; clip-path: inset(0); transform: none; filter: none; }
-  12% { clip-path: inset(10% 0 55% 0); transform: translateX(-3%); filter: hue-rotate(90deg); }
-  24% { clip-path: inset(40% 0 20% 0); transform: translateX(4%); filter: saturate(3); }
+  0% { opacity: 1; clip-path: inset(0); transform: none; }
+  12% { clip-path: inset(10% 0 55% 0); transform: translateX(-3%); }
+  24% { clip-path: inset(40% 0 20% 0); transform: translateX(4%); }
   36% { clip-path: inset(0 0 70% 0); transform: translateX(-6%); }
   48% { clip-path: inset(60% 0 5% 0); transform: translateX(5%); opacity: 0.8; }
   60% { clip-path: inset(25% 0 45% 0); transform: translateX(-2%) scaleY(1.05); opacity: 0.6; }
@@ -1890,7 +1914,6 @@ html.zpm-intro-on .zi:not(.zi-run) {
 
 /* контровой свет */
 .zr-rim {
-  mix-blend-mode: screen;
   animation: zr-rim 2.8s ease-in-out infinite alternate;
 }
 
@@ -1911,6 +1934,22 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 /* волосы */
+/* всё, что анимируется у персонажей, — на своих слоях видеокарты:
+   анимируются только transform и opacity, без перерисовки */
+.zr-hair,
+.zr-hand,
+.zr-in,
+.zr-eye,
+.zr-eye::after,
+.zr-embers i,
+.zr-sparks i {
+  will-change: transform, opacity;
+}
+
+.zr-rim {
+  will-change: opacity;
+}
+
 .zr-hair {
   animation: zr-sway var(--sd, 4.2s) ease-in-out infinite alternate;
   animation-delay: var(--sdl, 0s);
@@ -1968,7 +2007,6 @@ html.zpm-intro-on .zi:not(.zi-run) {
   aspect-ratio: 1;
   border-radius: 50%;
   background: radial-gradient(circle, #fff 0 4%, var(--ec) 12%, color-mix(in srgb, var(--ec) 40%, transparent) 32%, transparent 68%);
-  mix-blend-mode: screen;
   pointer-events: none;
   transform: translate(-50%, -50%);
   animation: zr-eye 2.2s ease-in-out infinite;
@@ -2343,17 +2381,15 @@ html.zpm-intro-on .zi:not(.zi-run) {
 /* РКН-тян: срывы сигнала */
 .zr-gl {
   opacity: 0;
-  mix-blend-mode: screen;
   pointer-events: none;
+  will-change: transform, clip-path, opacity;
 }
 
 .zr-gl-a {
-  filter: sepia(1) saturate(8) hue-rotate(-50deg) brightness(0.9);
   animation: zr-glitch-a 5.3s steps(1) infinite;
 }
 
 .zr-gl-b {
-  filter: sepia(1) saturate(6) hue-rotate(140deg) brightness(0.9);
   animation: zr-glitch-b 5.3s steps(1) infinite;
 }
 
@@ -2375,13 +2411,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 .zr-rkn .zr-in {
-  animation: zr-breathe 4.2s ease-in-out infinite, zr-jolt 5.3s steps(1) infinite;
-}
-
-@keyframes zr-jolt {
-  0%, 70%, 80%, 100% { filter: none; }
-  71%, 75% { filter: contrast(1.25) saturate(1.3) brightness(1.1); }
-  73% { filter: hue-rotate(-12deg) contrast(1.3); }
+  animation: zr-breathe 4.2s ease-in-out infinite;
 }
 
 .zr-fx {
@@ -2451,9 +2481,9 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 @keyframes zr-lunge {
-  0% { transform: none; filter: none; }
-  30% { transform: scale(1.07) translateY(1.5%); filter: brightness(1.25) saturate(1.4) drop-shadow(0 0 30px #ff2b4f); }
-  100% { transform: none; filter: none; }
+  0% { transform: none; }
+  30% { transform: scale(1.07) translateY(1.5%); }
+  100% { transform: none; }
 }
 
 .zr-rkn.zr-poke .zr-eye {
@@ -2551,7 +2581,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 .zi[data-cur="2"] .zi-rig-rkn .zr-in,
 .zi[data-cur="3"] .zi-rig-rkn .zr-in,
 .zi[data-cur="4"] .zi-rig-rkn .zr-in {
-  animation: zr-breathe 4.2s ease-in-out infinite, zr-jolt 1.9s steps(1) infinite;
+  animation: zr-breathe 4.2s ease-in-out infinite;
 }
 
 .zi.s2 .zi-stage {
@@ -5240,4 +5270,11 @@ html.zcur-on textarea {
 .zcur-hide .zcur-dot,
 .zcur-hide .zcur-ring {
   opacity: 0;
+}
+
+/* пока идёт заставка, всё под ней стоит на паузе — вся мощность уходит на заставку */
+.zpm-intro-on .zpm-home > :not(.zi) *,
+.zpm-intro-on .zpm-home > :not(.zi) *::before,
+.zpm-intro-on .zpm-home > :not(.zi) *::after {
+  animation-play-state: paused !important;
 }

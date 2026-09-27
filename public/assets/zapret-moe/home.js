@@ -801,6 +801,7 @@
     function frame(now) {
       raf = 0;
       if (!visible || document.hidden) return;
+      if (root.classList.contains('zpm-intro-on')) { setTimeout(kick, 500); return }
       var boost = false;
       if (duel._onAt) { var ph = (now - duel._onAt - 1500) % 6000; boost = ph > 5230 && ph < 5750 }
       if (now > nextShape) {
@@ -954,6 +955,7 @@
     }
     function frame(now) {
       raf = 0; if (!visible || document.hidden) { last = 0; return }
+      if (root.classList.contains('zpm-intro-on')) { last = 0; setTimeout(function () { if (!raf) raf = requestAnimationFrame(frame) }, 500); return }
       var dt = last ? Math.min(0.05, (now - last) / 1000) : 0; last = now; clock += dt;
       if (clock > nextPk) { spawn(); nextPk = clock + 0.55 + Math.random() * 0.6 }
       if (clock > nextClaw) { attack(); nextClaw = clock + Math.max(0.9, 2.6 - score.saved * 0.03) + Math.random() * 1.2 }

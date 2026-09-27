@@ -49,12 +49,11 @@
 			<path class="zi-wire" pathLength="1" d="M-20 600 H 1620" stroke="url(#zi-wire)" stroke-width="4" fill="none"/>
 			<path class="zi-wire-ticks" d="M-20 600 H 1620" stroke="#4fd1ff" stroke-width="12" stroke-dasharray="2 38" fill="none" opacity=".25"/>
 
-			<!-- DPI-шлюз -->
+			<!-- ТСПУ: коробка на проводе, которая просвечивает каждый пакет -->
 			<g class="zi-gate">
-				<text x="800" y="500" text-anchor="middle">DPI</text>
-				<g class="zi-gate-top"><rect x="784" y="520" width="32" height="80" rx="6"/></g>
-				<g class="zi-gate-bot"><rect x="784" y="600" width="32" height="80" rx="6"/></g>
-				<rect class="zi-beam" x="776" y="596" width="48" height="8" rx="4"/>
+				<g class="zi-gate-top"><rect x="722" y="540" width="156" height="60" rx="12"/><text x="800" y="582" text-anchor="middle">ТСПУ</text></g>
+				<g class="zi-gate-bot"><rect x="722" y="600" width="156" height="60" rx="12"/><g class="zi-leds"><circle cx="742" cy="642" r="4"/><circle cx="758" cy="642" r="4"/><circle cx="774" cy="642" r="4"/></g></g>
+				<rect class="zi-beam" x="728" y="598" width="144" height="4" rx="2"/>
 			</g>
 
 			<!-- 1: свободный поток -->
@@ -94,21 +93,21 @@
 			<svg class="zi-warp" viewBox="-800 -450 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
 			<div class="zi-hero"><img src="{{AppSubUrl}}/assets/zapret-moe/chars/zt-base.webp" alt="" loading="lazy"></div>
 			<div class="zi-cards zi-cards-6">
-				<figure class="zi-fc" style="--x:-1;--y:-0.35;--d:0s"><img src="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/media/branch/dev/docs/assets/zastogram-overview.webp" alt="" loading="lazy"><figcaption><b>ZaStoGram</b><span>Telegram с FakeTLS и WSS</span></figcaption></figure>
-				<figure class="zi-fc" style="--x:1;--y:-0.2;--d:0.6s"><img src="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/media/branch/main/docs/assets/zapret-kvn-android-overview.webp" alt="" loading="lazy"><figcaption><b>Zapret KVN</b><span>VPN с выборочной маршрутизацией</span></figcaption></figure>
-				<figure class="zi-fc" style="--x:-1;--y:0.3;--d:1.2s"><img src="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2/media/branch/main/docs/assets/zapret2-control-ui.webp" alt="" loading="lazy"><figcaption><b>Magisk Zapret 2</b><span>обход DPI на уровне Android</span></figcaption></figure>
-				<figure class="zi-fc" style="--x:1;--y:0.35;--d:1.8s"><img src="{{AppSubUrl}}/assets/zapret-moe/shot-gui.webp" alt="" loading="lazy"><figcaption><b>Zapret 2 GUI</b><span>профили обхода для Windows</span></figcaption></figure>
+				<figure class="zi-fc" style="--x:-1;--i:0"><img src="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/media/branch/dev/docs/assets/zastogram-overview.webp" alt="" loading="lazy"><figcaption><b>ZaStoGram</b><span>Telegram с FakeTLS и WSS</span></figcaption></figure>
+				<figure class="zi-fc" style="--x:1;--i:1"><img src="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/media/branch/main/docs/assets/zapret-kvn-android-overview.webp" alt="" loading="lazy"><figcaption><b>Zapret KVN</b><span>VPN с выборочной маршрутизацией</span></figcaption></figure>
+				<figure class="zi-fc" style="--x:-1;--i:2"><img src="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2/media/branch/main/docs/assets/zapret2-control-ui.webp" alt="" loading="lazy"><figcaption><b>Magisk Zapret 2</b><span>обход ТСПУ на уровне Android</span></figcaption></figure>
+				<figure class="zi-fc" style="--x:1;--i:3"><img src="{{AppSubUrl}}/assets/zapret-moe/shot-gui.webp" alt="" loading="lazy"><figcaption><b>Zapret 2 GUI</b><span>профили обхода для Windows</span></figcaption></figure>
 			</div>
 			<div class="zi-cards zi-cards-7">
-				<span class="zi-chip" style="--x:-1;--y:-0.5;--d:0s">yt.zapret.moe</span>
-				<span class="zi-chip" style="--x:1;--y:-0.1;--d:0.3s">RoskomFree</span>
-				<span class="zi-chip" style="--x:-0.8;--y:0.45;--d:0.6s">YourVPNDead</span>
-				<span class="zi-chip" style="--x:0.9;--y:0.55;--d:0.9s">F-Droid-репозиторий</span>
-				<span class="zi-chip" style="--x:-1;--y:0.05;--d:1.2s">YouTube 59second</span>
-				<span class="zi-chip" style="--x:1;--y:-0.55;--d:1.5s">@zapretvpns_bot</span>
-				<span class="zi-chip" style="--x:-0.7;--y:-0.6;--d:1.8s">Zapret для YouTube и Discord</span>
-				<span class="zi-chip" style="--x:0.8;--y:0.2;--d:2.1s">база знаний</span>
-				<span class="zi-chip" style="--x:-0.9;--y:-0.3;--d:2.4s">status.zapret.moe</span>
+				<span class="zi-chip" style="--x:-1;--y:-0.5;--d:0.20s">yt.zapret.moe</span>
+				<span class="zi-chip" style="--x:1;--y:-0.1;--d:0.70s">RoskomFree</span>
+				<span class="zi-chip" style="--x:-0.8;--y:0.45;--d:1.20s">YourVPNDead</span>
+				<span class="zi-chip" style="--x:0.9;--y:0.55;--d:1.70s">F-Droid-репозиторий</span>
+				<span class="zi-chip" style="--x:-1;--y:0.05;--d:2.20s">YouTube 59second</span>
+				<span class="zi-chip" style="--x:1;--y:-0.55;--d:2.70s">@zapretvpns_bot</span>
+				<span class="zi-chip" style="--x:-0.7;--y:-0.6;--d:3.20s">Zapret для YouTube и Discord</span>
+				<span class="zi-chip" style="--x:0.8;--y:0.2;--d:3.70s">база знаний</span>
+				<span class="zi-chip" style="--x:-0.9;--y:-0.3;--d:4.20s">status.zapret.moe</span>
 			</div>
 		</div>
 
@@ -125,8 +124,8 @@
 		<div class="zi-caps">
 			<p class="zi-cap"><strong>Жил-был интернет.</strong><span>Быстрый, общий и ничей.</span></p>
 			<p class="zi-cap"><strong>Потом пришла РКН-тян.</strong><span>С когтями, болгаркой и реестром запрещённых сайтов.</span></p>
-			<p class="zi-cap"><strong>Она заглядывает в каждый пакет.</strong><span>Не понравился — обрыв.</span></p>
-			<p class="zi-cap"><strong>Но пакеты научились хитрить.</strong><span>Фейк — РКН-тян, настоящие фрагменты — мимо.</span></p>
+			<p class="zi-cap"><strong>Её ТСПУ заглядывает в каждый пакет.</strong><span>Не понравился адрес — соединение рвётся.</span></p>
+			<p class="zi-cap"><strong>Но пакеты научились хитрить.</strong><span>ТСПУ ловит подставной пакет, а настоящий проскакивает по частям.</span></p>
 			<p class="zi-cap"><strong>Но у интернета есть Запрет-тян.</strong><span>Она всегда найдёт лазейку.</span></p>
 			<p class="zi-cap"><strong>Она прорывается дальше.</strong><span>ZaStoGram, Zapret KVN, Magisk Zapret 2, Zapret 2 GUI.</span></p>
 			<p class="zi-cap"><strong>И прихватывает весь арсенал.</strong><span>Прокси, проверки, загрузчики и база знаний — всё открыто.</span></p>

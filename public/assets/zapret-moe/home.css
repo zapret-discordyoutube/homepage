@@ -579,7 +579,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
   stroke-linecap: round;
   stroke-dasharray: 60 1000;
   opacity: 0.55;
-  animation: zi-warp 1.1s linear infinite paused;
+  animation: zi-warp 1.9s linear infinite paused;
   animation-delay: var(--wd);
 }
 
@@ -635,7 +635,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 .zi-fc {
-  width: min(440px, 62vw);
+  width: min(480px, 34vw);
   overflow: hidden;
   border: 1px solid rgba(155, 123, 255, 0.55);
   border-radius: 18px;
@@ -658,12 +658,12 @@ html.zpm-intro-on .zi:not(.zi-run) {
 
 .zi-fc b {
   font-family: var(--disp);
-  font-size: 20px;
+  font-size: 24px;
 }
 
 .zi-fc span {
   color: #b9c6ea;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .zi-chip {
@@ -677,19 +677,44 @@ html.zpm-intro-on .zi:not(.zi-run) {
   box-shadow: 0 0 30px -6px rgba(79, 209, 255, 0.6);
 }
 
+.zi-fc {
+  --sx: calc(var(--x) * 27vw);
+  --sy: -2vh;
+}
+
 .zi[data-cur="6"] .zi-cards-6 .zi-fc {
-  animation: zi-fly 2.3s cubic-bezier(0.5, 0, 0.9, 0.55) var(--d) both;
+  animation: zi-present 2.2s cubic-bezier(0.25, 0.8, 0.3, 1) calc(0.35s + var(--i) * 2.1s) both;
 }
 
 .zi[data-cur="7"] .zi-cards-7 .zi-chip {
-  animation: zi-fly 1.7s cubic-bezier(0.5, 0, 0.9, 0.55) var(--d) both;
+  animation: zi-fly 2.8s cubic-bezier(0.4, 0, 0.8, 0.6) var(--d) both;
+}
+
+/* карточка выплывает из глубины, замирает рядом с Запрет-тян и улетает за камеру */
+@keyframes zi-present {
+  0% { opacity: 0; transform: translate(-50%, -50%) translate3d(calc(var(--sx) * 0.2), var(--sy), -1500px) rotateY(calc(var(--x) * -30deg)); }
+  24% { opacity: 1; transform: translate(-50%, -50%) translate3d(var(--sx), var(--sy), 0) rotateY(calc(var(--x) * -12deg)); }
+  78% { opacity: 1; transform: translate(-50%, -50%) translate3d(calc(var(--sx) * 1.06), var(--sy), 60px) rotateY(calc(var(--x) * -8deg)); }
+  100% { opacity: 0; transform: translate(-50%, -50%) translate3d(calc(var(--sx) * 2.6), var(--sy), 700px) rotateY(calc(var(--x) * 10deg)); }
 }
 
 @keyframes zi-fly {
   0% { opacity: 0; transform: translate(-50%, -50%) translate3d(calc(var(--x) * 5vw), calc(var(--y) * 5vh), -1600px); }
-  14% { opacity: 1; }
-  82% { opacity: 1; }
-  100% { opacity: 0; transform: translate(-50%, -50%) translate3d(calc(var(--x) * 46vw), calc(var(--y) * 40vh), 420px); }
+  18% { opacity: 1; transform: translate(-50%, -50%) translate3d(calc(var(--x) * 26vw), calc(var(--y) * 24vh), -200px); }
+  70% { opacity: 1; transform: translate(-50%, -50%) translate3d(calc(var(--x) * 32vw), calc(var(--y) * 30vh), 60px); }
+  100% { opacity: 0; transform: translate(-50%, -50%) translate3d(calc(var(--x) * 50vw), calc(var(--y) * 44vh), 420px); }
+}
+
+@media (max-width: 760px) {
+  .zi-fc {
+    --sx: 0px;
+    --sy: 6vh;
+    width: min(340px, 84vw);
+  }
+
+  .zi-hero {
+    top: 25%;
+  }
 }
 
 .zi[data-cur="6"] .zi-scene,
@@ -860,15 +885,28 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 .zi-gate rect {
-  fill: #160a18;
+  fill: rgba(22, 6, 16, 0.92);
   stroke: var(--red);
   stroke-width: 2.5;
 }
 
 .zi-gate text {
   fill: #ff6b83;
-  font: 700 22px var(--mono);
-  letter-spacing: 0.2em;
+  font: 800 26px var(--disp);
+  letter-spacing: 0.14em;
+  filter: drop-shadow(0 0 6px rgba(255, 59, 92, 0.8));
+}
+
+.zi-leds circle {
+  fill: #ff3b5c;
+  animation: zi-led 0.9s steps(1) infinite;
+}
+
+.zi-leds circle:nth-child(2) { animation-delay: -0.3s; }
+.zi-leds circle:nth-child(3) { animation-delay: -0.6s; }
+
+@keyframes zi-led {
+  50% { fill: #3a0a16; }
 }
 
 .zi-gate-top,
@@ -885,8 +923,8 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 @keyframes zi-scan {
-  from { transform: translateY(-68px); }
-  to { transform: translateY(68px); }
+  from { transform: translateY(-50px); }
+  to { transform: translateY(50px); }
 }
 
 .zi-hit rect,
@@ -974,7 +1012,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 /* ── шаг 3: смотрит в каждый пакет ── */
 
 .zi.s3 .zi-gaze path {
-  animation: zi-gaze 0.5s linear infinite, zi-gaze-on 2.2s forwards;
+  animation: zi-gaze 0.5s linear infinite, zi-gaze-on 3.4s forwards;
 }
 
 @keyframes zi-gaze {
@@ -988,12 +1026,12 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 .zi.s3 .zi-hit rect {
-  animation: zi-hit 1.5s cubic-bezier(0.3, 0, 0.6, 1) forwards;
+  animation: zi-hit 2.3s cubic-bezier(0.3, 0, 0.6, 1) forwards;
 }
 
-.zi.s3 .zi-hit rect:nth-child(2) { animation-delay: 0.32s; }
-.zi.s3 .zi-hit rect:nth-child(3) { animation-delay: 0.64s; }
-.zi.s3 .zi-hit rect:nth-child(4) { animation-delay: 0.96s; }
+.zi.s3 .zi-hit rect:nth-child(2) { animation-delay: 0.55s; }
+.zi.s3 .zi-hit rect:nth-child(3) { animation-delay: 1.1s; }
+.zi.s3 .zi-hit rect:nth-child(4) { animation-delay: 1.65s; }
 
 @keyframes zi-hit {
   0% { opacity: 0; transform: translate(0, 0); fill: var(--cy); }
@@ -1004,7 +1042,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 .zi.s3 .zi-cut {
-  animation: zi-flash 0.32s 0.72s 4 ease-out;
+  animation: zi-flash 0.55s 1.15s 4 ease-out;
 }
 
 @keyframes zi-flash {
@@ -1016,7 +1054,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 /* ── шаг 4: фейк летит ей в лицо, она хватает пустоту ── */
 
 .zi.s4 .zi-fake {
-  animation: zi-fake 2.6s cubic-bezier(0.4, 0, 0.4, 1) forwards;
+  animation: zi-fake 3.6s cubic-bezier(0.4, 0, 0.4, 1) forwards;
 }
 
 @keyframes zi-fake {
@@ -1029,7 +1067,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 .zi.s4 .zi-fake rect {
-  animation: zi-fake-red 2.6s forwards;
+  animation: zi-fake-red 3.6s forwards;
 }
 
 @keyframes zi-fake-red {
@@ -1038,7 +1076,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 .zi.s4 .zi-rig-rkn > .zrig {
-  animation: zi-lunge 2.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: zi-lunge 3.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes zi-lunge {
@@ -1049,16 +1087,16 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 .zi.s4 .zi-rig-rkn .zr-eye::after {
-  animation: zr-streak 2.6s ease-out 1 forwards;
+  animation: zr-streak 3.6s ease-out 1 forwards;
   animation-delay: -1.4s;
 }
 
 .zi.s4 .zi-half-a {
-  animation: zi-half-a 2.6s cubic-bezier(0.4, 0, 0.4, 1) forwards;
+  animation: zi-half-a 3.6s cubic-bezier(0.4, 0, 0.4, 1) forwards;
 }
 
 .zi.s4 .zi-half-b {
-  animation: zi-half-b 2.6s cubic-bezier(0.4, 0, 0.4, 1) forwards;
+  animation: zi-half-b 3.6s cubic-bezier(0.4, 0, 0.4, 1) forwards;
 }
 
 @keyframes zi-half-a {
@@ -1082,12 +1120,12 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 .zi.s4 .zi-beam {
-  animation: zi-distract 2.6s forwards;
+  animation: zi-distract 3.6s forwards;
 }
 
 @keyframes zi-distract {
   0%, 30% { transform: translateY(0); }
-  45%, 100% { transform: translateY(-74px); opacity: 0.4; }
+  45%, 100% { transform: translateY(-50px); opacity: 0.4; }
 }
 
 /* ── шаг 5: РКН-тян глючит и исчезает, влетает Запрет-тян ── */

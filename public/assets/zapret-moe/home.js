@@ -498,7 +498,7 @@
   var intro = document.getElementById('zpm-intro');
   var replay = document.getElementById('zpm-replay');
   // длительность слайдов: 6–7 — полёт мимо проектов, 8 — год в цифрах
-  var steps = [2200, 2600, 2400, 2800, 3000, 3800, 3300, 4300, 3900];
+  var steps = [2200, 2800, 3600, 4200, 3200, 9000, 5600, 4300, 3900];
   var cur = 0, timer = null, running = false, muted = false;
   try { muted = localStorage.getItem('zpm-mute') === '1' } catch (e) {}
 

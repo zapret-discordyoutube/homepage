@@ -400,7 +400,7 @@
     function stroke(pts, width, color, blur) {
       g.beginPath(); g.moveTo(pts[0][0], pts[0][1]);
       for (var i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
-      g.lineWidth = width; g.strokeStyle = color; g.shadowBlur = blur; g.shadowColor = color; g.stroke();
+      g.lineWidth = width; g.strokeStyle = color; g.stroke();   // без shadowBlur: он дорогой, свечение — широкими слоями
     }
     function frame(now) {
       raf = 0;
@@ -420,8 +420,8 @@
       var k = (boost ? 1.9 : 1.2) * flick, sh = horiz ? [0, 2] : [2, 0];
       bolts.forEach(function (b) {
         var w = b.w * k;
-        g.save(); g.translate(-sh[0], -sh[1]); stroke(b.pts, 9 * w, 'rgba(79,209,255,' + (0.22 * k) + ')', 26); g.restore();
-        g.save(); g.translate(sh[0], sh[1]); stroke(b.pts, 9 * w, 'rgba(255,59,92,' + (0.2 * k) + ')', 26); g.restore();
+        g.save(); g.translate(-sh[0], -sh[1]); stroke(b.pts, 26 * w, 'rgba(79,209,255,' + (0.06 * k) + ')'); stroke(b.pts, 12 * w, 'rgba(79,209,255,' + (0.16 * k) + ')'); g.restore();
+        g.save(); g.translate(sh[0], sh[1]); stroke(b.pts, 26 * w, 'rgba(255,59,92,' + (0.06 * k) + ')'); stroke(b.pts, 12 * w, 'rgba(255,59,92,' + (0.15 * k) + ')'); g.restore();
         stroke(b.pts, 3.2 * w, 'rgba(190,225,255,' + (0.8 * k) + ')', 12);
         stroke(b.pts, 1.3 * w + 0.4, 'rgba(255,255,255,' + Math.min(1, k) + ')', 4);
       });

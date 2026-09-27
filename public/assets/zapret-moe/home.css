@@ -1203,30 +1203,37 @@ html.zpm-intro-lock body {
 .zd-side {
   position: relative;
   flex: none;
-  width: 60%;
+  width: 55%;
   transition: opacity 1.2s, transform 1.4s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .zd-left {
   z-index: 1;
-  margin-right: -10%;
+  margin-right: -5%;
 }
 
 .zd-right {
-  margin-left: -10%;
+  margin-left: -5%;
   transition-delay: 0.15s;
 }
 
-.zd-side .zrig {
-  -webkit-mask-image: linear-gradient(to right, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
-  mask-image: linear-gradient(to right, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
-  -webkit-mask-composite: source-in;
-  mask-composite: intersect;
+/* края персонажей растворяются статичной виньеткой поверх, а не mask-image:
+   маска на контейнере с анимированными слоями перерисовывала всю дуэль каждый кадр */
+.zd-side::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  content: "";
+  pointer-events: none;
+  background:
+    linear-gradient(to right, rgba(6, 9, 20, 0) 62%, #060914 97%),
+    linear-gradient(to top, #060914, rgba(6, 9, 20, 0) 22%);
 }
 
-.zd-right .zrig {
-  -webkit-mask-image: linear-gradient(to left, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
-  mask-image: linear-gradient(to left, #000 58%, transparent 96%), linear-gradient(to top, transparent, #000 20%);
+.zd-right::after {
+  background:
+    linear-gradient(to left, rgba(6, 9, 20, 0) 62%, #060914 97%),
+    linear-gradient(to top, #060914, rgba(6, 9, 20, 0) 22%);
 }
 
 .zd-js .zd-left {
@@ -1430,10 +1437,9 @@ html.zpm-intro-lock body {
     margin: 0 !important;
   }
 
-  .zd-side .zrig,
-  .zd-right .zrig {
-    -webkit-mask-image: linear-gradient(to top, transparent, #000 25%);
-    mask-image: linear-gradient(to top, transparent, #000 25%);
+  .zd-side::after,
+  .zd-right::after {
+    background: linear-gradient(to top, #060914, rgba(6, 9, 20, 0) 25%);
   }
 
   /* девушки друг над другом — молния горизонтально на стыке */

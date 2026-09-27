@@ -2116,6 +2116,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
   justify-content: space-between;
   gap: 14px;
   color: var(--mut);
+  white-space: nowrap;
 }
 
 .zp-tip li i {

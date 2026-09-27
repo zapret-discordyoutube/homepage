@@ -46,9 +46,9 @@
 
 Обложки берутся прямо из репозиториев проектов — ровно те файлы, что показаны в их README:
 
-- ZaStoGram — `zastogram/ZaStoGram_desktop/media/branch/dev/docs/assets/zastogram-overview.png`
-- Magisk Zapret 2 — `zapretdiscordyoutube/magisk-zapret2/media/branch/main/docs/assets/zapret2-control-ui.png`
-- Zapret KVN — `zapretkvn/ZapretKVN-android/media/branch/main/docs/assets/zapret-kvn-android-overview.png`
+- ZaStoGram — `zastogram/ZaStoGram_desktop/media/branch/dev/docs/assets/zastogram-overview.webp`
+- Magisk Zapret 2 — `zapretdiscordyoutube/magisk-zapret2/media/branch/main/docs/assets/zapret2-control-ui.webp`
+- Zapret KVN — `zapretkvn/ZapretKVN-android/media/branch/main/docs/assets/zapret-kvn-android-overview.webp`
 - эмблема сообщества — аватар организации, `/zapretdiscordyoutube.png`
 
 Поменяли обложку в проекте — главная показывает новую сама. Если переименовываете файл или ветку в проекте, поправьте ссылку в `home.tmpl`.

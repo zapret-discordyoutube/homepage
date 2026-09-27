@@ -614,4 +614,56 @@
     }, { threshold: 0.2 });
     dio.observe(duel);
   }
+
+  /* ── Появление блоков при прокрутке ─────────────────────────────────── */
+  (function () {
+    if (!window.IntersectionObserver || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    var groups = [
+      ['.zsec-head', ''], ['.zp-kpi', 'rv-pop'], ['.zp-panel', ''], ['.zc', 'rv-card'],
+      ['.zt-list li', 'rv-side'], ['.zr-fdroid', ''], ['.zr-row li', 'rv-pop'], ['.zci-pipe', ''],
+      ['.zci-points > div', ''], ['.zj-help', 'rv-card'], ['.zj-join > h2', ''], ['.zj-steps li', 'rv-pop'], ['.zj-cta', ''],
+      ['.zci > .zs > .zb', 'rv-pop']
+    ];
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.remove('rv-wait'); e.target.classList.add('rv-in'); io.unobserve(e.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    function words(h) {
+      var w = 0;
+      h.innerHTML = h.textContent.split(/(\s+)/).map(function (p) {
+        return /^\s+$/.test(p) || !p ? p : '<span class="rw" style="--w:' + (w++) + '">' + p + '</span>';
+      }).join('');
+      h.classList.add('rv-words');
+    }
+    groups.forEach(function (g) {
+      document.querySelectorAll('.zpm-home ' + g[0]).forEach(function (el) {
+        if (el.getBoundingClientRect().top < innerHeight) return;   // уже на экране — не прячем
+        var sib = el.parentNode ? Array.prototype.filter.call(el.parentNode.children, function (c) { return c.matches(g[0].split(' ').pop()) }) : [el];
+        el.style.setProperty('--rv', Math.min(8, sib.indexOf(el)));
+        if (g[1]) el.classList.add(g[1]);
+        var h = el.matches('h2') ? el : el.querySelector(':scope > h2');
+        if (h && !h.querySelector('*')) words(h);
+        el.classList.add('rv-wait');
+        io.observe(el);
+      });
+    });
+  })();
+
+  /* ── Живые цифры в шапке ───────────────────────────────────────────── */
+  var hs = document.getElementById('zh-stats');
+  if (hs) loadStats().then(function (d) {
+    if (d.source !== 'commits') return;
+    var t = d.totals || {};
+    hs.hidden = false;
+    hs.querySelectorAll('[data-hs]').forEach(function (b) {
+      var v = t[b.getAttribute('data-hs')];
+      if (v == null) { b.parentNode.hidden = true; return }
+      var go = function () { countUp(b, v, 1800) };
+      if (root.classList.contains('zpm-intro-on')) {
+        var wait = setInterval(function () { if (!root.classList.contains('zpm-intro-on')) { clearInterval(wait); go() } }, 300);
+      } else setTimeout(go, 1500);
+    });
+  }).catch(function () {});
 })();

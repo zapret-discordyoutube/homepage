@@ -1907,7 +1907,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
    ═══════════════════════════════════════════════════════════════════ */
 
 .zp {
-  padding: clamp(80px, 10vw, 120px) 0 0;
+  padding: clamp(56px, 7vw, 88px) 0 0;
 }
 
 .zp[hidden] {
@@ -2226,7 +2226,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
    ═══════════════════════════════════════════════════════════════════ */
 
 .za {
-  padding: clamp(80px, 10vw, 128px) 0;
+  padding: clamp(56px, 7vw, 88px) 0;
 }
 
 .za-grid {
@@ -2473,7 +2473,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
    ═══════════════════════════════════════════════════════════════════ */
 
 .zt {
-  padding: 0 0 clamp(80px, 10vw, 128px);
+  padding: 0 0 clamp(56px, 7vw, 88px);
 }
 
 .zt-grid {
@@ -2628,7 +2628,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
    ═══════════════════════════════════════════════════════════════════ */
 
 .zr {
-  padding: clamp(80px, 10vw, 120px) 0;
+  padding: clamp(56px, 7vw, 88px) 0;
   border-top: 1px solid var(--line);
   background:
     radial-gradient(50rem 26rem at 0% 0%, rgba(55, 227, 154, 0.07), transparent 70%),
@@ -2782,7 +2782,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
    ═══════════════════════════════════════════════════════════════════ */
 
 .zci {
-  padding: clamp(80px, 10vw, 120px) 0;
+  padding: clamp(56px, 7vw, 88px) 0;
 }
 
 .zci-pipe {
@@ -2921,7 +2921,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
    ═══════════════════════════════════════════════════════════════════ */
 
 .zj {
-  padding: 0 0 clamp(80px, 10vw, 128px);
+  padding: 0 0 clamp(56px, 7vw, 88px);
 }
 
 .zj-help {
@@ -3115,7 +3115,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
     .zj-cta {
       animation: z-rise linear both;
       animation-timeline: view();
-      animation-range: entry 0% entry 55%;
+      animation-range: entry 0% entry 22%;
     }
 
     .zc::before {
@@ -3126,7 +3126,7 @@ html.zpm-intro-on .zi:not(.zi-run) {
 }
 
 @keyframes z-rise {
-  from { opacity: 0; transform: translateY(36px) scale(0.98); }
+  from { opacity: 0.15; transform: translateY(24px) scale(0.99); }
   to { opacity: 1; transform: none; }
 }
 

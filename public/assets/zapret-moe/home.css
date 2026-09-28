@@ -1089,29 +1089,41 @@ html.zpm-intro-lock body {
   to { transform: rotate(var(--sb, 1.2deg)) skewX(calc(var(--sk, 0deg) * -1)); }
 }
 
-.zr-rkn .zr-hair-l { --sa: 1.6deg; --sb: -1.2deg; --sk: 0.8deg; --sd: 4.6s; }
-.zr-rkn .zr-hair-r { --sa: -1.6deg; --sb: 1.3deg; --sk: -0.8deg; --sd: 4.1s; --sdl: -1.7s; }
-.zr-rkn .zr-hair-t { --sa: -0.9deg; --sb: 0.9deg; --sd: 3.3s; --sdl: -0.8s; }
 .zr-zt .zr-hair-r { --sa: -2.2deg; --sb: 1.6deg; --sk: -1deg; --sd: 3.2s; }
 .zr-zt .zr-hair-t { --sa: -3deg; --sb: 2.4deg; --sd: 2.4s; --sdl: -0.6s; }
 .zr-zt .zr-hair-l { --sa: 1.8deg; --sb: -1.4deg; --sk: 0.8deg; --sd: 3.6s; --sdl: -1.2s; }
 
-/* руки: только увеличение от запястья — рука всегда накрывает саму себя в основе,
-   поэтому под ней никогда не видно дыр или дорисовки */
-.zr-rkn .zr-hand {
-  animation: zr-grab 2.9s cubic-bezier(0.5, 0, 0.3, 1) infinite;
+/* РКН-тян: руки — отдельные слои поверх основы без рук, поэтому их можно
+   поворачивать от плеча. Цикл: замах когтями вверх → удар к зрителю → отдача.
+   Арт обрезан краями кадра (левая кисть — слева, правая — сверху и справа):
+   левая рука поворачивается только по часовой, правая — против, и всегда с
+   ростом к зрителю, иначе срез заехал бы внутрь кадра. */
+.zr-arm {
+  will-change: transform;
 }
 
-.zr-rkn .zr-hand-r {
-  animation-delay: -1.45s;
+.zr-rkn .zr-arm-l {
+  animation: zr-claw-l 3.2s cubic-bezier(0.4, 0, 0.3, 1) infinite;
 }
 
-@keyframes zr-grab {
-  0%, 100% { transform: scale(1); }
-  38% { transform: scale(1.1); }
-  46% { transform: scale(1.07); }
-  52% { transform: scale(1.11); }
-  72% { transform: scale(1.02); }
+.zr-rkn .zr-arm-r {
+  animation: zr-claw-r 3.2s cubic-bezier(0.4, 0, 0.3, 1) -1.6s infinite;
+}
+
+@keyframes zr-claw-l {
+  0%, 100% { transform: rotate(1deg) scale(1.02); }
+  22% { transform: rotate(7deg) scale(1.06); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5); }
+  31% { transform: rotate(-2deg) scale(1.15); animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+  40% { transform: rotate(-1deg) scale(1.11); }
+  58% { transform: rotate(2deg) scale(1.03); }
+}
+
+@keyframes zr-claw-r {
+  0%, 100% { transform: rotate(-1deg) scale(1.02); }
+  22% { transform: rotate(-7deg) scale(1.06); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5); }
+  31% { transform: rotate(2deg) scale(1.15); animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+  40% { transform: rotate(1deg) scale(1.11); }
+  58% { transform: rotate(-2deg) scale(1.03); }
 }
 
 .zr-zt .zr-hand {
@@ -4444,7 +4456,8 @@ html.zcur-on textarea {
 .zr-gl-on .zr-base,
 .zr-gl-on .zr-rim,
 .zr-gl-on .zr-hair,
-.zr-gl-on .zr-hand {
+.zr-gl-on .zr-hand,
+.zr-gl-on .zr-arm {
   visibility: hidden;
   animation: none;
 }

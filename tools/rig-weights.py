@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 """Веса костей для WebGL-рига персонажа (public/assets/zapret-moe/rig.js).
 
-Персонаж рисуется одной картинкой-основой, натянутой на сетку. Кость сдвигает,
-поворачивает и масштабирует вершины сетки со своим весом 0…1, поэтому картинка
-тянется, а не рвётся: нет ни дыр, ни копии руки под слоем.
+Персонаж собран из частей: основа без рук и отдельные руки. Каждая часть — своя
+сетка поверх текстуры. Кость поворачивает и масштабирует вершины со своим весом
+0…1, поэтому картинка тянется, а не рвётся. Руку целиком от плеча двигает
+«корень» части (как CSS-анимация рук), а кости внутри гнут кисть и когти.
 
-Маски костей берутся из уже вырезанных слоёв (кисти, пряди) и размываются,
-чтобы вес плавно затухал. Результат — rig/<имя>.json с сеткой и весами
-(uint8, base64). Запуск из корня репозитория:
+Маски костей строятся из альфы и цвета самих слоёв и размываются, чтобы вес
+плавно затухал. Результат — rig/<имя>.json. Запуск из корня репозитория:
 
     tools/rig-weights.py rkn
 """
 import base64
 import json
+import os
 import sys
 
 import numpy as np
@@ -21,40 +22,28 @@ from scipy import ndimage
 
 CH = 'public/assets/zapret-moe/chars/'
 W, H = 1600, 900
-COLS, ROWS = 101, 57          # вершин по ширине и высоте: ячейка 16 px
+CELL = 16                     # шаг сетки в пикселях кадра
 
 # Координаты — в системе кадра 1600×900, как у слоёв в home.tmpl.
 RIGS = {
     'rkn': {
-        'base': 'rkn-base.webp',
-        'rim': ['rkn-rim.webp', 0, 0, 1509, 895],
-        'layers': {
-            'handL': ['rkn-hand-l.webp', 0, 173],
-            'handR': ['rkn-hand-r.webp', 1043, 4],
-            'hairL': ['rkn-hair-l.webp', 0, 125],
-            'hairR': ['rkn-hair-r.webp', 981, 101],
-            'hairT': ['rkn-hair-t.webp', 413, 0],
+        'rim': ['rkn2-rim.webp', 0, 0, 1600, 900],
+        'base': {
+            'tex': 'rkn2-base.webp', 'rect': [0, 0, 1600, 900],
+            # лицо и туловище не качаются вместе с волосами
+            'protect': [(812, 345, 150, 175), (820, 660, 270, 330)],
+            'hair': {'hairL': (620, 150), 'hairR': (1000, 120)},
+            'split': 810,
         },
-        # лицо и грудь не должны тянуться за руками
-        'protect': [(826, 420, 185, 245), (830, 700, 150, 200)],
-        'hands': {
-            # запястье, центр ладони; руки тянутся к зрителю
-            # body — откуда рука «выходит» к зрителю: от этой точки она растёт наружу
-            'L': {'wrist': (314, 729), 'palm': (262, 452), 'body': (640, 700)},
-            'R': {'wrist': (1187, 499), 'palm': (1372, 330), 'body': (1060, 560)},
+        'arms': {
+            # корень — где рукав уходит в плечо; кисть — запястье и центр ладони
+            'armL': {'tex': 'rkn2-arm-l.webp', 'rect': [0, 169, 670, 714], 'root': (650, 400),
+                     'wrist': (250, 660), 'palm': (240, 448)},
+            'armR': {'tex': 'rkn2-arm-r.webp', 'rect': [974, 0, 626, 728], 'root': (990, 330),
+                     'wrist': (1305, 560), 'palm': (1312, 304)},
         },
-        'hair_pivots': {'hairL': (560, 250), 'hairR': (1040, 230), 'hairT': (800, 190)},
     },
 }
-
-
-def layer_alpha(path, x, y):
-    im = Image.open(CH + path)
-    a = np.zeros((H, W), np.float32)
-    al = np.asarray(im.getchannel('A'), np.float32) / 255
-    h, w = al.shape
-    a[y:y + h, x:x + w] = al[:H - y, :W - x]
-    return a
 
 
 def smooth(a, px):
@@ -66,85 +55,92 @@ def smoothstep(e0, e1, x):
     return t * t * (3 - 2 * t)
 
 
+def load(tex, rect):
+    """RGBA части и сетки координат кадра под неё."""
+    im = np.asarray(Image.open(CH + tex).convert('RGBA'), np.float32)
+    x0, y0, w, h = rect
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    return im, xx + x0, yy + y0
+
+
+def pin(xx, yy):
+    # арт обрезан краями кадра: у самой границы вес уходит в ноль,
+    # чтобы край картинки не заезжал внутрь и не открывал ровный срез
+    edge = np.minimum(np.minimum(xx, W - 1 - xx), np.minimum(yy, H - 1 - yy))
+    return smoothstep(0, 40, edge)
+
+
+def grid(rect, maps):
+    x0, y0, w, h = rect
+    cols, rows = max(2, round(w / CELL) + 1), max(2, round(h / CELL) + 1)
+    gx = np.linspace(0, w - 1, cols).round().astype(int)
+    gy = np.linspace(0, h - 1, rows).round().astype(int)
+    out = [np.clip(m[np.ix_(gy, gx)] * 255 + 0.5, 0, 255).astype(np.uint8) for m in maps]
+    if not out:
+        out = [np.zeros((rows, cols), np.uint8)]
+    while len(out) % 4:
+        out.append(np.zeros_like(out[0]))
+    return cols, rows, len(out), base64.b64encode(np.stack(out, -1).reshape(-1).tobytes()).decode()
+
+
+def base_part(cfg):
+    im, xx, yy = load(cfg['tex'], cfg['rect'])
+    a = im[..., 3] / 255
+    body = np.zeros_like(a)
+    for cx, cy, rx, ry in cfg['protect']:
+        body = np.maximum(body, (((xx - cx) / rx) ** 2 + ((yy - cy) / ry) ** 2 <= 1).astype(np.float32))
+    body = np.clip(smooth(body, 35) * 1.3, 0, 1)
+    hair = np.clip(smooth(a, 20) * 1.2, 0, 1) * (1 - body) * pin(xx, yy)
+    side = smoothstep(cfg['split'] - 60, cfg['split'] + 60, xx)
+    bones, maps = [], []
+    for bid, (px, py) in cfg['hair'].items():
+        far = smoothstep(60, 520, np.hypot(xx - px, yy - py))     # кончики качаются сильнее корней
+        maps.append(hair * far * (1 - side if bid.endswith('L') else side))
+        bones.append({'id': bid, 'pivot': [px, py]})
+    return bones, maps
+
+
+def arm_part(cfg):
+    im, xx, yy = load(cfg['tex'], cfg['rect'])
+    r, g, b, a = im[..., 0], im[..., 1], im[..., 2], im[..., 3] / 255
+    # кисть — кожа и чёрные когти рядом с ней; рукав и манжета двигаются только корнем
+    skin = (r > 140) & (r > b + 25) & (g > 90) & (a > 0.5)
+    skin = ndimage.binary_opening(skin, iterations=2)
+    near = ndimage.binary_dilation(skin, iterations=45)
+    claw = (np.maximum(np.maximum(r, g), b) < 90) & (a > 0.5) & near
+    hand = (skin | claw).astype(np.float32)
+    handw = np.clip(smooth(hand, 14) * 1.25, 0, 1) * pin(xx, yy)
+    px, py = cfg['palm']
+    wx, wy = cfg['wrist']
+    fing = np.clip(smooth(hand, 18) * 1.2, 0, 1) * smoothstep(80, 200, np.hypot(xx - px, yy - py)) \
+        * smoothstep(140, 240, np.hypot(xx - wx, yy - wy)) * pin(xx, yy)
+    bones = [{'id': 'fing', 'pivot': [px, py]}, {'id': 'hand', 'pivot': [wx, wy]}]
+    return bones, [fing, handw]
+
+
 def build(name):
     cfg = RIGS[name]
-    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
-
-    prot = np.zeros((H, W), np.float32)
-    for cx, cy, rx, ry in cfg['protect']:
-        prot = np.maximum(prot, ((xx - cx) / rx) ** 2 + ((yy - cy) / ry) ** 2 <= 1)
-    prot = np.clip(smooth(prot, 30) * 1.4, 0, 1)
-
-    L = {k: layer_alpha(*v) for k, v in cfg['layers'].items()}
-    bones, maps = [], []
-
-    for side in ('L', 'R'):
-        h = cfg['hands'][side]
-        hand = L['hand' + side]
-        wx, wy = h['wrist']
-        px, py = h['palm']
-        # пальцы: всё, что далеко и от центра ладони, и от запястья (манжета — нет)
-        d = np.hypot(xx - px, yy - py)
-        dw = np.hypot(xx - wx, yy - wy)
-        # веса мягкие: при резком крае треугольники на границе пальца растягиваются и край «мажется»
-        fing = np.clip(smooth(hand, 18) * 1.2, 0, 1) * smoothstep(80, 210, d) * smoothstep(150, 260, dw)
-        # кисть целиком, с мягким краем
-        handw = np.clip(smooth(hand, 16) * 1.2, 0, 1)
-        # рука: кисть и всё вокруг неё, затухает к телу
-        arm = ndimage.grey_dilation(hand, size=(41, 41))
-        arm = np.clip(smooth(arm, 55) * 1.35, 0, 1) * (1 - prot)
-        bones += [
-            {'id': 'fing' + side, 'pivot': [px, py]},
-            {'id': 'hand' + side, 'pivot': [wx, wy]},
-            {'id': 'arm' + side, 'pivot': list(h['body'])},
-        ]
-        maps += [fing, handw * (1 - prot * 0.7), arm]
-
-    handsAll = np.clip(smooth(ndimage.grey_dilation(np.maximum(L['handL'], L['handR']), size=(21, 21)), 10) * 1.3, 0, 1)
-    for k in ('hairL', 'hairR', 'hairT'):
-        bones.append({'id': k, 'pivot': list(cfg['hair_pivots'][k])})
-        # слои прядей — прямоугольные куски: широкое размытие, чтобы у края веса не было шва
-        maps.append(np.clip(smooth(L[k], 30) * 1.1, 0, 1) * (1 - handsAll))
-
-    # арт обрезан краями кадра: у самой границы вес уходит в ноль, чтобы край
-    # картинки никогда не заезжал внутрь и не открывал ровный срез руки
-    edge = np.minimum(np.minimum(xx, W - 1 - xx), np.minimum(yy, H - 1 - yy))
-    pin = smoothstep(0, 40, edge)
-    maps = [m * pin for m in maps]
-
-    # сетка: вес в каждой вершине
-    gx = np.linspace(0, W - 1, COLS).round().astype(int)
-    gy = np.linspace(0, H - 1, ROWS).round().astype(int)
-    out = []
-    for m in maps:
-        v = m[np.ix_(gy, gx)]
-        out.append(np.clip(v * 255 + 0.5, 0, 255).astype(np.uint8))
-    while len(out) % 4:                          # по 4 веса на атрибут vec4
-        out.append(np.zeros_like(out[0]))
-    inter = np.stack(out, -1).reshape(-1)       # вершина за вершиной, веса подряд
-    data = {
-        'w': W, 'h': H, 'cols': COLS, 'rows': ROWS,
-        'base': cfg['base'], 'rim': cfg['rim'],
-        'bones': bones,
-        'stride': len(out),
-        'weights': base64.b64encode(inter.tobytes()).decode(),
-    }
+    parts = []
+    bones, maps = base_part(cfg['base'])
+    cols, rows, stride, wts = grid(cfg['base']['rect'], maps)
+    parts.append({'id': 'base', 'tex': cfg['base']['tex'], 'rect': cfg['base']['rect'], 'cols': cols, 'rows': rows,
+                  'stride': stride, 'bones': bones, 'weights': wts})
+    for pid, a in cfg['arms'].items():
+        bones, maps = arm_part(a)
+        cols, rows, stride, wts = grid(a['rect'], maps)
+        # id костей внутри руки делаем уникальными: fingL, handL…
+        for bn in bones:
+            bn['id'] += pid[-1]
+        parts.append({'id': pid, 'tex': a['tex'], 'rect': a['rect'], 'root': list(a['root']), 'cols': cols,
+                      'rows': rows, 'stride': stride, 'bones': bones, 'weights': wts})
+    data = {'w': W, 'h': H, 'rim': cfg['rim'], 'parts': parts}
+    os.makedirs('public/assets/zapret-moe/rig', exist_ok=True)
     with open(f'public/assets/zapret-moe/rig/{name}.json', 'w') as f:
         json.dump(data, f, separators=(',', ':'))
-    return maps
+    return {p['id']: p for p in parts}
 
 
 if __name__ == '__main__':
-    import os
-    os.makedirs('public/assets/zapret-moe/rig', exist_ok=True)
     for n in sys.argv[1:] or RIGS:
-        maps = build(n)
-        if os.environ.get('DEBUG'):
-            base = Image.open(CH + RIGS[n]['base']).convert('RGBA')
-            for i, m in enumerate(maps):
-                ov = Image.new('RGBA', (W, H), (0, 0, 0, 255))
-                ov.alpha_composite(base)
-                red = Image.fromarray((np.stack([m * 255, m * 0, m * 0, m * 170], -1)).astype(np.uint8), 'RGBA')
-                ov.alpha_composite(red)
-                ov.convert('RGB').resize((800, 450)).save(os.environ['DEBUG'] + f'/{n}-w{i}.png')
+        build(n)
         print(n, 'ok')

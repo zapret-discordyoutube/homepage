@@ -1,7 +1,7 @@
-/* WebGL-риг персонажа: основа, натянутая на сетку, и кости с плавными весами.
-   Кость поворачивает и масштабирует вершины со своим весом 0…1, поэтому арт
-   тянется, а не рвётся: руки гнутся от запястья, когти подгибаются, пряди
-   качаются — без дыр и без копии руки под слоем. Веса строит tools/rig-weights.py.
+/* WebGL-риг персонажа: части (основа без рук и отдельные руки) натянуты на сетки,
+   кости с плавными весами гнут их, а «корень» каждой руки поворачивает её от
+   плеча. Арт тянется, а не рвётся: кисть гнётся от запястья, когти сжимаются,
+   пряди качаются — без дыр и двоения. Веса строит tools/rig-weights.py.
 
    Прототип: включается адресом с ?gl (выключается ?gl=0). Без WebGL, при
    «меньше движения» и при любой ошибке остаются обычные CSS-слои.          */
@@ -22,59 +22,59 @@
   var ROOT = SRC.replace(/[?#].*$/, '').replace(/[^/]*$/, '');
   var VER = (SRC.match(/[?&]v=([^&#]+)/) || [])[1];   // тот же хеш, что у скрипта: данные рига не застрянут в кеше
   var CHARS = ROOT + 'chars/';
-
-  /* ── движение: по имени рига — функция, возвращающая кости на момент t ── */
   var D = Math.PI / 180;
 
-  // кусочная кривая по ключам [доля, значение] со сглаживанием между ними
-  function curve(keys, u) {
+  /* ── ключевые кадры: [доля цикла, значение, изинг до следующего ключа] ── */
+  var EASE = {
+    io: function (k) { return k * k * (3 - 2 * k) },
+    in: function (k) { return k * k * k },                                // разгон замаха
+    out: function (k) { return 1 - Math.pow(1 - k, 3) }                   // резкий удар и торможение
+  };
+  function track(keys, u) {
     for (var i = 1; i < keys.length; i++) {
       if (u <= keys[i][0]) {
         var a = keys[i - 1], b = keys[i], k = (u - a[0]) / (b[0] - a[0]);
-        k = k * k * (3 - 2 * k);
-        return a[1] + (b[1] - a[1]) * k;
+        return a[1] + (b[1] - a[1]) * EASE[a[2] || 'io'](k);
       }
     }
     return keys[keys.length - 1][1];
   }
-  var GRAB = [[0, 0], [0.34, 1], [0.44, 0.74], [0.52, 1.06], [0.74, 0.16], [1, 0]];
-  var CLENCH = [[0, 0], [0.28, 0.1], [0.42, 1], [0.6, 0.92], [0.78, 0], [1, 0]];
+
+  // тот же цикл, что zr-claw-l в home.css: замах вверх → удар к зрителю → отдача.
+  // Левая рука — по часовой, правая — зеркально: срез арта у края уходит за кадр.
+  var CLAW = {
+    r: [[0, 1], [0.22, 7, 'in'], [0.31, -2, 'out'], [0.4, -1], [0.58, 2], [1, 1]],
+    s: [[0, 1.02], [0.22, 1.06, 'in'], [0.31, 1.15, 'out'], [0.4, 1.11], [0.58, 1.03], [1, 1.02]],
+    // кисть отгибается назад на замахе и хлёстко доворачивается в ударе
+    hand: [[0, 0], [0.22, -6, 'in'], [0.31, 8, 'out'], [0.45, 3], [0.7, 0], [1, 0]],
+    // когти раскрыты на замахе, смыкаются в ударе
+    fing: [[0, 0.1], [0.2, -0.4], [0.3, 1, 'out'], [0.46, 0.85], [0.7, 0.1], [1, 0.1]]
+  };
 
   var MOTION = {
-    // РКН-тян тянется когтями к зрителю: рука подаётся вперёд и внутрь,
-    // кисть доворачивается, когти сжимаются в хватке; руки — вразнобой
     rkn: function (t, B) {
       ['L', 'R'].forEach(function (s, i) {
-        var sg = i ? -1 : 1, u = (t / 2.9 + i * 0.5) % 1;
-        var g = curve(GRAB, u), c = curve(CLENCH, u);
-        var idle = Math.sin(t * 0.83 + i * 2.1), idle2 = Math.sin(t * 1.37 + i);
-        // рука выбрасывается к зрителю: растёт наружу от тела (опора кости — у тела),
-        // так срез арта у края кадра всегда уходит за кадр, а не внутрь
-        B['arm' + s] = { r: sg * (1.5 * idle - 1.5 * g) * D, s: 1 + 0.07 * g + 0.012 * idle2, ty: -4 * idle };
-        // кисть доворачивается в хватке, когти сжимаются к ладони
-        B['hand' + s] = { r: sg * (-2.5 + 6 * g) * D, s: 1 + 0.03 * g };
-        B['fing' + s] = { r: sg * 7 * c * D, s: 1 - 0.06 * c };
+        var sg = i ? -1 : 1, u = ((t / 3.2) + (i ? 0.5 : 0)) % 1, c = track(CLAW.fing, u);
+        B.root['arm' + s] = { r: sg * track(CLAW.r, u) * D, s: track(CLAW.s, u) };
+        B['hand' + s] = { r: sg * track(CLAW.hand, u) * D, s: 1 + 0.03 * Math.max(0, c) };
+        B['fing' + s] = { r: sg * 8 * c * D, s: 1 - 0.07 * c };
       });
-      B.hairL = { r: 1.4 * Math.sin(t * 2 * Math.PI / 4.6) * D };
-      B.hairR = { r: -1.5 * Math.sin(t * 2 * Math.PI / 4.1 + 1.7) * D };
-      B.hairT = { r: 0.9 * Math.sin(t * 2 * Math.PI / 3.3 + 0.8) * D };
-      // контровой свет мерцает, как zr-rim-rkn в home.css
-      var f = (t / 3.4) % 1;
+      B.hairL = { r: (1.8 * Math.sin(t * 2 * Math.PI / 4.6)) * D };
+      B.hairR = { r: (-1.9 * Math.sin(t * 2 * Math.PI / 4.1 + 1.7)) * D };
+      var f = (t / 3.4) % 1;   // контровой свет мерцает, как zr-rim-rkn в home.css
       B.rim = f > 0.18 && f < 0.22 ? 0.35 : f > 0.6 && f < 0.63 ? 0.5 : 0.9;
     }
   };
 
   /* ── WebGL ── */
   var VS = [
-    'attribute vec2 a_p;attribute vec4 a_w0;attribute vec4 a_w1;attribute vec4 a_w2;',
-    'uniform mat3 u_b[12];uniform vec2 u_size;uniform vec4 u_rect;varying vec2 v_uv;',
+    'attribute vec2 a_p;attribute vec4 a_w0;attribute vec4 a_w1;',
+    'uniform mat3 u_b[8];uniform mat3 u_root;uniform vec2 u_size;uniform vec4 u_rect;varying vec2 v_uv;',
     'vec2 ap(vec2 p,mat3 m,float w){return mix(p,(m*vec3(p,1.)).xy,w);}',
     'void main(){vec2 p=a_p;',
-    // цепочка по каждой руке: пальцы → кисть → рука; потом пряди
-    'p=ap(p,u_b[0],a_w0.x);p=ap(p,u_b[1],a_w0.y);p=ap(p,u_b[2],a_w0.z);',
-    'p=ap(p,u_b[3],a_w0.w);p=ap(p,u_b[4],a_w1.x);p=ap(p,u_b[5],a_w1.y);',
-    'p=ap(p,u_b[6],a_w1.z);p=ap(p,u_b[7],a_w1.w);p=ap(p,u_b[8],a_w2.x);',
-    'p=ap(p,u_b[9],a_w2.y);p=ap(p,u_b[10],a_w2.z);p=ap(p,u_b[11],a_w2.w);',
+    'p=ap(p,u_b[0],a_w0.x);p=ap(p,u_b[1],a_w0.y);p=ap(p,u_b[2],a_w0.z);p=ap(p,u_b[3],a_w0.w);',
+    'p=ap(p,u_b[4],a_w1.x);p=ap(p,u_b[5],a_w1.y);p=ap(p,u_b[6],a_w1.z);p=ap(p,u_b[7],a_w1.w);',
+    'p=(u_root*vec3(p,1.)).xy;',
     'v_uv=(a_p-u_rect.xy)/u_rect.zw;',
     'gl_Position=vec4(p.x/u_size.x*2.-1.,1.-p.y/u_size.y*2.,0.,1.);}'
   ].join('');
@@ -95,20 +95,31 @@
     });
   }
 
+  // p' = A(p − pivot) + pivot + t, A = поворот·масштаб; mat3 по столбцам
+  function mat(m, o, px, py, r, s, tx, ty) {
+    var c = Math.cos(r) * s, sn = Math.sin(r) * s;
+    m[o] = c; m[o + 1] = sn; m[o + 2] = 0;
+    m[o + 3] = -sn; m[o + 4] = c; m[o + 5] = 0;
+    m[o + 6] = px - (c * px - sn * py) + (tx || 0);
+    m[o + 7] = py - (sn * px + c * py) + (ty || 0);
+    m[o + 8] = 1;
+  }
+
   function Rig(el, name) {
     this.el = el; this.name = name; this.visible = false; this.raf = 0;
-    this.t0 = performance.now() - Math.random() * 3000;
+    this.t0 = performance.now();
   }
 
   Rig.prototype.init = function () {
     var self = this;
     if (this.ready) return this.ready;
     return (this.ready = loadRig(this.name).then(function (d) {
-      return Promise.all([loadImg(CHARS + d.base), loadImg(CHARS + d.rim[0])]).then(function (ims) { self.build(d, ims[0], ims[1]) });
+      var srcs = [d.rim[0]].concat(d.parts.map(function (p) { return p.tex }));
+      return Promise.all(srcs.map(function (s) { return loadImg(CHARS + s) })).then(function (ims) { self.build(d, ims) });
     }).catch(function (e) { self.fail(e) }));
   };
 
-  Rig.prototype.build = function (d, base, rim) {
+  Rig.prototype.build = function (d, ims) {
     var cv = document.createElement('canvas');
     cv.className = 'zr-l zr-glc';
     cv.setAttribute('aria-hidden', 'true');
@@ -130,30 +141,11 @@
     if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
     gl.useProgram(pr);
     this.pr = pr;
-
-    // сетка: вершины в координатах кадра, треугольники ячейками
-    var C = d.cols, R = d.rows, pos = new Float32Array(C * R * 2), idx = new Uint16Array((C - 1) * (R - 1) * 6), n = 0;
-    for (var y = 0; y < R; y++) for (var x = 0; x < C; x++) {
-      pos[(y * C + x) * 2] = x / (C - 1) * d.w; pos[(y * C + x) * 2 + 1] = y / (R - 1) * d.h;
-    }
-    for (y = 0; y < R - 1; y++) for (x = 0; x < C - 1; x++) {
-      var a = y * C + x, b = a + 1, c = a + C, e = c + 1;
-      idx[n++] = a; idx[n++] = b; idx[n++] = c; idx[n++] = b; idx[n++] = e; idx[n++] = c;
-    }
-    this.count = n;
-    var bin = atob(d.weights), w = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) w[i] = bin.charCodeAt(i);
-
-    function buf(target, data) { var bf = gl.createBuffer(); gl.bindBuffer(target, bf); gl.bufferData(target, data, gl.STATIC_DRAW); return bf }
-    buf(gl.ARRAY_BUFFER, pos);
-    var ap = gl.getAttribLocation(pr, 'a_p'); gl.enableVertexAttribArray(ap); gl.vertexAttribPointer(ap, 2, gl.FLOAT, false, 0, 0);
-    buf(gl.ARRAY_BUFFER, w);
-    ['a_w0', 'a_w1', 'a_w2'].forEach(function (nm, k) {
-      var l = gl.getAttribLocation(pr, nm); if (l < 0) return;
-      if (k * 4 < d.stride) { gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 4, gl.UNSIGNED_BYTE, true, d.stride, k * 4) }
-      else gl.vertexAttrib4f(l, 0, 0, 0, 0);
-    });
-    buf(gl.ELEMENT_ARRAY_BUFFER, idx);
+    this.loc = {
+      p: gl.getAttribLocation(pr, 'a_p'), w0: gl.getAttribLocation(pr, 'a_w0'), w1: gl.getAttribLocation(pr, 'a_w1'),
+      b: gl.getUniformLocation(pr, 'u_b'), root: gl.getUniformLocation(pr, 'u_root'), size: gl.getUniformLocation(pr, 'u_size'),
+      rect: gl.getUniformLocation(pr, 'u_rect'), a: gl.getUniformLocation(pr, 'u_a'), t: gl.getUniformLocation(pr, 'u_t')
+    };
 
     function tex(im) {
       var t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
@@ -167,14 +159,27 @@
       else gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       return t;
     }
-    this.tBase = tex(base); this.tRim = tex(rim);
-    this.u = {};
-    ['u_size', 'u_rect', 'u_a', 'u_t'].forEach(function (k) { this.u[k] = gl.getUniformLocation(pr, k) }, this);
-    this.uB = gl.getUniformLocation(pr, 'u_b');
-    this.idx = {}; d.bones.forEach(function (bn, k) { this.idx[bn.id] = k }, this);
-    this.mats = new Float32Array(12 * 9);
-    gl.uniform2f(this.u.u_size, d.w, d.h);
-    gl.uniform1i(this.u.u_t, 0);
+    function buf(target, data) { var bf = gl.createBuffer(); gl.bindBuffer(target, bf); gl.bufferData(target, data, gl.STATIC_DRAW); return bf }
+
+    // сетка части: вершины в координатах кадра по её прямоугольнику
+    this.parts = d.parts.map(function (p, k) {
+      var C = p.cols, R = p.rows, r = p.rect, pos = new Float32Array(C * R * 2), idx = new Uint16Array((C - 1) * (R - 1) * 6), n = 0;
+      for (var y = 0; y < R; y++) for (var x = 0; x < C; x++) {
+        pos[(y * C + x) * 2] = r[0] + x / (C - 1) * r[2]; pos[(y * C + x) * 2 + 1] = r[1] + y / (R - 1) * r[3];
+      }
+      for (y = 0; y < R - 1; y++) for (x = 0; x < C - 1; x++) {
+        var a = y * C + x, b = a + 1, c = a + C, e = c + 1;
+        idx[n++] = a; idx[n++] = b; idx[n++] = c; idx[n++] = b; idx[n++] = e; idx[n++] = c;
+      }
+      var bin = atob(p.weights), w = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) w[i] = bin.charCodeAt(i);
+      return { d: p, count: n, tex: tex(ims[k + 1]), pos: buf(gl.ARRAY_BUFFER, pos), w: buf(gl.ARRAY_BUFFER, w), idx: buf(gl.ELEMENT_ARRAY_BUFFER, idx) };
+    });
+    this.rimTex = tex(ims[0]);
+    this.mats = new Float32Array(8 * 9);
+    this.root = new Float32Array(9);
+    gl.uniform2f(this.loc.size, d.w, d.h);
+    gl.uniform1i(this.loc.t, 0);
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
     var self = this;
@@ -195,35 +200,42 @@
     if (this.cv.width !== w || this.cv.height !== h) { this.cv.width = w; this.cv.height = h }
   };
 
+  Rig.prototype.drawPart = function (P, texture, rect, alpha, B) {
+    var gl = this.gl, L = this.loc, m = this.mats, p = P.d;
+    for (var k = 0; k < 8; k++) {
+      var bn = p.bones[k];
+      if (bn) { var o = B[bn.id] || {}; mat(m, k * 9, bn.pivot[0], bn.pivot[1], o.r || 0, o.s || 1, o.tx, o.ty) }
+      else mat(m, k * 9, 0, 0, 0, 1);
+    }
+    var ro = p.root && B.root[p.id] || {};
+    mat(this.root, 0, p.root ? p.root[0] : 0, p.root ? p.root[1] : 0, ro.r || 0, ro.s || 1, ro.tx, ro.ty);
+    gl.uniformMatrix3fv(L.b, false, m);
+    gl.uniformMatrix3fv(L.root, false, this.root);
+    gl.uniform4f(L.rect, rect[0], rect[1], rect[2], rect[3]);
+    gl.uniform1f(L.a, alpha);
+    gl.bindBuffer(gl.ARRAY_BUFFER, P.pos);
+    gl.enableVertexAttribArray(L.p); gl.vertexAttribPointer(L.p, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, P.w);
+    gl.enableVertexAttribArray(L.w0); gl.vertexAttribPointer(L.w0, 4, gl.UNSIGNED_BYTE, true, p.stride, 0);
+    if (L.w1 >= 0) {
+      if (p.stride >= 8) { gl.enableVertexAttribArray(L.w1); gl.vertexAttribPointer(L.w1, 4, gl.UNSIGNED_BYTE, true, p.stride, 4) }
+      else { gl.disableVertexAttribArray(L.w1); gl.vertexAttrib4f(L.w1, 0, 0, 0, 0) }
+    }
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, P.idx);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.drawElements(gl.TRIANGLES, P.count, gl.UNSIGNED_SHORT, 0);
+  };
+
   Rig.prototype.draw = function (now) {
-    var gl = this.gl, d = this.d, B = {}, m = this.mats;
+    var gl = this.gl, B = { root: {} };
     // window.zpmRigT — время в мс для покадровой записи ролика (tools, тесты)
     MOTION[this.name]((typeof window.zpmRigT === 'number' ? window.zpmRigT : now - this.t0) / 1000, B);
-    d.bones.forEach(function (bn, k) {
-      var o = B[bn.id] || {}, r = o.r || 0, s = o.s || 1, c = Math.cos(r) * s, sn = Math.sin(r) * s;
-      var px = bn.pivot[0], py = bn.pivot[1];
-      // p' = A(p − pivot) + pivot + t;   mat3 по столбцам
-      m[k * 9] = c; m[k * 9 + 1] = sn; m[k * 9 + 2] = 0;
-      m[k * 9 + 3] = -sn; m[k * 9 + 4] = c; m[k * 9 + 5] = 0;
-      m[k * 9 + 6] = px - (c * px - sn * py) + (o.tx || 0);
-      m[k * 9 + 7] = py - (sn * px + c * py) + (o.ty || 0);
-      m[k * 9 + 8] = 1;
-    });
-    for (var k = d.bones.length; k < 12; k++) { m[k * 9] = m[k * 9 + 4] = m[k * 9 + 8] = 1 }
     gl.viewport(0, 0, this.cv.width, this.cv.height);
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.uniformMatrix3fv(this.uB, false, m);
     gl.activeTexture(gl.TEXTURE0);
-    // контровой свет — той же сеткой, иначе свечение отставало бы от рук
-    var rr = d.rim;
-    gl.bindTexture(gl.TEXTURE_2D, this.tRim);
-    gl.uniform4f(this.u.u_rect, rr[1], rr[2], rr[3], rr[4]);
-    gl.uniform1f(this.u.u_a, B.rim == null ? 0.9 : B.rim);
-    gl.drawElements(gl.TRIANGLES, this.count, gl.UNSIGNED_SHORT, 0);
-    gl.bindTexture(gl.TEXTURE_2D, this.tBase);
-    gl.uniform4f(this.u.u_rect, 0, 0, d.w, d.h);
-    gl.uniform1f(this.u.u_a, 1);
-    gl.drawElements(gl.TRIANGLES, this.count, gl.UNSIGNED_SHORT, 0);
+    // контровой свет — сеткой основы, чтобы он качался вместе с прядями
+    this.drawPart(this.parts[0], this.rimTex, this.d.rim.slice(1), B.rim == null ? 0.9 : B.rim, B);
+    for (var i = 0; i < this.parts.length; i++) this.drawPart(this.parts[i], this.parts[i].tex, this.parts[i].d.rect, 1, B);
   };
 
   Rig.prototype.start = function () {

@@ -8,7 +8,7 @@
 #    /var/lib/forgejo/custom зеркалируют ветку main целиком: файлы, которых нет
 #    в git, удаляются. Правки прямо на сервере не живут дольше одной выкладки.
 #    Исключение — PRESERVE: статистика, которую пишет zapret-homepage-stats.py.
-#  * @ASSETS_VER@ в шаблонах заменяется хешем home.css, home.js и site.css,
+#  * @ASSETS_VER@ в шаблонах заменяется хешем CSS/JS главной и данных рига (ASSET_FILES),
 #    поэтому браузеры получают новые CSS/JS сразу, несмотря на кеш статики Forgejo.
 #  * Шаблоны Forgejo читает при старте: при их изменении сервис
 #    перезапускается, после чего проверяется, что сайт отвечает. Если нет —
@@ -29,7 +29,7 @@ LOCK=${LOCK:-/run/zapret-homepage-sync.lock}
 MANAGED="templates public"
 # Генерируемое на сервере (не из git) — переживает выкладку.
 PRESERVE="public/assets/zapret-moe-stats"
-ASSET_FILES="public/assets/zapret-moe/home.css public/assets/zapret-moe/home.js public/assets/zapret-moe/site.css public/assets/zapret-moe/intro.css public/assets/zapret-moe/intro.js"
+ASSET_FILES="public/assets/zapret-moe/home.css public/assets/zapret-moe/home.js public/assets/zapret-moe/site.css public/assets/zapret-moe/intro.css public/assets/zapret-moe/intro.js public/assets/zapret-moe/rig.js public/assets/zapret-moe/rig"
 
 exec 9>"$LOCK"
 flock -n 9 || exit 0

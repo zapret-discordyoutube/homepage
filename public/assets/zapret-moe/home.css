@@ -4435,3 +4435,16 @@ html.zcur-on textarea {
 .zoff *::after {
   animation-play-state: paused !important;
 }
+
+/* ── WebGL-риг (rig.js): пока он рисует, CSS-слои персонажа спрятаны ── */
+.zr-glc {
+  pointer-events: none;
+}
+
+.zr-gl-on .zr-base,
+.zr-gl-on .zr-rim,
+.zr-gl-on .zr-hair,
+.zr-gl-on .zr-hand {
+  visibility: hidden;
+  animation: none;
+}

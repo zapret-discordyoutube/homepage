@@ -328,7 +328,10 @@
     // крыша: кадр вписан над подписью (девушки сидят у нижнего края — подпись их не закрывает); на телефоне — по ширине девушек
     if (intro.getAttribute('data-rig') === 'roof') { r = portrait ? W / 1000 : Math.min(W / 1600, (H - top - bottom) / 900); ry = top + (H - top - bottom - 900 * r) / 2 }
     if (intro.getAttribute('data-rig') === 'claw') { r = Math.min(W / (portrait ? 1250 : 1450), (H - top - bottom) / 900); ry = top + (H - top - bottom - 900 * r) / 2 }
-    intro.style.setProperty('--rg-s', r); intro.style.setProperty('--rg-x', (W - 1600 * r) / 2 + 'px'); intro.style.setProperty('--rg-y', ry + 'px');
+    // на узком экране сюжетный арт кадрируется по лицу, а не по центру кадра
+    var rx = (W - 1600 * r) / 2, focus = { stamp: 800, defeat: 1080, victory: 720 }[intro.getAttribute('data-rig')];
+    if (portrait && focus) rx = Math.max(W - 1600 * r, Math.min(0, W / 2 - focus * r));
+    intro.style.setProperty('--rg-s', r); intro.style.setProperty('--rg-x', rx + 'px'); intro.style.setProperty('--rg-y', ry + 'px');
   }
 
   function buildActs() {

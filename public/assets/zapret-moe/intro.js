@@ -277,6 +277,7 @@
     reg: { act: 1, dur: 6200, m: 3, cap: 'В реестре — сотни тысяч адресов.', sub: 'Видео, соцсети, мессенджеры, СМИ, VPN… и каждый день новые.' },
     map: { act: 1, dur: 6800, m: 3, cap: 'Потом — ТСПУ у каждого провайдера.', sub: 'Коробки встали на провода от Калининграда до Анадыря.' },
     xray: { act: 1, dur: 6800, m: 3, cap: 'ТСПУ читает адрес на каждом конверте.', sub: 'Адреса нет в реестре — пропускает. Есть — рвёт соединение.' },
+    claw: { act: 1, dur: 6800, m: 3, rig: 'claw', cap: 'Она хватает пакеты прямо на проводе.', sub: 'Подозрительный — в когти. Но всех ей не поймать: часть всё равно проскакивает.' },
     slow: { act: 1, dur: 6200, m: 3, cap: 'Что не запретили — замедлили.', sub: 'Видео грузится по минуте, а виноватым якобы оказывается «сервис».' },
     loss: { act: 1, dur: 6200, m: 4, cap: 'VPN удаляют из магазинов. Сайты пропадают.', sub: 'Кажется, что сделать уже ничего нельзя.' },
     fake: { act: 2, dur: 6800, m: 10, cap: 'Но у пакетов есть приёмы. Первый — подделка.', sub: 'Вперёд летит фейковый пакет, которому не хватит «жизни» дойти до сервера. ТСПУ проверяет его — и пропускает настоящий следом.' },
@@ -295,7 +296,7 @@
     final: { act: 2, dur: 0, m: 9, rig: 'victory' },
     fly: { act: 2, dur: 6000, m: 6, cap: 'Её инструменты — для всех.', sub: 'Zapret 2 GUI, Zapret KVN, ZaStoGram и Magisk Zapret 2.' }
   };
-  var FULL = ['net', 'env', 'rkn', 'stamp', 'reg', 'map', 'xray', 'slow', 'loss', 'fake', 'split', 'disorder', 'tunnel', 'zt', 'p-gui', 'p-kvn', 'p-zsg', 'p-mag', 'infra', 'num', 'battle', 'defeat', 'final'];
+  var FULL = ['net', 'env', 'rkn', 'stamp', 'reg', 'map', 'xray', 'claw', 'slow', 'loss', 'fake', 'split', 'disorder', 'tunnel', 'zt', 'p-gui', 'p-kvn', 'p-zsg', 'p-mag', 'infra', 'num', 'battle', 'defeat', 'final'];
   var SHORT = ['net', 'rkn', 'xray', 'fake', 'zt', 'fly', 'num', 'final'];
 
   var Z = window.zpm || {};
@@ -320,7 +321,10 @@
     intro.style.setProperty('--st-s', s); intro.style.setProperty('--st-x', sx + 'px'); intro.style.setProperty('--st-y', sy + 'px');
     var r = Math.max(W / 1600, H / 900);
     if (portrait && intro.getAttribute('data-rig') === 'both') r = H * 0.46 / 900;   // битва: две девушки друг над другом
-    intro.style.setProperty('--rg-s', r); intro.style.setProperty('--rg-x', (W - 1600 * r) / 2 + 'px'); intro.style.setProperty('--rg-y', (H - 900 * r) / 2 + 'px');
+    var ry = (H - 900 * r) / 2;
+    // когти над проводом: кадр вписан над подписью, как схемы, — провод не уходит под подпись и кнопки
+    if (intro.getAttribute('data-rig') === 'claw') { r = Math.min(W / (portrait ? 1250 : 1450), (H - top - bottom) / 900); ry = top + (H - top - bottom - 900 * r) / 2 }
+    intro.style.setProperty('--rg-s', r); intro.style.setProperty('--rg-x', (W - 1600 * r) / 2 + 'px'); intro.style.setProperty('--rg-y', ry + 'px');
   }
 
   function buildActs() {

@@ -2122,6 +2122,7 @@ html.zpm-intro-on .zx:not(.zx-run) {
 .zx-art-rig .zr-hair-t { --sd: 2.8s; --sdl: -0.6s; }
 
 .zx[data-rig="stamp"] .zx-rig-stamp,
+.zx[data-rig="claw"] .zx-rig-claw,
 .zx[data-rig="splice"] .zx-rig-splice,
 .zx[data-rig="defeat"] .zx-rig-defeat,
 .zx[data-rig="victory"] .zx-rig-victory {
@@ -2604,6 +2605,7 @@ html.zpm-intro-on .zx:not(.zx-run) {
 .zx[data-rig="both"] .zx-rig-rkn,
 .zx[data-rig="both"] .zx-rig-zt,
 .zx[data-rig="stamp"] .zx-rig-stamp,
+.zx[data-rig="claw"] .zx-rig-claw,
 .zx[data-rig="splice"] .zx-rig-splice,
 .zx[data-rig="defeat"] .zx-rig-defeat,
 .zx[data-rig="victory"] .zx-rig-victory {
@@ -2612,4 +2614,170 @@ html.zpm-intro-on .zx:not(.zx-run) {
 
 @keyframes zx-fadein {
   from { opacity: 0; }
+}
+
+/* кадр вписан в экран, а не на весь экран: у виньетки были бы видны края */
+.zx-rig-claw::after {
+  display: none;
+}
+
+/* ═══ когти над проводом: РКН-тян хватает пакеты ═══════════════════════════
+   Всё в координатах кадра 1600×900 и на одной шкале 6,8 с: левая лапа ловит
+   «youtube.com» на 1,25 с, правая — «discord.gg» на 3,65 с (когти сменяются
+   кулаком, пакет уезжает вместе с ним и лопается), в конце обе бьют мимо —
+   голубые пакеты проскакивают. Руки — отдельные слои с осью в плече. */
+.zx[data-rig="claw"] .zx-rig-claw {
+  transform-origin: 50% 40%;
+  animation: zx-claw-cam 6.8s ease-out both, zx-fadein 0.6s ease-out both;
+}
+
+@keyframes zx-claw-cam {
+  from { transform: scale(1.02); }
+  to { transform: scale(1.09); }
+}
+
+.zc-hair {
+  animation: zc-hair 2.4s ease-in-out infinite alternate;
+}
+
+.zc-hair-r {
+  animation-duration: 2.8s;
+  animation-delay: -1.3s;
+}
+
+@keyframes zc-hair {
+  from { transform: skewY(-1.6deg) scaleX(0.99); }
+  to { transform: skewY(1.8deg) scaleX(1.02); }
+}
+
+.zc-wire {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.zc-line,
+.zc-line-glow {
+  fill: none;
+  stroke: #4fd1ff;
+}
+
+.zc-line {
+  stroke-width: 3;
+}
+
+.zc-line-glow {
+  stroke-width: 16;
+  opacity: 0.18;
+}
+
+.zc-p {
+  color: #4fd1ff;
+  transform: translate(-200px, 780px);
+}
+
+.zc-p rect {
+  fill: rgba(6, 12, 30, 0.92);
+  stroke: currentColor;
+  stroke-width: 2.5;
+}
+
+.zc-p text {
+  fill: currentColor;
+  font: 600 22px var(--mono);
+  text-anchor: middle;
+}
+
+.zx-rig-claw .zc-pa { animation: zc-pa 6.8s linear both; }
+.zx-rig-claw .zc-pb { animation: zc-pb 6.8s linear both; }
+.zx-rig-claw .zc-pc { animation: zc-run 3.4s linear 4.82s both; }
+.zx-rig-claw .zc-pd { animation: zc-run 3.4s linear 3.03s both; }
+.zx-rig-claw .zc-pe { animation: zc-run 3.4s linear 0.2s both; }
+
+@keyframes zc-run {
+  0% { transform: translate(-120px, 780px); opacity: 0; }
+  8%, 92% { opacity: 1; }
+  100% { transform: translate(1720px, 780px); opacity: 0; }
+}
+
+/* пойманный пакет: едет к лапе, краснеет, уезжает в кулаке и лопается */
+@keyframes zc-pa {
+  0% { transform: translate(-120px, 780px); opacity: 0; }
+  5% { opacity: 1; }
+  18.4% { transform: translate(338px, 780px); color: #4fd1ff; animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+  19.9% { transform: translate(338px, 600px) rotate(-8deg); color: #ff3b5c; animation-timing-function: ease-in-out; }
+  30.9% { transform: translate(250px, 420px) rotate(6deg); color: #ff3b5c; }
+  32.5% { transform: translate(250px, 420px) scale(1.35); opacity: 1; color: #ff3b5c; }
+  35%, 100% { transform: translate(250px, 420px) scale(0); opacity: 0; color: #ff3b5c; }
+}
+
+@keyframes zc-pb {
+  0%, 14% { transform: translate(-120px, 780px); opacity: 0; }
+  18% { opacity: 1; }
+  53.7% { transform: translate(1278px, 780px); color: #4fd1ff; animation-timing-function: cubic-bezier(0.2, 0.8, 0.3, 1); }
+  55.1% { transform: translate(1278px, 608px) rotate(8deg); color: #ff3b5c; animation-timing-function: ease-in-out; }
+  66.2% { transform: translate(1373px, 414px) rotate(-6deg); color: #ff3b5c; }
+  67.8% { transform: translate(1373px, 414px) scale(1.35); opacity: 1; color: #ff3b5c; }
+  70.5%, 100% { transform: translate(1373px, 414px) scale(0); opacity: 0; color: #ff3b5c; }
+}
+
+/* удары лап: замах вниз к проводу, хватка, рывок вверх с добычей */
+.zx-rig-claw .zc-arm-l { animation: zc-arm-l 6.8s both; }
+.zx-rig-claw .zc-arm-r { animation: zc-arm-r 6.8s both; }
+
+@keyframes zc-arm-l {
+  0%, 11.8% { transform: rotate(0) scale(1); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5); }
+  18.4%, 19.9% { transform: rotate(-24deg) scale(1.12); animation-timing-function: cubic-bezier(0.3, 0, 0.3, 1); }
+  30.9% { transform: rotate(4deg) scale(1); }
+  38.2%, 76.5% { transform: rotate(0) scale(1); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5); }
+  83.1%, 88.2% { transform: rotate(-24deg) scale(1.12); animation-timing-function: ease-in-out; }
+  97%, 100% { transform: rotate(0) scale(1); }
+}
+
+@keyframes zc-arm-r {
+  0%, 47% { transform: rotate(0) scale(1); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5); }
+  53.7%, 55.1% { transform: rotate(24deg) scale(1.12); animation-timing-function: cubic-bezier(0.3, 0, 0.3, 1); }
+  66.2% { transform: rotate(-4deg) scale(1); }
+  73.5%, 76.5% { transform: rotate(0) scale(1); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5); }
+  83.1%, 88.2% { transform: rotate(24deg) scale(1.12); animation-timing-function: ease-in-out; }
+  97%, 100% { transform: rotate(0) scale(1); }
+}
+
+/* когти ↔ кулак: подмена в момент хватки */
+.zx-rig-claw .zc-fist { opacity: 0; }
+.zx-rig-claw .zc-arm-l.zc-open { animation: zc-arm-l 6.8s both, zc-show-l 6.8s steps(1) both; }
+.zx-rig-claw .zc-arm-l.zc-fist { animation: zc-arm-l 6.8s both, zc-hide-l 6.8s steps(1) both; }
+.zx-rig-claw .zc-arm-r.zc-open { animation: zc-arm-r 6.8s both, zc-show-r 6.8s steps(1) both; }
+.zx-rig-claw .zc-arm-r.zc-fist { animation: zc-arm-r 6.8s both, zc-hide-r 6.8s steps(1) both; }
+
+@keyframes zc-show-l { 0% { opacity: 1; } 18.4% { opacity: 0; } 38.2% { opacity: 1; } }
+@keyframes zc-hide-l { 0% { opacity: 0; } 18.4% { opacity: 1; } 38.2% { opacity: 0; } }
+@keyframes zc-show-r { 0% { opacity: 1; } 53.7% { opacity: 0; } 73.5% { opacity: 1; } }
+@keyframes zc-hide-r { 0% { opacity: 0; } 53.7% { opacity: 1; } 73.5% { opacity: 0; } }
+
+/* вспышка хватки */
+.zc-hit {
+  fill: none;
+  stroke: #ff3b5c;
+  stroke-width: 6;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.zx-rig-claw .zc-hit-a { animation: zc-hit 6.8s both; }
+.zx-rig-claw .zc-hit-b { animation: zc-hit-b 6.8s both; }
+
+@keyframes zc-hit {
+  0%, 18.3% { opacity: 0; transform: scale(0.2); }
+  18.4% { opacity: 1; transform: scale(0.3); }
+  23.5%, 100% { opacity: 0; transform: scale(2.2); }
+}
+
+@keyframes zc-hit-b {
+  0%, 53.6% { opacity: 0; transform: scale(0.2); }
+  53.7% { opacity: 1; transform: scale(0.3); }
+  58.8%, 100% { opacity: 0; transform: scale(2.2); }
 }

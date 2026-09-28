@@ -261,20 +261,21 @@
   }
 
   /* ── Драка в дуэли: хореография на таймлайне ─────────────────────────
-     Цикл 7,2 с: РКН-тян бьёт левой — Запрет-тян уворачивается (промах, следы
-     когтей), бьёт правой — блок (щит и искры), Запрет-тян контратакует —
-     вспышка, ударная волна, РКН-тян отбрасывает; РКН-тян в ярости вскидывает руки.
-     Движения — Web Animations по отдельным свойствам translate/rotate/scale, поэтому
-     они складываются с CSS-покачиванием. Направления считаются по реальному
-     положению персонажей: на телефоне они друг над другом, драка идёт по вертикали.
-     Руки РКН-тян играют тот же цикл удара, что и zr-claw-l/-r в home.css. */
+     Бойцы в полный рост стоят лицом друг к другу (слои: волосы, основа, две руки
+     с осью в плече). Цикл 7,2 с: РКН-тян бросается и полосует когтями — Запрет-тян
+     уходит назад (промах, следы когтей); колющий удар — блок рукой (щит, искры);
+     контратака кулаком — вспышка, ударная волна, РКН-тян отбрасывает; ярость.
+     Тело двигают свойства translate/rotate/scale (Web Animations), руки — transform:
+     они складываются с CSS-покачиванием стойки. Точки эффектов берутся с реальных
+     прямоугольников кулака и когтей в момент удара. */
   (function () {
     if (!duel || !duel.animate || !window.IntersectionObserver) return;
     if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var zt = duel.querySelector('.zd-left .zrig'), rk = duel.querySelector('.zd-right .zrig');
-    var armL = rk && rk.querySelector('.zr-arm-l'), armR = rk && rk.querySelector('.zr-arm-r');
+    var zt = duel.querySelector('.zf-zt'), rk = duel.querySelector('.zf-rkn');
+    if (!zt || !rk) return;
+    var ztGuard = zt.querySelector('.zf-arm0'), ztPunch = zt.querySelector('.zf-arm1');
+    var rkClaw = rk.querySelector('.zf-arm0'), rkBack = rk.querySelector('.zf-arm1');
     var vs = duel.querySelector('.zd-vs span');
-    if (!zt || !rk || !armL || !armR) return;
     duel.classList.add('zd-fight');
 
     var cv = document.createElement('canvas');
@@ -288,45 +289,32 @@
     }
     addEventListener('resize', size);
 
-    // где кто стоит: центры персонажей внутри дуэли и направление от РКН-тян к Запрет-тян
-    function geo() {
-      var d = duel.getBoundingClientRect(), a = zt.getBoundingClientRect(), b = rk.getBoundingClientRect();
-      var ax = a.left - d.left + a.width * 0.5, ay = a.top - d.top + a.height * 0.42;
-      var bx = b.left - d.left + b.width * 0.5, by = b.top - d.top + b.height * 0.42;
-      var dx = ax - bx, dy = ay - by, len = Math.hypot(dx, dy) || 1;
-      return { ax: ax, ay: ay, bx: bx, by: by, ux: dx / len, uy: dy / len, len: len };
+    // точка на элементе (доли его прямоугольника) в координатах дуэли
+    function at(el, fx_, fy) {
+      var d = duel.getBoundingClientRect(), r = el.getBoundingClientRect();
+      return { x: r.left - d.left + r.width * fx_, y: r.top - d.top + r.height * fy };
     }
-    function px(v) { return v.toFixed(1) + 'px' }
-
-    // цикл удара рук — копия zr-claw-l/-r: замах вверх → удар к зрителю → отдача
-    var E = 'cubic-bezier(0.4, 0, 0.3, 1)';
-    function claw(sg) {
-      function k(o, r, s, e) { return { offset: o, transform: 'rotate(' + sg * r + 'deg) scale(' + s + ')', easing: e || E } }
-      return [k(0, 1, 1.02), k(0.22, 7, 1.06, 'cubic-bezier(0.6, 0, 0.9, 0.5)'), k(0.31, -2, 1.15, 'cubic-bezier(0.2, 0.8, 0.3, 1)'),
-        k(0.4, -1, 1.11), k(0.58, 2, 1.03), k(1, 1, 1.02)];
-    }
-    var CLAW = { L: claw(1), R: claw(-1) };
-    function swing(side) {
-      (side === 'L' ? armL : armR).animate(CLAW[side], { duration: 3200 });
-      rk._claw = rk._claw || {}; rk._claw[side] = performance.now();   // WebGL-риг (rig.js) играет тот же удар
-    }
-    // руки вскидываются (флинч от удара, ярость): только «вверх» — срез арта уходит за кадр
-    function raise(ms, hold) {
-      [[armL, 1], [armR, -1]].forEach(function (a) {
-        a[0].animate([{ transform: 'rotate(' + a[1] + 'deg) scale(1.02)' }, { offset: 0.2, transform: 'rotate(' + a[1] * 8 + 'deg) scale(1.07)' },
-          { offset: 0.2 + hold, transform: 'rotate(' + a[1] * 7 + 'deg) scale(1.06)' }, { transform: 'rotate(' + a[1] + 'deg) scale(1.02)' }], { duration: ms, easing: E });
-      });
-    }
-    function move(el, path, ms) {
-      el.animate(path.map(function (p) {
-        var f = { offset: p[0], translate: px(p[1]) + ' ' + px(p[2]), rotate: (p[3] || 0) + 'deg', scale: String(p[4] || 1) };
-        if (p[5]) f.easing = p[5];
+    var OUT = 'cubic-bezier(0.2, 0.8, 0.3, 1)', IN = 'cubic-bezier(0.6, 0, 0.9, 0.5)', IO = 'cubic-bezier(0.4, 0, 0.3, 1)';
+    // тело: [доля, сдвиг X в % своей ширины, сдвиг Y в %, наклон°, изинг]
+    function body(el, keys, ms) {
+      el.animate(keys.map(function (k) {
+        var f = { offset: k[0], translate: k[1] + '% ' + (k[2] || 0) + '%', rotate: (k[3] || 0) + 'deg' };
+        if (k[4]) f.easing = k[4];
         return f;
-      }), { duration: ms, easing: E });
+      }), { duration: ms, easing: IO });
+    }
+    // рука: [доля, поворот°, масштаб, изинг]
+    function arm(el, keys, ms) {
+      if (!el) return;
+      el.animate(keys.map(function (k) {
+        var f = { offset: k[0], transform: 'rotate(' + k[1] + 'deg) scale(' + (k[2] || 1) + ')' };
+        if (k[3]) f.easing = k[3];
+        return f;
+      }), { duration: ms, easing: IO });
     }
     function shake(power) {
-      duel.animate([{ translate: '0 0' }, { translate: px(-power) + ' ' + px(power / 2) }, { translate: px(power) + ' ' + px(-power / 2) },
-        { translate: px(-power / 2) + ' ' + px(power / 4) }, { translate: '0 0' }], { duration: 260 });
+      duel.animate([{ translate: '0 0' }, { translate: -power + 'px ' + power / 2 + 'px' }, { translate: power + 'px ' + -power / 2 + 'px' },
+        { translate: -power / 2 + 'px ' + power / 4 + 'px' }, { translate: '0 0' }], { duration: 280 });
     }
     function flashVs(k) {
       if (vs) vs.animate([{ filter: 'drop-shadow(0 0 18px rgba(155,123,255,.8))' }, { filter: 'drop-shadow(0 0 40px #fff) brightness(' + k + ')' },
@@ -334,22 +322,23 @@
     }
     function mark(el, cls, ms) { el.classList.add(cls); setTimeout(function () { el.classList.remove(cls) }, ms) }
 
-    /* ── эффекты на холсте: следы когтей, щит, удар ── */
+    /* ── эффекты на холсте ── */
     function add(o) { o.t0 = performance.now(); fx.push(o); if (!raf) raf = requestAnimationFrame(draw) }
-    function sparks(x, y, n, speed, colors, up) {
+    function sparks(p, n, speed, colors, up) {
       for (var i = 0; i < n; i++) {
         var a = Math.random() * Math.PI * 2, v = speed * (0.35 + Math.random() * 0.8);
-        add({ k: 'spark', x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - (up || 0), life: 380 + Math.random() * 380, c: colors[i % colors.length] });
+        add({ k: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - (up || 0), life: 380 + Math.random() * 380, c: colors[i % colors.length] });
       }
     }
     function draw(now) {
       raf = 0;
       g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
       g.lineCap = 'round'; g.globalCompositeOperation = 'lighter';
+      var U = Math.min(W, H);
       fx = fx.filter(function (o) {
         var t = now - o.t0;
         if (o.k === 'slash') {                      // три следа когтей: прорисовываются за 110 мс и гаснут
-          var p = Math.min(1, t / 110), a = t < 110 ? 1 : Math.max(0, 1 - (t - 110) / 380);
+          var p = Math.min(1, t / 110), a = t < 110 ? 1 : Math.max(0, 1 - (t - 110) / 420);
           for (var i = -1; i <= 1; i++) {
             var ox = -o.ny * i * o.gap, oy = o.nx * i * o.gap;
             var sx = o.x - o.nx * o.len / 2 + ox, sy = o.y - o.ny * o.len / 2 + oy;
@@ -358,36 +347,37 @@
               g.beginPath(); g.moveTo(sx, sy); g.quadraticCurveTo(cx, cy, ex, ey); g.lineWidth = s[0]; g.strokeStyle = s[1]; g.stroke();
             });
           }
-          return t < 500;
+          return t < 530;
         }
-        if (o.k === 'shield') {                     // блок: голубая дуга, обращённая к удару
-          var q = Math.min(1, t / 420), r = o.r * (0.8 + 0.35 * q), al = 1 - q;
-          [[18, 'rgba(79,209,255,' + 0.18 * al + ')'], [6, 'rgba(79,209,255,' + 0.6 * al + ')'], [2, 'rgba(230,250,255,' + al + ')']].forEach(function (s) {
-            g.beginPath(); g.arc(o.x, o.y, r, o.ang - 1.1, o.ang + 1.1); g.lineWidth = s[0]; g.strokeStyle = s[1]; g.stroke();
+        if (o.k === 'shield') {                     // блок: голубой шестигранник щита
+          var q = Math.min(1, t / 460), r = o.r * (0.85 + 0.3 * q), al = 1 - q;
+          [[18, 'rgba(79,209,255,' + 0.16 * al + ')'], [6, 'rgba(79,209,255,' + 0.55 * al + ')'], [2, 'rgba(230,250,255,' + al + ')']].forEach(function (s) {
+            g.beginPath();
+            for (var j = 0; j <= 6; j++) { var an = j / 6 * Math.PI * 2 + Math.PI / 6; g[j ? 'lineTo' : 'moveTo'](o.x + Math.cos(an) * r, o.y + Math.sin(an) * r) }
+            g.lineWidth = s[0]; g.strokeStyle = s[1]; g.stroke();
           });
-          return t < 420;
-        }
-        if (o.k === 'burst') {                      // удар: вспышка, кольцо и лучи
-          var b = Math.min(1, t / 460), fade = 1 - b;
-          if (t < 200) {
-            var gr = g.createRadialGradient(o.x, o.y, 0, o.x, o.y, Math.max(W, H) * 0.7);
-            gr.addColorStop(0, 'rgba(235,248,255,' + 0.55 * (1 - t / 200) + ')'); gr.addColorStop(1, 'rgba(79,209,255,0)');
-            g.fillStyle = gr; g.fillRect(0, 0, W, H);
-          }
-          var R = o.r * (0.2 + 1.3 * Math.pow(b, 0.6));
-          g.beginPath(); g.arc(o.x, o.y, R, 0, Math.PI * 2); g.lineWidth = 3 + 8 * fade; g.strokeStyle = 'rgba(200,240,255,' + 0.85 * fade + ')'; g.stroke();
-          g.beginPath(); g.arc(o.x, o.y, R * 0.75, 0, Math.PI * 2); g.lineWidth = 10 * fade; g.strokeStyle = 'rgba(255,59,92,' + 0.35 * fade + ')'; g.stroke();
-          for (var j = 0; j < 14; j++) {
-            var an = j / 14 * Math.PI * 2 + o.rot, r0 = R * 0.35, r1 = R * (0.9 + 0.5 * ((j * 7) % 5) / 5);
-            g.beginPath(); g.moveTo(o.x + Math.cos(an) * r0, o.y + Math.sin(an) * r0); g.lineTo(o.x + Math.cos(an) * r1, o.y + Math.sin(an) * r1);
-            g.lineWidth = 2.4 * fade + 0.5; g.strokeStyle = 'rgba(230,250,255,' + fade + ')'; g.stroke();
-          }
           return t < 460;
         }
+        if (o.k === 'burst') {                      // попадание: вспышка, кольца и лучи
+          var b = Math.min(1, t / 480), fade = 1 - b;
+          if (t < 200) {
+            var gr = g.createRadialGradient(o.x, o.y, 0, o.x, o.y, Math.max(W, H) * 0.6);
+            gr.addColorStop(0, 'rgba(235,248,255,' + 0.5 * (1 - t / 200) + ')'); gr.addColorStop(1, 'rgba(79,209,255,0)');
+            g.fillStyle = gr; g.fillRect(0, 0, W, H);
+          }
+          var R = U * 0.3 * (0.2 + 1.3 * Math.pow(b, 0.6));
+          g.beginPath(); g.arc(o.x, o.y, R, 0, Math.PI * 2); g.lineWidth = 3 + 8 * fade; g.strokeStyle = 'rgba(200,240,255,' + 0.85 * fade + ')'; g.stroke();
+          g.beginPath(); g.arc(o.x, o.y, R * 0.7, 0, Math.PI * 2); g.lineWidth = 10 * fade; g.strokeStyle = 'rgba(255,59,92,' + 0.35 * fade + ')'; g.stroke();
+          for (var k = 0; k < 14; k++) {
+            var an2 = k / 14 * Math.PI * 2 + o.rot, r0 = R * 0.35, r1 = R * (0.9 + 0.5 * ((k * 7) % 5) / 5);
+            g.beginPath(); g.moveTo(o.x + Math.cos(an2) * r0, o.y + Math.sin(an2) * r0); g.lineTo(o.x + Math.cos(an2) * r1, o.y + Math.sin(an2) * r1);
+            g.lineWidth = 2.4 * fade + 0.5; g.strokeStyle = 'rgba(230,250,255,' + fade + ')'; g.stroke();
+          }
+          return t < 480;
+        }
         if (o.k === 'spark') {
-          var s = t / 1000, life = 1 - t / o.life;
-          var x = o.x + o.vx * s, y = o.y + o.vy * s + 900 * s * s;
-          g.beginPath(); g.moveTo(x, y); g.lineTo(x - o.vx * 0.03, y - (o.vy + 1800 * s) * 0.03);
+          var s2 = t / 1000, life = 1 - t / o.life, x = o.x + o.vx * s2, y = o.y + o.vy * s2 + 900 * s2 * s2;
+          g.beginPath(); g.moveTo(x, y); g.lineTo(x - o.vx * 0.03, y - (o.vy + 1800 * s2) * 0.03);
           g.lineWidth = 2; g.strokeStyle = o.c.replace('A', Math.max(0, life).toFixed(2)); g.stroke();
           return t < o.life;
         }
@@ -398,161 +388,82 @@
       else g.clearRect(0, 0, W, H);
     }
     var BLUE = ['rgba(79,209,255,A)', 'rgba(230,250,255,A)'], RED = ['rgba(255,59,92,A)', 'rgba(255,200,210,A)'];
+    // кончики: когти РКН-тян — левый край её передней руки, кулак Запрет-тян — правый край её ударной
+    function claw() { return at(rkClaw, 0.08, 0.5) }
+    function fist() { return at(ztPunch, 0.93, 0.62) }
 
     /* ── хореография ── */
-    var P = 7200, S = { u: 0.5, len: 0 };
+    var P = 7200;
     var EV = [
-      [200, function () { swing('L') }],                                   // РКН-тян: замах левой
-      [900, function (G) {                                                // Запрет-тян уворачивается назад и вверх
-        move(zt, [[0, 0, 0], [0.3, -G.ux * -G.len * 0.16, -G.uy * -G.len * 0.16 - H * 0.07, -7, 0.97, 'cubic-bezier(0.2,0.8,0.3,1)'],
-          [0.65, -G.ux * -G.len * 0.14, -G.uy * -G.len * 0.14 - H * 0.06, -6, 0.98], [1, 0, 0]], 820);
+      [150, function () {                                                  // РКН-тян: замах
+        body(rk, [[0, 0, 0, 0], [1, 3, 0, 3]], 450);
+        arm(rkClaw, [[0, 0], [1, 24, 1.04, IN]], 450);
       }],
-      [1060, function (G) { move(rk, [[0, 0, 0], [0.18, G.ux * G.len * 0.11, G.uy * G.len * 0.11, -2.5 * Math.sign(G.ux || 1), 1.04, 'cubic-bezier(0.2,0.8,0.3,1)'], [1, 0, 0]], 760) }],
-      [1190, function (G) {                                                // промах: следы когтей в воздухе
-        var x = G.bx + (G.ax - G.bx) * 0.66, y = G.by + (G.ay - G.by) * 0.66;
-        var ang = Math.atan2(G.uy, G.ux) + Math.PI / 2 + 0.55;
-        add({ k: 'slash', x: x, y: y, nx: Math.cos(ang), ny: Math.sin(ang), len: Math.min(W, H) * 0.42, gap: Math.min(W, H) * 0.035 });
+      [600, function () {                                                  // бросок и удар когтями сверху вниз
+        body(rk, [[0, 3, 0, 3], [0.2, -11, 1, -5, OUT], [0.55, -9, 1, -4], [1, 0, 0, 0]], 1000);
+        arm(rkClaw, [[0, 24, 1.04], [0.16, -30, 1.12, OUT], [0.5, -22, 1.06], [1, 0, 1]], 1000);
+      }],
+      [620, function () { body(zt, [[0, 0, 0, 0], [0.3, -8, -1, -9, OUT], [0.65, -7, -1, -7], [1, 0, 0, 0]], 850) }],   // Запрет-тян уклоняется
+      [760, function () {                                                  // промах: следы когтей в воздухе
+        var p = claw(), ang = 1.15;
+        add({ k: 'slash', x: p.x - W * 0.02, y: p.y + H * 0.04, nx: Math.cos(ang), ny: Math.sin(ang), len: H * 0.42, gap: H * 0.04 });
         shake(3);
       }],
-      [1900, function () { swing('R') }],                                  // замах правой
-      [2860, function (G) { move(zt, [[0, 0, 0], [0.25, -G.ux * -G.len * 0.05, -G.uy * -G.len * 0.05, -3, 0.98], [1, 0, 0]], 520) }],
-      [2890, function (G) {                                                // блок: щит и искры на стыке
-        var x = G.bx + (G.ax - G.bx) * 0.6, y = G.by + (G.ay - G.by) * 0.6;
-        add({ k: 'shield', x: x, y: y, r: Math.min(W, H) * 0.16, ang: Math.atan2(-G.uy, -G.ux) });
-        sparks(x, y, 18, 520, BLUE.concat(RED), 120); shake(4); flashVs(1.5);
+      [2200, function () {                                                 // колющий удар и блок
+        body(rk, [[0, 0, 0, 0], [0.35, 2, 0, 2], [0.55, -9, 0, -3, OUT], [1, 0, 0, 0]], 1100);
+        arm(rkClaw, [[0, 0, 1], [0.35, 8, 0.96], [0.55, -4, 1.22, OUT], [0.8, -2, 1.14], [1, 0, 1]], 1100);
+        arm(ztGuard, [[0, 0, 1], [0.4, -16, 1.06, OUT], [0.75, -14, 1.05], [1, 0, 1]], 1100);
+        body(zt, [[0, 0, 0, 0], [0.55, 0, 0, 0], [0.7, -3, 0, -3, OUT], [1, 0, 0, 0]], 1100);
       }],
-      [3700, function (G) { move(zt, [[0, 0, 0], [0.55, G.ux * G.len * 0.03, G.uy * G.len * 0.03 + H * 0.02, 2, 0.96], [1, G.ux * G.len * 0.02, G.uy * G.len * 0.02 + H * 0.015, 2, 0.97]], 260) }],
-      [3960, function (G) {                                                // рывок Запрет-тян
-        move(zt, [[0, G.ux * G.len * 0.02, G.uy * G.len * 0.02 + H * 0.015, 2, 0.97, 'cubic-bezier(0.6,0,0.9,0.5)'],
-          [0.2, -G.ux * G.len * 0.24, -G.uy * G.len * 0.24, 6, 1.08, 'cubic-bezier(0.2,0.8,0.3,1)'], [0.45, -G.ux * G.len * 0.18, -G.uy * G.len * 0.18, 4, 1.04], [1, 0, 0]], 950);
+      [2810, function () {
+        var a = claw(), b = at(ztGuard, 0.85, 0.2), p = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        add({ k: 'shield', x: p.x, y: p.y, r: H * 0.13 });
+        sparks(p, 18, 520, BLUE.concat(RED), 120); shake(4); flashVs(1.5);
       }],
-      [4150, function (G) {                                                // попадание
-        var x = G.bx + (G.ax - G.bx) * 0.25, y = G.by + (G.ay - G.by) * 0.25;
-        add({ k: 'burst', x: x, y: y, r: Math.min(W, H) * 0.3, rot: Math.random() });
-        sparks(x, y, 34, 900, BLUE, 200); sparks(x, y, 10, 600, RED, 100);
-        shake(9); flashVs(2.2); duel._boostUntil = performance.now() + 520;
-        move(rk, [[0, 0, 0], [0.12, -G.ux * G.len * 0.19, -G.uy * G.len * 0.19, 7 * Math.sign(G.ux || 1), 0.95, 'cubic-bezier(0.2,0.8,0.3,1)'],
-          [0.4, -G.ux * G.len * 0.14, -G.uy * G.len * 0.14, 5 * Math.sign(G.ux || 1), 0.97], [1, 0, 0]], 1100);
-        raise(700, 0.15); mark(rk, 'zr-hit', 600);
+      [3500, function () {                                                 // контратака кулаком
+        body(zt, [[0, 0, 0, 0], [0.25, -3, 0, -3, IN], [0.42, 22, -1, 6, OUT], [0.62, 18, -1, 5], [1, 0, 0, 0]], 1300);
+        arm(ztPunch, [[0, 0, 1], [0.25, 10, 0.94, IN], [0.42, -5, 1.38, OUT], [0.62, -4, 1.3], [1, 0, 1]], 1300);
+        arm(ztGuard, [[0, 0, 1], [0.42, -8, 1.04], [1, 0, 1]], 1300);
       }],
-      [5400, function () { raise(1100, 0.45); mark(rk, 'zr-rage', 1100) }]  // ярость: руки вверх, глаза вспыхивают
+      [4060, function () {                                                 // попадание
+        var p = fist();
+        add({ k: 'burst', x: p.x, y: p.y, rot: Math.random() });
+        sparks(p, 34, 900, BLUE, 200); sparks(p, 10, 600, RED, 100);
+        shake(10); flashVs(2.2); duel._boostUntil = performance.now() + 520;
+        body(rk, [[0, 0, 0, 0], [0.12, 10, -1, 9, OUT], [0.45, 7, 0, 6], [1, 0, 0, 0]], 1200);
+        arm(rkClaw, [[0, 0, 1], [0.15, 32, 1.05, OUT], [0.5, 18, 1.02], [1, 0, 1]], 1200);
+        arm(rkBack, [[0, 0, 1], [0.15, -18, 1.04, OUT], [1, 0, 1]], 1200);
+        mark(rk, 'zf-hit', 520);
+      }],
+      [5400, function () {                                                 // ярость РКН-тян, Запрет-тян дразнится
+        arm(rkClaw, [[0, 0, 1], [0.25, 26, 1.1, OUT], [0.4, 20, 1.06], [0.55, 26, 1.1], [1, 0, 1]], 1300);
+        arm(rkBack, [[0, 0, 1], [0.25, -24, 1.08, OUT], [0.4, -18, 1.04], [0.55, -24, 1.08], [1, 0, 1]], 1300);
+        body(rk, [[0, 0, 0, 0], [0.3, 1, -2, -2], [1, 0, 0, 0]], 1300);
+        body(zt, [[0, 0, 0, 0], [0.3, 0, -4, -2, OUT], [0.5, 0, 0, 0], [0.7, 0, -2, -1], [1, 0, 0, 0]], 1000);
+        arm(ztGuard, [[0, 0, 1], [0.3, -12, 1.05], [0.6, -4, 1.02], [1, 0, 1]], 1000);
+      }]
     ];
 
-    var t0 = 0, last = -1, on = false, loop = 0, G = null;
+    var t0 = 0, last = -1, on = false, loop = 0;
     function tick(now) {
       loop = 0;
       if (!on || document.hidden || root.classList.contains('zpm-intro-on')) return;
       if (!t0) { t0 = now; last = -1 }
       var ct = (now - t0) % P;
       if (ct < last) last = -1;                                            // новый круг
-      EV.forEach(function (e) { if (e[0] > last && e[0] <= ct) { G = G || geo(); e[1](G) } });
-      if (ct < last || last < 0) G = geo();
+      EV.forEach(function (e) { if (e[0] > last && e[0] <= ct) e[1]() });
       last = ct;
       loop = requestAnimationFrame(tick);
     }
-    function start() { if (!loop && on) { size(); G = geo(); t0 = 0; loop = requestAnimationFrame(tick) } }
+    function start() { if (!loop && on) { size(); t0 = 0; loop = requestAnimationFrame(tick) } }
     new IntersectionObserver(function (es) {
       on = es[0].isIntersecting && duel.classList.contains('zd-on');
       if (on) start(); else if (loop) { cancelAnimationFrame(loop); loop = 0 }
     }, { threshold: 0.25 }).observe(duel);
-    // дуэль включается (zd-on) чуть позже появления на экране — подхватываем
+    // дуэль включается (zd-on) чуть позже появления на экране — подхватываем после выезда бойцов
     var mo = new MutationObserver(function () { if (duel.classList.contains('zd-on') && !on) { on = true; setTimeout(start, 1400); mo.disconnect() } });
     mo.observe(duel, { attributes: true, attributeFilter: ['class'] });
     document.addEventListener('visibilitychange', function () { if (!document.hidden && on) { t0 = 0; start() } });
-    addEventListener('resize', function () { G = null });
-  })();
-
-  /* ── Появление блоков при прокрутке ─────────────────────────────────── */
-  (function () {
-    if (!window.IntersectionObserver || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
-    var groups = [
-      ['.zsec-head', ''], ['.zp-kpi', 'rv-pop'], ['.zp-panel', ''], ['.zc', 'rv-card'],
-      ['.zt-list li', 'rv-side'], ['.zbox', 'rv-drop'], ['.zfd', ''], ['.zci-term', 'rv-card'], ['.zci-hash', 'rv-card'],
-      ['.zci-points > div', ''], ['.zj-help', 'rv-card'], ['.zj-join > h2', ''], ['.zj-steps li', 'rv-pop'], ['.zj-cta', ''],
-      ['.zci > .zs > .zb', 'rv-pop']
-    ];
-    var io = new IntersectionObserver(function (es) {
-      es.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        e.target.classList.remove('rv-wait'); e.target.classList.add('rv-in'); io.unobserve(e.target);
-      });
-    }, { rootMargin: '0px 0px -8% 0px' });
-    function words(h) {
-      var w = 0;
-      h.innerHTML = h.textContent.split(/(\s+)/).map(function (p) {
-        return /^\s+$/.test(p) || !p ? p : '<span class="rw" style="--w:' + (w++) + '">' + p + '</span>';
-      }).join('');
-      h.classList.add('rv-words');
-    }
-    groups.forEach(function (g) {
-      document.querySelectorAll('.zpm-home ' + g[0]).forEach(function (el) {
-        if (el.getBoundingClientRect().top < innerHeight) return;   // уже на экране — не прячем
-        var sib = el.parentNode ? Array.prototype.filter.call(el.parentNode.children, function (c) { return c.matches(g[0].split(' ').pop()) }) : [el];
-        el.style.setProperty('--rv', Math.min(8, sib.indexOf(el)));
-        if (g[1]) el.classList.add(g[1]);
-        var h = el.matches('h2') ? el : el.querySelector(':scope > h2');
-        if (h && !h.querySelector('*')) words(h);
-        el.classList.add('rv-wait');
-        io.observe(el);
-      });
-    });
-  })();
-
-  /* ── Живые цифры в шапке ───────────────────────────────────────────── */
-  var hs = document.getElementById('zh-stats');
-  if (hs) loadStats().then(function (d) {
-    if (d.source !== 'commits') return;
-    var t = d.totals || {};
-    hs.hidden = false;
-    hs.querySelectorAll('[data-hs]').forEach(function (b) {
-      var v = t[b.getAttribute('data-hs')];
-      if (v == null) { b.parentNode.hidden = true; return }
-      var go = function () { countUp(b, v, 1800) };
-      if (root.classList.contains('zpm-intro-on')) {
-        var wait = setInterval(function () { if (!root.classList.contains('zpm-intro-on')) { clearInterval(wait); go() } }, 300);
-      } else setTimeout(go, 1500);
-    });
-  }).catch(function () {});
-
-  /* ── Персонажи: следят за курсором и реагируют на касание ────────────── */
-  (function () {
-    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    var rigs = Array.prototype.slice.call(document.querySelectorAll('.zrig'));
-    if (!rigs.length) return;
-    var mx = innerWidth / 2, my = innerHeight / 2, raf = 0;
-    var state = rigs.map(function () { return { x: 0, y: 0 } });
-    function tick() {
-      raf = 0;
-      var moving = false;
-      rigs.forEach(function (r, i) {
-        var b = rects[i];                     // положение кэшировано: чтение rect каждый кадр заставляло браузер пересчитывать раскладку
-        if (!b || !b.width || b.bottom < 0 || b.top > innerHeight) return;
-        var tx = Math.max(-1, Math.min(1, (mx - (b.left + b.width / 2)) / (b.width * 0.6)));
-        var ty = Math.max(-1, Math.min(1, (my - (b.top + b.height / 2)) / (b.height * 0.6)));
-        var s = state[i];
-        s.x += (tx - s.x) * 0.08; s.y += (ty - s.y) * 0.08;
-        if (Math.abs(tx - s.x) > 0.002 || Math.abs(ty - s.y) > 0.002) moving = true;
-        r.style.setProperty('--px', s.x.toFixed(3));
-        r.style.setProperty('--py', s.y.toFixed(3));
-      });
-      if (moving) raf = requestAnimationFrame(tick);
-    }
-    var rects = [], rectsAt = 0;
-    function measure() { rects = rigs.map(function (r) { return r.getBoundingClientRect() }); rectsAt = performance.now() }
-    function kick() { if (!raf) { if (performance.now() - rectsAt > 300) measure(); raf = requestAnimationFrame(tick) } }
-    addEventListener('pointermove', function (e) { mx = e.clientX; my = e.clientY; kick() }, { passive: true });
-    addEventListener('scroll', function () { rectsAt = 0; kick() }, { passive: true });
-    addEventListener('resize', function () { rectsAt = 0 });
-    function poke(r) {
-      if (r.classList.contains('zr-poke')) return;
-      r.classList.add('zr-poke');
-      setTimeout(function () { r.classList.remove('zr-poke') }, 800);
-    }
-    rigs.forEach(function (r) {
-      var last = 0;
-      r.addEventListener('pointerenter', function () { if (Date.now() - last > 1500) { last = Date.now(); poke(r) } });
-      r.addEventListener('pointerdown', function () { poke(r) });
-    });
   })();
 
   /* ── Молния дуэли: фрактальный разряд на canvas ─────────────────────── */
@@ -989,7 +900,7 @@
     function state(t) {
       var c = root.classList, el = t && t.closest ? t : null;
       c.toggle('zcur-link', !!(el && el.closest('a, button, [role="button"], .zbox, .zc-dl, .zp-lg, .zlock-hit, .zg-canvas, summary, label')));
-      c.toggle('zcur-rkn', !!(el && el.closest('.zr-rkn, .zx-rig-rkn, .zx-rig-stamp, .zx-rig-defeat')));
+      c.toggle('zcur-rkn', !!(el && el.closest('.zr-rkn, .zf-rkn, .zx-rig-rkn, .zx-rig-stamp, .zx-rig-defeat')));
       c.toggle('zcur-love', !!(el && el.closest('.zj-help, .zlock, a[href*="zapretvpns_bot"]')));
       c.toggle('zcur-text', !!(el && !el.closest('a, button') && el.closest('p, h1, h2, h3, li span, dd, code, .zt-t') && !el.closest('.zr-rkn')));
     }

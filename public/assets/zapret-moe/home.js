@@ -93,7 +93,7 @@
       var s0 = N - wCur;
       var x = function (i) { return pl + (i - s0) / (wCur - 1) * pw };
       var y = function (v) { return pt + ph - v / yCur * ph };
-      var out = '<defs><clipPath id="zp-clip"><rect x="' + pl + '" y="0" width="' + (pw * reveal).toFixed(1) + '" height="' + H + '"/></clipPath>';
+      var out = '<defs><clipPath id="zp-clip"><rect x="' + pl + '" y="0" width="' + Math.max(0, pw * reveal).toFixed(1) + '" height="' + H + '"/></clipPath>';
       keys.forEach(function (k) {
         out += '<linearGradient id="zp-g-' + k + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + COLORS[k] + '" stop-opacity=".85"/><stop offset="1" stop-color="' + COLORS[k] + '" stop-opacity=".25"/></linearGradient>';
       });

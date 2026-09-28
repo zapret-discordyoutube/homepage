@@ -74,6 +74,17 @@ body {
   background: rgba(79, 209, 255, 0.08);
 }
 
+/* у вошедших «+» и меню профиля — не .item, а <details class="dropdown"> */
+#navbar details.dropdown > summary {
+  color: #c7d3f2;
+}
+
+#navbar details.dropdown > summary:hover,
+#navbar details.dropdown[open] > summary {
+  color: #fff;
+  background: rgba(79, 209, 255, 0.08);
+}
+
 .page-footer {
   color: #7f8db3;
   background: #04060f;
@@ -853,16 +864,13 @@ html.zpm-intro-lock body {
 }
 
 .zh-replay {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-top: 22px;
-  padding: 0;
+  margin: 22px 0 0;
   color: var(--dim);
   font: 500 14px var(--txt);
-  cursor: pointer;
-  border: 0;
-  background: none;
 }
 
 .zh-replay[hidden] {
@@ -875,8 +883,23 @@ html.zpm-intro-lock body {
   fill: currentColor;
 }
 
-.zh-replay:hover {
-  color: var(--cy);
+.zh-replay button {
+  padding: 6px 14px;
+  color: var(--mut);
+  font: 600 13px/1.2 var(--txt);
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(16, 24, 58, 0.55);
+  transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.zh-replay button:hover,
+.zh-replay button:focus-visible {
+  color: var(--ink);
+  border-color: var(--cy);
+  box-shadow: 0 0 0 3px rgba(79, 209, 255, 0.12);
+  outline: none;
 }
 
 /* арт с Запрет-тян */

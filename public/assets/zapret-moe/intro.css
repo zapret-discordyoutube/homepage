@@ -1706,6 +1706,23 @@ html.zpm-intro-on .zx:not(.zx-run) {
   animation: zx-note 0.5s ease-out calc(0.9s + var(--i) * 0.7s) both;
 }
 
+/* в альбомной раскладке карточка и текст стоят по центру кадра: подписи у этих
+   слайдов нет, и с абсолютными top нижняя половина кадра пустовала */
+.zx:not(.portrait) .zx-s.zx-proj.on {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+}
+
+.zx:not(.portrait) .zx-proj .zx-pcard,
+.zx:not(.portrait) .zx-proj .zx-ptext {
+  position: relative;
+  top: auto;
+  left: auto;
+  flex: none;
+}
+
 /* 18. инфраструктура */
 .zx-link {
   fill: none;
@@ -2408,10 +2425,11 @@ html.zpm-intro-on .zx:not(.zx-run) {
   left: 230px;
 }
 
+/* 14 человек — ровно два ряда по семь, без одинокого человечка во втором ряду */
 .zx.portrait .zx-crowd {
   flex-wrap: wrap;
   width: 1150px;
-  gap: 26px 30px;
+  gap: 40px 100px;
 }
 
 .zx.portrait .zx-crowd i {
@@ -2423,6 +2441,12 @@ html.zpm-intro-on .zx:not(.zx-run) {
   top: -80px;
   left: 220px;
   width: 1160px;
+}
+
+/* скриншот GUI почти квадратный: на всю ширину он заезжал под заголовок */
+.zx.portrait .zx-shot-gui {
+  left: 370px;
+  width: 860px;
 }
 
 .zx.portrait .zx-ptext {
@@ -2471,6 +2495,13 @@ html.zpm-intro-on .zx:not(.zx-run) {
   top: 560px;
   left: 220px;
   width: 1160px;
+}
+
+/* узлы и линии схемы привязаны к координатам 1600×900, а на телефоне видно
+   только 1250 по ширине: сжимаем схему целиком к центру, чтобы крайние узлы не резались */
+.zx.portrait .zx-s.zx-infra {
+  transform: scale(0.82);
+  transform-origin: 800px 450px;
 }
 
 .zx.portrait .zx-inode {

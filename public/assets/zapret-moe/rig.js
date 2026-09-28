@@ -52,9 +52,12 @@
   };
 
   var MOTION = {
-    rkn: function (t, B) {
+    rkn: function (t, B, el) {
       ['L', 'R'].forEach(function (s, i) {
-        var sg = i ? -1 : 1, u = ((t / 3.2) + (i ? 0.5 : 0)) % 1, c = track(CLAW.fing, u);
+        // в драке (home.js) удары запускает хореография: el._claw — момент начала замаха
+        var cl = el && el._claw, st = cl && cl[s];
+        var u = cl ? (st ? Math.min(1, (performance.now() - st) / 3200) : 0) : ((t / 3.2) + (i ? 0.5 : 0)) % 1;
+        var sg = i ? -1 : 1, c = track(CLAW.fing, u);
         B.root['arm' + s] = { r: sg * track(CLAW.r, u) * D, s: track(CLAW.s, u) };
         B['hand' + s] = { r: sg * track(CLAW.hand, u) * D, s: 1 + 0.03 * Math.max(0, c) };
         B['fing' + s] = { r: sg * 8 * c * D, s: 1 - 0.07 * c };
@@ -229,7 +232,7 @@
   Rig.prototype.draw = function (now) {
     var gl = this.gl, B = { root: {} };
     // window.zpmRigT — время в мс для покадровой записи ролика (tools, тесты)
-    MOTION[this.name]((typeof window.zpmRigT === 'number' ? window.zpmRigT : now - this.t0) / 1000, B);
+    MOTION[this.name]((typeof window.zpmRigT === 'number' ? window.zpmRigT : now - this.t0) / 1000, B, this.el);
     gl.viewport(0, 0, this.cv.width, this.cv.height);
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
     gl.activeTexture(gl.TEXTURE0);

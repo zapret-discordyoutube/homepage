@@ -260,6 +260,208 @@
     dio.observe(duel);
   }
 
+  /* ── Драка в дуэли: хореография на таймлайне ─────────────────────────
+     Цикл 7,2 с: РКН-тян бьёт левой — Запрет-тян уворачивается (промах, следы
+     когтей), бьёт правой — блок (щит и искры), Запрет-тян контратакует —
+     вспышка, ударная волна, РКН-тян отбрасывает; РКН-тян в ярости вскидывает руки.
+     Движения — Web Animations по отдельным свойствам translate/rotate/scale, поэтому
+     они складываются с CSS-покачиванием. Направления считаются по реальному
+     положению персонажей: на телефоне они друг над другом, драка идёт по вертикали.
+     Руки РКН-тян играют тот же цикл удара, что и zr-claw-l/-r в home.css. */
+  (function () {
+    if (!duel || !duel.animate || !window.IntersectionObserver) return;
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var zt = duel.querySelector('.zd-left .zrig'), rk = duel.querySelector('.zd-right .zrig');
+    var armL = rk && rk.querySelector('.zr-arm-l'), armR = rk && rk.querySelector('.zr-arm-r');
+    var vs = duel.querySelector('.zd-vs span');
+    if (!zt || !rk || !armL || !armR) return;
+    duel.classList.add('zd-fight');
+
+    var cv = document.createElement('canvas');
+    cv.className = 'zd-fx'; cv.setAttribute('aria-hidden', 'true');
+    duel.appendChild(cv);
+    var g = cv.getContext('2d'), W = 0, H = 0, dpr = 1, fx = [], raf = 0;
+    function size() {
+      var r = duel.getBoundingClientRect();
+      dpr = Math.min(2, window.devicePixelRatio || 1); W = r.width; H = r.height;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    }
+    addEventListener('resize', size);
+
+    // где кто стоит: центры персонажей внутри дуэли и направление от РКН-тян к Запрет-тян
+    function geo() {
+      var d = duel.getBoundingClientRect(), a = zt.getBoundingClientRect(), b = rk.getBoundingClientRect();
+      var ax = a.left - d.left + a.width * 0.5, ay = a.top - d.top + a.height * 0.42;
+      var bx = b.left - d.left + b.width * 0.5, by = b.top - d.top + b.height * 0.42;
+      var dx = ax - bx, dy = ay - by, len = Math.hypot(dx, dy) || 1;
+      return { ax: ax, ay: ay, bx: bx, by: by, ux: dx / len, uy: dy / len, len: len };
+    }
+    function px(v) { return v.toFixed(1) + 'px' }
+
+    // цикл удара рук — копия zr-claw-l/-r: замах вверх → удар к зрителю → отдача
+    var E = 'cubic-bezier(0.4, 0, 0.3, 1)';
+    function claw(sg) {
+      function k(o, r, s, e) { return { offset: o, transform: 'rotate(' + sg * r + 'deg) scale(' + s + ')', easing: e || E } }
+      return [k(0, 1, 1.02), k(0.22, 7, 1.06, 'cubic-bezier(0.6, 0, 0.9, 0.5)'), k(0.31, -2, 1.15, 'cubic-bezier(0.2, 0.8, 0.3, 1)'),
+        k(0.4, -1, 1.11), k(0.58, 2, 1.03), k(1, 1, 1.02)];
+    }
+    var CLAW = { L: claw(1), R: claw(-1) };
+    function swing(side) {
+      (side === 'L' ? armL : armR).animate(CLAW[side], { duration: 3200 });
+      rk._claw = rk._claw || {}; rk._claw[side] = performance.now();   // WebGL-риг (rig.js) играет тот же удар
+    }
+    // руки вскидываются (флинч от удара, ярость): только «вверх» — срез арта уходит за кадр
+    function raise(ms, hold) {
+      [[armL, 1], [armR, -1]].forEach(function (a) {
+        a[0].animate([{ transform: 'rotate(' + a[1] + 'deg) scale(1.02)' }, { offset: 0.2, transform: 'rotate(' + a[1] * 8 + 'deg) scale(1.07)' },
+          { offset: 0.2 + hold, transform: 'rotate(' + a[1] * 7 + 'deg) scale(1.06)' }, { transform: 'rotate(' + a[1] + 'deg) scale(1.02)' }], { duration: ms, easing: E });
+      });
+    }
+    function move(el, path, ms) {
+      el.animate(path.map(function (p) {
+        var f = { offset: p[0], translate: px(p[1]) + ' ' + px(p[2]), rotate: (p[3] || 0) + 'deg', scale: String(p[4] || 1) };
+        if (p[5]) f.easing = p[5];
+        return f;
+      }), { duration: ms, easing: E });
+    }
+    function shake(power) {
+      duel.animate([{ translate: '0 0' }, { translate: px(-power) + ' ' + px(power / 2) }, { translate: px(power) + ' ' + px(-power / 2) },
+        { translate: px(-power / 2) + ' ' + px(power / 4) }, { translate: '0 0' }], { duration: 260 });
+    }
+    function flashVs(k) {
+      if (vs) vs.animate([{ filter: 'drop-shadow(0 0 18px rgba(155,123,255,.8))' }, { filter: 'drop-shadow(0 0 40px #fff) brightness(' + k + ')' },
+        { filter: 'drop-shadow(0 0 18px rgba(155,123,255,.8))' }], { duration: 420 });
+    }
+    function mark(el, cls, ms) { el.classList.add(cls); setTimeout(function () { el.classList.remove(cls) }, ms) }
+
+    /* ── эффекты на холсте: следы когтей, щит, удар ── */
+    function add(o) { o.t0 = performance.now(); fx.push(o); if (!raf) raf = requestAnimationFrame(draw) }
+    function sparks(x, y, n, speed, colors, up) {
+      for (var i = 0; i < n; i++) {
+        var a = Math.random() * Math.PI * 2, v = speed * (0.35 + Math.random() * 0.8);
+        add({ k: 'spark', x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - (up || 0), life: 380 + Math.random() * 380, c: colors[i % colors.length] });
+      }
+    }
+    function draw(now) {
+      raf = 0;
+      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+      g.lineCap = 'round'; g.globalCompositeOperation = 'lighter';
+      fx = fx.filter(function (o) {
+        var t = now - o.t0;
+        if (o.k === 'slash') {                      // три следа когтей: прорисовываются за 110 мс и гаснут
+          var p = Math.min(1, t / 110), a = t < 110 ? 1 : Math.max(0, 1 - (t - 110) / 380);
+          for (var i = -1; i <= 1; i++) {
+            var ox = -o.ny * i * o.gap, oy = o.nx * i * o.gap;
+            var sx = o.x - o.nx * o.len / 2 + ox, sy = o.y - o.ny * o.len / 2 + oy;
+            var ex = sx + o.nx * o.len * p, ey = sy + o.ny * o.len * p, cx = (sx + ex) / 2 - o.ny * o.len * 0.12, cy = (sy + ey) / 2 + o.nx * o.len * 0.12;
+            [[16, 'rgba(255,40,80,' + 0.18 * a + ')'], [7, 'rgba(255,70,100,' + 0.55 * a + ')'], [2.2, 'rgba(255,235,240,' + a + ')']].forEach(function (s) {
+              g.beginPath(); g.moveTo(sx, sy); g.quadraticCurveTo(cx, cy, ex, ey); g.lineWidth = s[0]; g.strokeStyle = s[1]; g.stroke();
+            });
+          }
+          return t < 500;
+        }
+        if (o.k === 'shield') {                     // блок: голубая дуга, обращённая к удару
+          var q = Math.min(1, t / 420), r = o.r * (0.8 + 0.35 * q), al = 1 - q;
+          [[18, 'rgba(79,209,255,' + 0.18 * al + ')'], [6, 'rgba(79,209,255,' + 0.6 * al + ')'], [2, 'rgba(230,250,255,' + al + ')']].forEach(function (s) {
+            g.beginPath(); g.arc(o.x, o.y, r, o.ang - 1.1, o.ang + 1.1); g.lineWidth = s[0]; g.strokeStyle = s[1]; g.stroke();
+          });
+          return t < 420;
+        }
+        if (o.k === 'burst') {                      // удар: вспышка, кольцо и лучи
+          var b = Math.min(1, t / 460), fade = 1 - b;
+          if (t < 200) {
+            var gr = g.createRadialGradient(o.x, o.y, 0, o.x, o.y, Math.max(W, H) * 0.7);
+            gr.addColorStop(0, 'rgba(235,248,255,' + 0.55 * (1 - t / 200) + ')'); gr.addColorStop(1, 'rgba(79,209,255,0)');
+            g.fillStyle = gr; g.fillRect(0, 0, W, H);
+          }
+          var R = o.r * (0.2 + 1.3 * Math.pow(b, 0.6));
+          g.beginPath(); g.arc(o.x, o.y, R, 0, Math.PI * 2); g.lineWidth = 3 + 8 * fade; g.strokeStyle = 'rgba(200,240,255,' + 0.85 * fade + ')'; g.stroke();
+          g.beginPath(); g.arc(o.x, o.y, R * 0.75, 0, Math.PI * 2); g.lineWidth = 10 * fade; g.strokeStyle = 'rgba(255,59,92,' + 0.35 * fade + ')'; g.stroke();
+          for (var j = 0; j < 14; j++) {
+            var an = j / 14 * Math.PI * 2 + o.rot, r0 = R * 0.35, r1 = R * (0.9 + 0.5 * ((j * 7) % 5) / 5);
+            g.beginPath(); g.moveTo(o.x + Math.cos(an) * r0, o.y + Math.sin(an) * r0); g.lineTo(o.x + Math.cos(an) * r1, o.y + Math.sin(an) * r1);
+            g.lineWidth = 2.4 * fade + 0.5; g.strokeStyle = 'rgba(230,250,255,' + fade + ')'; g.stroke();
+          }
+          return t < 460;
+        }
+        if (o.k === 'spark') {
+          var s = t / 1000, life = 1 - t / o.life;
+          var x = o.x + o.vx * s, y = o.y + o.vy * s + 900 * s * s;
+          g.beginPath(); g.moveTo(x, y); g.lineTo(x - o.vx * 0.03, y - (o.vy + 1800 * s) * 0.03);
+          g.lineWidth = 2; g.strokeStyle = o.c.replace('A', Math.max(0, life).toFixed(2)); g.stroke();
+          return t < o.life;
+        }
+        return false;
+      });
+      g.globalCompositeOperation = 'source-over';
+      if (fx.length) raf = requestAnimationFrame(draw);
+      else g.clearRect(0, 0, W, H);
+    }
+    var BLUE = ['rgba(79,209,255,A)', 'rgba(230,250,255,A)'], RED = ['rgba(255,59,92,A)', 'rgba(255,200,210,A)'];
+
+    /* ── хореография ── */
+    var P = 7200, S = { u: 0.5, len: 0 };
+    var EV = [
+      [200, function () { swing('L') }],                                   // РКН-тян: замах левой
+      [900, function (G) {                                                // Запрет-тян уворачивается назад и вверх
+        move(zt, [[0, 0, 0], [0.3, -G.ux * -G.len * 0.16, -G.uy * -G.len * 0.16 - H * 0.07, -7, 0.97, 'cubic-bezier(0.2,0.8,0.3,1)'],
+          [0.65, -G.ux * -G.len * 0.14, -G.uy * -G.len * 0.14 - H * 0.06, -6, 0.98], [1, 0, 0]], 820);
+      }],
+      [1060, function (G) { move(rk, [[0, 0, 0], [0.18, G.ux * G.len * 0.11, G.uy * G.len * 0.11, -2.5 * Math.sign(G.ux || 1), 1.04, 'cubic-bezier(0.2,0.8,0.3,1)'], [1, 0, 0]], 760) }],
+      [1190, function (G) {                                                // промах: следы когтей в воздухе
+        var x = G.bx + (G.ax - G.bx) * 0.66, y = G.by + (G.ay - G.by) * 0.66;
+        var ang = Math.atan2(G.uy, G.ux) + Math.PI / 2 + 0.55;
+        add({ k: 'slash', x: x, y: y, nx: Math.cos(ang), ny: Math.sin(ang), len: Math.min(W, H) * 0.42, gap: Math.min(W, H) * 0.035 });
+        shake(3);
+      }],
+      [1900, function () { swing('R') }],                                  // замах правой
+      [2860, function (G) { move(zt, [[0, 0, 0], [0.25, -G.ux * -G.len * 0.05, -G.uy * -G.len * 0.05, -3, 0.98], [1, 0, 0]], 520) }],
+      [2890, function (G) {                                                // блок: щит и искры на стыке
+        var x = G.bx + (G.ax - G.bx) * 0.6, y = G.by + (G.ay - G.by) * 0.6;
+        add({ k: 'shield', x: x, y: y, r: Math.min(W, H) * 0.16, ang: Math.atan2(-G.uy, -G.ux) });
+        sparks(x, y, 18, 520, BLUE.concat(RED), 120); shake(4); flashVs(1.5);
+      }],
+      [3700, function (G) { move(zt, [[0, 0, 0], [0.55, G.ux * G.len * 0.03, G.uy * G.len * 0.03 + H * 0.02, 2, 0.96], [1, G.ux * G.len * 0.02, G.uy * G.len * 0.02 + H * 0.015, 2, 0.97]], 260) }],
+      [3960, function (G) {                                                // рывок Запрет-тян
+        move(zt, [[0, G.ux * G.len * 0.02, G.uy * G.len * 0.02 + H * 0.015, 2, 0.97, 'cubic-bezier(0.6,0,0.9,0.5)'],
+          [0.2, -G.ux * G.len * 0.24, -G.uy * G.len * 0.24, 6, 1.08, 'cubic-bezier(0.2,0.8,0.3,1)'], [0.45, -G.ux * G.len * 0.18, -G.uy * G.len * 0.18, 4, 1.04], [1, 0, 0]], 950);
+      }],
+      [4150, function (G) {                                                // попадание
+        var x = G.bx + (G.ax - G.bx) * 0.25, y = G.by + (G.ay - G.by) * 0.25;
+        add({ k: 'burst', x: x, y: y, r: Math.min(W, H) * 0.3, rot: Math.random() });
+        sparks(x, y, 34, 900, BLUE, 200); sparks(x, y, 10, 600, RED, 100);
+        shake(9); flashVs(2.2); duel._boostUntil = performance.now() + 520;
+        move(rk, [[0, 0, 0], [0.12, -G.ux * G.len * 0.19, -G.uy * G.len * 0.19, 7 * Math.sign(G.ux || 1), 0.95, 'cubic-bezier(0.2,0.8,0.3,1)'],
+          [0.4, -G.ux * G.len * 0.14, -G.uy * G.len * 0.14, 5 * Math.sign(G.ux || 1), 0.97], [1, 0, 0]], 1100);
+        raise(700, 0.15); mark(rk, 'zr-hit', 600);
+      }],
+      [5400, function () { raise(1100, 0.45); mark(rk, 'zr-rage', 1100) }]  // ярость: руки вверх, глаза вспыхивают
+    ];
+
+    var t0 = 0, last = -1, on = false, loop = 0, G = null;
+    function tick(now) {
+      loop = 0;
+      if (!on || document.hidden || root.classList.contains('zpm-intro-on')) return;
+      if (!t0) { t0 = now; last = -1 }
+      var ct = (now - t0) % P;
+      if (ct < last) last = -1;                                            // новый круг
+      EV.forEach(function (e) { if (e[0] > last && e[0] <= ct) { G = G || geo(); e[1](G) } });
+      if (ct < last || last < 0) G = geo();
+      last = ct;
+      loop = requestAnimationFrame(tick);
+    }
+    function start() { if (!loop && on) { size(); G = geo(); t0 = 0; loop = requestAnimationFrame(tick) } }
+    new IntersectionObserver(function (es) {
+      on = es[0].isIntersecting && duel.classList.contains('zd-on');
+      if (on) start(); else if (loop) { cancelAnimationFrame(loop); loop = 0 }
+    }, { threshold: 0.25 }).observe(duel);
+    // дуэль включается (zd-on) чуть позже появления на экране — подхватываем
+    var mo = new MutationObserver(function () { if (duel.classList.contains('zd-on') && !on) { on = true; setTimeout(start, 1400); mo.disconnect() } });
+    mo.observe(duel, { attributes: true, attributeFilter: ['class'] });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden && on) { t0 = 0; start() } });
+    addEventListener('resize', function () { G = null });
+  })();
+
   /* ── Появление блоков при прокрутке ─────────────────────────────────── */
   (function () {
     if (!window.IntersectionObserver || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
@@ -410,7 +612,7 @@
       if (!visible || document.hidden) return;
       if (root.classList.contains('zpm-intro-on')) { setTimeout(kick, 500); return }
       var boost = false;
-      if (duel._onAt) { var ph = (now - duel._onAt - 1500) % 6000; boost = ph > 5230 && ph < 5750 }
+      if (duel._boostUntil) boost = now < duel._boostUntil;   // всплеск разряда в момент удара — его ставит хореография драки
       if (now > nextShape) {
         bolts = shape(boost);
         nextShape = now + (boost ? 45 : 70 + Math.random() * 60);

@@ -466,6 +466,100 @@
     document.addEventListener('visibilitychange', function () { if (!document.hidden && on) { t0 = 0; start() } });
   })();
 
+  /* ── Появление блоков при прокрутке ─────────────────────────────────── */
+  (function () {
+    if (!window.IntersectionObserver || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    var groups = [
+      ['.zsec-head', ''], ['.zp-kpi', 'rv-pop'], ['.zp-panel', ''], ['.zc', 'rv-card'],
+      ['.zt-list li', 'rv-side'], ['.zbox', 'rv-drop'], ['.zfd', ''], ['.zci-term', 'rv-card'], ['.zci-hash', 'rv-card'],
+      ['.zci-points > div', ''], ['.zj-help', 'rv-card'], ['.zj-join > h2', ''], ['.zj-steps li', 'rv-pop'], ['.zj-cta', ''],
+      ['.zci > .zs > .zb', 'rv-pop']
+    ];
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.remove('rv-wait'); e.target.classList.add('rv-in'); io.unobserve(e.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    function words(h) {
+      var w = 0;
+      h.innerHTML = h.textContent.split(/(\s+)/).map(function (p) {
+        return /^\s+$/.test(p) || !p ? p : '<span class="rw" style="--w:' + (w++) + '">' + p + '</span>';
+      }).join('');
+      h.classList.add('rv-words');
+    }
+    groups.forEach(function (g) {
+      document.querySelectorAll('.zpm-home ' + g[0]).forEach(function (el) {
+        if (el.getBoundingClientRect().top < innerHeight) return;   // уже на экране — не прячем
+        var sib = el.parentNode ? Array.prototype.filter.call(el.parentNode.children, function (c) { return c.matches(g[0].split(' ').pop()) }) : [el];
+        el.style.setProperty('--rv', Math.min(8, sib.indexOf(el)));
+        if (g[1]) el.classList.add(g[1]);
+        var h = el.matches('h2') ? el : el.querySelector(':scope > h2');
+        if (h && !h.querySelector('*')) words(h);
+        el.classList.add('rv-wait');
+        io.observe(el);
+      });
+    });
+  })();
+
+  /* ── Живые цифры в шапке ───────────────────────────────────────────── */
+  var hs = document.getElementById('zh-stats');
+  if (hs) loadStats().then(function (d) {
+    if (d.source !== 'commits') return;
+    var t = d.totals || {};
+    hs.hidden = false;
+    hs.querySelectorAll('[data-hs]').forEach(function (b) {
+      var v = t[b.getAttribute('data-hs')];
+      if (v == null) { b.parentNode.hidden = true; return }
+      var go = function () { countUp(b, v, 1800) };
+      if (root.classList.contains('zpm-intro-on')) {
+        var wait = setInterval(function () { if (!root.classList.contains('zpm-intro-on')) { clearInterval(wait); go() } }, 300);
+      } else setTimeout(go, 1500);
+    });
+  }).catch(function () {});
+
+  /* ── Персонажи: следят за курсором и реагируют на касание ────────────── */
+  (function () {
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var rigs = Array.prototype.slice.call(document.querySelectorAll('.zrig'));
+    if (!rigs.length) return;
+    var mx = innerWidth / 2, my = innerHeight / 2, raf = 0;
+    var state = rigs.map(function () { return { x: 0, y: 0 } });
+    function tick() {
+      raf = 0;
+      var moving = false;
+      rigs.forEach(function (r, i) {
+        var b = rects[i];                     // положение кэшировано: чтение rect каждый кадр заставляло браузер пересчитывать раскладку
+        if (!b || !b.width || b.bottom < 0 || b.top > innerHeight) return;
+        var tx = Math.max(-1, Math.min(1, (mx - (b.left + b.width / 2)) / (b.width * 0.6)));
+        var ty = Math.max(-1, Math.min(1, (my - (b.top + b.height / 2)) / (b.height * 0.6)));
+        var s = state[i];
+        s.x += (tx - s.x) * 0.08; s.y += (ty - s.y) * 0.08;
+        if (Math.abs(tx - s.x) > 0.002 || Math.abs(ty - s.y) > 0.002) moving = true;
+        r.style.setProperty('--px', s.x.toFixed(3));
+        r.style.setProperty('--py', s.y.toFixed(3));
+      });
+      if (moving) raf = requestAnimationFrame(tick);
+    }
+    var rects = [], rectsAt = 0;
+    function measure() { rects = rigs.map(function (r) { return r.getBoundingClientRect() }); rectsAt = performance.now() }
+    function kick() { if (!raf) { if (performance.now() - rectsAt > 300) measure(); raf = requestAnimationFrame(tick) } }
+    addEventListener('pointermove', function (e) { mx = e.clientX; my = e.clientY; kick() }, { passive: true });
+    addEventListener('scroll', function () { rectsAt = 0; kick() }, { passive: true });
+    addEventListener('resize', function () { rectsAt = 0 });
+    function poke(r) {
+      if (r.classList.contains('zr-poke')) return;
+      r.classList.add('zr-poke');
+      setTimeout(function () { r.classList.remove('zr-poke') }, 800);
+    }
+    rigs.forEach(function (r) {
+      var last = 0;
+      r.addEventListener('pointerenter', function () { if (Date.now() - last > 1500) { last = Date.now(); poke(r) } });
+      r.addEventListener('pointerdown', function () { poke(r) });
+    });
+  })();
+
+
   /* ── Молния дуэли: фрактальный разряд на canvas ─────────────────────── */
   (function () {
     var duel = document.getElementById('zpm-duel');

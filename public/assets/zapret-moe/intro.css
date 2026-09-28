@@ -2123,6 +2123,7 @@ html.zpm-intro-on .zx:not(.zx-run) {
 
 .zx[data-rig="stamp"] .zx-rig-stamp,
 .zx[data-rig="claw"] .zx-rig-claw,
+.zx[data-rig="roof"] .zx-rig-roof,
 .zx[data-rig="splice"] .zx-rig-splice,
 .zx[data-rig="defeat"] .zx-rig-defeat,
 .zx[data-rig="victory"] .zx-rig-victory {
@@ -2606,6 +2607,7 @@ html.zpm-intro-on .zx:not(.zx-run) {
 .zx[data-rig="both"] .zx-rig-zt,
 .zx[data-rig="stamp"] .zx-rig-stamp,
 .zx[data-rig="claw"] .zx-rig-claw,
+.zx[data-rig="roof"] .zx-rig-roof,
 .zx[data-rig="splice"] .zx-rig-splice,
 .zx[data-rig="defeat"] .zx-rig-defeat,
 .zx[data-rig="victory"] .zx-rig-victory {
@@ -2780,4 +2782,128 @@ html.zpm-intro-on .zx:not(.zx-run) {
   0%, 53.6% { opacity: 0; transform: scale(0.2); }
   53.7% { opacity: 1; transform: scale(0.3); }
   58.8%, 100% { opacity: 0; transform: scale(2.2); }
+}
+
+/* ═══ эпилог на крыше: ночной город, девушки выплывают из дымки ═══════════
+   Город медленно наезжает, огни мерцают тремя группами вразнобой, светится
+   луна, падает звезда; девушки поднимаются снизу по очереди, волосы на ветру. */
+.zx[data-rig="roof"] .zx-rig-roof {
+  transform-origin: 55% 60%;
+  animation: zx-roof-cam 7.5s cubic-bezier(0.3, 0, 0.3, 1) both, zx-fadein 1.2s ease-out both;
+}
+
+@keyframes zx-roof-cam {
+  from { transform: scale(1.06) translateY(1.5%); }
+  to { transform: scale(1); }
+}
+
+.zo-lights {
+  opacity: 0.2;
+  animation: zo-lights 2.6s ease-in-out infinite alternate;
+}
+
+.zo-lights-1 { animation-duration: 3.3s; animation-delay: -1.1s; }
+.zo-lights-2 { animation-duration: 1.9s; animation-delay: -0.4s; }
+
+@keyframes zo-lights {
+  from { opacity: 0.05; }
+  to { opacity: 0.85; }
+}
+
+.zo-moon {
+  position: absolute;
+  top: calc(94 / 9 * 1%);
+  left: calc(1418 / 16 * 1%);
+  width: 14%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(230, 236, 255, 0.55), rgba(160, 180, 255, 0.18) 30%, transparent 65%);
+  transform: translate(-50%, -50%);
+  animation: zo-moon 4s ease-in-out infinite alternate;
+}
+
+@keyframes zo-moon {
+  from { opacity: 0.6; transform: translate(-50%, -50%) scale(0.9); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+}
+
+.zo-stars i {
+  position: absolute;
+  top: calc(var(--sy) / 9 * 1%);
+  left: calc(var(--sx) / 16 * 1%);
+  width: 0.5%;
+  aspect-ratio: 1;
+  background:
+    linear-gradient(90deg, transparent 44%, #fff 50%, transparent 56%),
+    linear-gradient(0deg, transparent 44%, #fff 50%, transparent 56%);
+  opacity: 0;
+  animation: zo-twinkle 3.4s ease-in-out var(--sd) infinite;
+}
+
+@keyframes zo-twinkle {
+  0%, 60%, 100% { opacity: 0; transform: scale(0.4) rotate(0); }
+  75% { opacity: 1; transform: scale(1.6) rotate(45deg); }
+}
+
+.zo-meteor {
+  position: absolute;
+  top: 8%;
+  left: 18%;
+  width: 16%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(200, 230, 255, 0.9));
+  border-radius: 2px;
+  opacity: 0;
+  transform: rotate(18deg);
+  transform-origin: 100% 50%;
+  animation: zo-meteor 7.5s ease-in 2.6s both;
+}
+
+@keyframes zo-meteor {
+  0% { opacity: 0; translate: 0 0; scale: 0.3 1; }
+  4% { opacity: 1; }
+  12% { opacity: 0; translate: 380% 120%; scale: 1 1; }
+  100% { opacity: 0; translate: 380% 120%; }
+}
+
+/* девушки выплывают снизу из дымки: сначала Запрет-тян, за ней РКН-тян */
+.zo-girl {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.zx[data-rig="roof"] .zo-zt { animation: zo-rise 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) 0.7s both; }
+.zx[data-rig="roof"] .zo-rkn { animation: zo-rise 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) 1.5s both; }
+
+@keyframes zo-rise {
+  from { opacity: 0; transform: translateY(7%); filter: blur(10px) brightness(1.8); }
+  60% { filter: blur(0) brightness(1.15); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+
+/* волосы на ветру: наклон вокруг линии среза, шов на месте */
+.zo-hair {
+  animation: zo-wind 2.8s ease-in-out infinite alternate;
+}
+
+.zo-hair-rkn {
+  animation-duration: 3.2s;
+  animation-delay: -1.4s;
+}
+
+@keyframes zo-wind {
+  0% { transform: skewY(-1.8deg) scaleX(0.98); }
+  50% { transform: skewY(0.4deg) scaleX(1.03); }
+  100% { transform: skewY(2deg) scaleX(1); }
+}
+
+.zo-hair-rkn {
+  animation-name: zo-wind-r;
+}
+
+@keyframes zo-wind-r {
+  0% { transform: skewY(1.8deg) scaleX(0.98); }
+  50% { transform: skewY(-0.4deg) scaleX(1.03); }
+  100% { transform: skewY(-2deg) scaleX(1); }
 }

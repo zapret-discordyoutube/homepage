@@ -293,11 +293,12 @@
     num: { act: 2, dur: 6500, m: 8, cap: 'Наш год в цифрах.', sub: 'Коммиты, релизы и скачивания за последние двенадцать месяцев.' },
     battle: { act: 2, dur: 7000, m: 11, rig: 'both', cap: 'РКН-тян не сдаётся.', sub: 'Но против открытого кода её когти бессильны.' },
     defeat: { act: 2, dur: 4600, m: 11, rig: 'defeat', cap: 'Блокировки падают одна за другой.', sub: 'Пока есть люди, которые делают и поддерживают такие инструменты.' },
+    roof: { act: 2, dur: 7500, m: 1, rig: 'roof', cap: 'А ночью город снова светится.', sub: 'Каждый огонёк — чьё-то соединение, которое дошло. Мы справляемся — вместе с вами.' },
     final: { act: 2, dur: 0, m: 9, rig: 'victory' },
     fly: { act: 2, dur: 6000, m: 6, cap: 'Её инструменты — для всех.', sub: 'Zapret 2 GUI, Zapret KVN, ZaStoGram и Magisk Zapret 2.' }
   };
-  var FULL = ['net', 'env', 'rkn', 'stamp', 'reg', 'map', 'xray', 'claw', 'slow', 'loss', 'fake', 'split', 'disorder', 'tunnel', 'zt', 'p-gui', 'p-kvn', 'p-zsg', 'p-mag', 'infra', 'num', 'battle', 'defeat', 'final'];
-  var SHORT = ['net', 'rkn', 'xray', 'fake', 'zt', 'fly', 'num', 'final'];
+  var FULL = ['net', 'env', 'rkn', 'stamp', 'reg', 'map', 'xray', 'claw', 'slow', 'loss', 'fake', 'split', 'disorder', 'tunnel', 'zt', 'p-gui', 'p-kvn', 'p-zsg', 'p-mag', 'infra', 'num', 'battle', 'defeat', 'roof', 'final'];
+  var SHORT = ['net', 'rkn', 'xray', 'fake', 'zt', 'fly', 'num', 'roof', 'final'];
 
   var Z = window.zpm || {};
   var root = document.documentElement;
@@ -323,6 +324,9 @@
     if (portrait && intro.getAttribute('data-rig') === 'both') r = H * 0.46 / 900;   // битва: две девушки друг над другом
     var ry = (H - 900 * r) / 2;
     // когти над проводом: кадр вписан над подписью, как схемы, — провод не уходит под подпись и кнопки
+    // крыша на телефоне: кадр по ширине девушек, над подписью; на ПК — во весь экран
+    // крыша: кадр вписан над подписью (девушки сидят у нижнего края — подпись их не закрывает); на телефоне — по ширине девушек
+    if (intro.getAttribute('data-rig') === 'roof') { r = portrait ? W / 1000 : Math.min(W / 1600, (H - top - bottom) / 900); ry = top + (H - top - bottom - 900 * r) / 2 }
     if (intro.getAttribute('data-rig') === 'claw') { r = Math.min(W / (portrait ? 1250 : 1450), (H - top - bottom) / 900); ry = top + (H - top - bottom - 900 * r) / 2 }
     intro.style.setProperty('--rg-s', r); intro.style.setProperty('--rg-x', (W - 1600 * r) / 2 + 'px'); intro.style.setProperty('--rg-y', ry + 'px');
   }

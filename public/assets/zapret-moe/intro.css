@@ -2085,10 +2085,11 @@ html.zpm-intro-on .zx:not(.zx-run) {
   45% { transform: scale(1); }
 }
 
+/* без поворота: повёрнутая кисть открывала бы копию руки в основе */
 @keyframes zx-tremble {
-  0%, 100% { transform: scale(1.02) rotate(0); }
-  25% { transform: scale(1.025) rotate(0.8deg); }
-  75% { transform: scale(1.02) rotate(-0.8deg); }
+  0%, 100% { transform: scale(1.02); }
+  25% { transform: scale(1.028, 1.022); }
+  75% { transform: scale(1.022, 1.03); }
 }
 
 @keyframes zx-grip {

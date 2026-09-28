@@ -1506,11 +1506,19 @@ html.zpm-intro-lock body {
   --py: 0;
 }
 
-.zr-base { translate: calc(var(--px) * 0.6%) calc(var(--py) * 0.5%); }
-.zr-hair { translate: calc(var(--px) * -1.1%) calc(var(--py) * -0.8%); }
-.zr-rim { translate: calc(var(--px) * -0.4%) calc(var(--py) * -0.3%); }
-.zr-hand { translate: calc(var(--px) * 2.2%) calc(var(--py) * 1.8%); }
-.zr-eye { translate: calc(var(--px) * 0.6vw) calc(var(--py) * 0.5vw); }
+/* Персонаж сдвигается целиком: руки, пряди, контур и глаза вырезаны из основы,
+   и любой их сдвиг относительно неё выдаёт копию под слоем — двоение и шов на
+   запястье. Проценты translate считаются от самого слоя, поэтому у слоёв
+   разного размера «одинаковый» сдвиг расходился — сдвигаем все слои на одно
+   и то же расстояние в единицах ширины рига (cqw). translate самого .zr-in
+   и .zrig заняты подпрыгиванием и столкновением в дуэли. */
+.zrig {
+  container-type: inline-size;
+}
+
+.zr-in > * {
+  translate: calc(var(--px) * 0.8cqw) calc(var(--py) * 0.45cqw);
+}
 
 /* РКН-тян: срывы сигнала */
 .zr-gl {

@@ -471,9 +471,9 @@
     if (!window.IntersectionObserver || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
     var groups = [
       ['.zsec-head', ''], ['.zp-kpi', 'rv-pop'], ['.zp-panel', ''], ['.zc', 'rv-card'],
-      ['.zt-list li', 'rv-side'], ['.zbox', 'rv-drop'], ['.zfd', ''], ['.zci-term', 'rv-card'], ['.zci-hash', 'rv-card'],
-      ['.zci-points > div', ''], ['.zj-help', 'rv-card'], ['.zj-join > h2', ''], ['.zj-steps li', 'rv-pop'], ['.zj-cta', ''],
-      ['.zci > .zs > .zb', 'rv-pop']
+      ['.zt-list li', 'rv-side'], ['.zrn', 'rv-side'], ['.zfd', ''], ['.zci-run', ''],
+      ['.zci-points > div', ''], ['.zj-help', 'rv-card'], ['.zj-join > h2', ''], ['.zj-hs li', 'rv-side'], ['.zj-cta', ''],
+      ['.zci-points > .zb', 'rv-pop']
     ];
     var io = new IntersectionObserver(function (es) {
       es.forEach(function (e) {
@@ -645,9 +645,9 @@
     new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) { size(); kick() } }).observe(duel);
   })();
 
-  /* ── Стеллаж сборок: последние релизы из API ────────────────────────── */
+  /* ── Схема сборок: последние релизы из API ────────────────────────── */
   (function () {
-    var shelf = document.getElementById('zr-shelf');
+    var shelf = document.getElementById('zr-net');
     if (!shelf || !window.fetch) return;
     function ago(ts) {
       var d = Math.floor((Date.now() - ts) / 864e5);
@@ -658,7 +658,7 @@
       var m = Math.floor(d / 30); return m + ' ' + plural(m, 'месяц', 'месяца', 'месяцев') + ' назад';
     }
     function load() {
-      shelf.querySelectorAll('.zbox[data-repo]').forEach(function (b) {
+      shelf.querySelectorAll('.zrn[data-repo]').forEach(function (b) {
         fetch(shelf.getAttribute('data-api') + b.getAttribute('data-repo') + '/releases/latest')
           .then(function (r) { return r.ok ? r.json() : null })
           .then(function (r) {
@@ -666,10 +666,10 @@
             var ver = String(r.tag_name).replace(/^(zsg-|v)/i, '');
             var ts = Date.parse(r.published_at || r.created_at);
             var dl = (r.assets || []).reduce(function (a, x) { return a + (x.download_count || 0) }, 0);
-            b.querySelector('[data-f="ver"]').textContent = 'v' + ver;
+            var v = b.querySelector('[data-f="ver"]'); v.textContent = 'v' + ver; v.classList.add('zrn-ver-on');
             if (ts) b.querySelector('[data-f="age"]').textContent = ago(ts);
             if (dl) b.querySelector('[data-f="dl"]').textContent = '↓ ' + short(dl);
-            if (ts && Date.now() - ts < 3 * 864e5) b.classList.add('zbox-fresh');
+            if (ts && Date.now() - ts < 3 * 864e5) b.classList.add('zrn-fresh');
           }).catch(function () {});
       });
     }
@@ -683,7 +683,7 @@
   (function () {
     var lab = document.getElementById('zci-lab');
     if (!lab || !window.IntersectionObserver || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
-    var items = lab.querySelectorAll('.zci-log li'), codes = lab.querySelectorAll('.zci-h code'), stamp = lab.querySelector('.zci-stamp');
+    var items = lab.querySelectorAll('.zci-log li'), codes = lab.querySelectorAll('.zci-h code'), stamp = lab.querySelector('.zci-ok');
     var HEX = '0123456789abcdef', visible = false, busy = false, timers = [];
     function later(fn, ms) { timers.push(setTimeout(fn, ms)) }
     function hex(n) { var s = ''; for (var i = 0; i < n; i++) s += HEX[Math.floor(Math.random() * 16)]; return s }
@@ -790,7 +790,7 @@
           if (c.t >= 0.22) {
             c.st = 'up'; c.t = 0;
             pk.forEach(function (p) { if (!p.grab && !p.s && Math.abs(p.x - c.x) < 34) { p.grab = c; c.got = p; score.lost++; ui(); burst(p.x, wireY, '#ff3b5c', 14) } });
-            pk.forEach(function (p) { if (p.s && Math.abs(p.x - c.x) < 34) { burst(p.x, wireY, '#4fd1ff', 10); c.blocked = 1 } });
+            pk.forEach(function (p) { if (p.s && Math.abs(p.x - c.x) < 34) { burst(p.x, wireY, '#5b7fff', 10); c.blocked = 1 } });
           }
         } else {
           var y2 = wireY - (wireY + 60) * Math.min(1, c.t / 0.5);
@@ -810,7 +810,7 @@
           g.beginPath(); g.arc(p.x, y, 17, 0, 6.28); g.stroke();
         }
         g.fillStyle = p.grab ? 'rgba(255,59,92,.22)' : 'rgba(79,209,255,.2)'; g.fillRect(p.x - 14, y - 11, 28, 22);
-        g.fillStyle = p.grab ? '#ff5a74' : (p.s ? '#bff0ff' : '#4fd1ff');
+        g.fillStyle = p.grab ? '#ff5a74' : (p.s ? '#f2eee6' : '#5b7fff');
         g.beginPath(); g.roundRect ? g.roundRect(p.x - 9, y - 7, 18, 14, 4) : g.rect(p.x - 9, y - 7, 18, 14); g.fill();
         if (p.x > W + 20) { p.gone = 1; if (p.s) { score.saved++; if (score.saved > score.best) { score.best = score.saved; try { localStorage.setItem('zg-best', score.best) } catch (e) {} } ui(); milestone() } }
       });
@@ -823,7 +823,7 @@
     cv.addEventListener('pointerdown', function (e) {
       var r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, best = null, d = 40;
       pk.forEach(function (p) { var dd = Math.hypot(p.x - x, (p.grab ? p.y : wireY) - y); if (!p.s && !p.grab && dd < d) { d = dd; best = p } });
-      if (best) { best.s = 1; burst(best.x, wireY, '#4fd1ff', 12) }
+      if (best) { best.s = 1; burst(best.x, wireY, '#5b7fff', 12) }
       claws.forEach(function (c) { if (c.st !== 'warn' && Math.abs(c.x - x) < 40 && y < wireY + 10) { if (c.got) { c.got.grab = null; c.got.s = 1; c.got = null } c.st = 'up'; c.t = 0.3; burst(c.x, y, '#ffcf5a', 16) } });
     });
     new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) { size(); if (!raf) raf = requestAnimationFrame(frame) } }).observe(box);
@@ -867,7 +867,7 @@
     }
     function boom() {
       lock.classList.add('broken');
-      var cols = ['#4fd1ff', '#9b7bff', '#37e39a', '#ffcf5a', '#ff6bb3'];
+      var cols = ['#5b7fff', '#9b7bff', '#37e39a', '#ffcf5a', '#ff6bb3'];
       for (var i = 0; i < 60; i++) {
         var c = document.createElement('i'), a = -Math.PI / 2 + (Math.random() - 0.5) * 2.6, v = 90 + Math.random() * 220;
         c.className = 'cf'; c.style.setProperty('--c', cols[i % 5]);
@@ -993,7 +993,7 @@
     var mx = -100, my = -100, rx = -100, ry = -100, trail = [], fx = [], raf = 0, idle = 0;
     function state(t) {
       var c = root.classList, el = t && t.closest ? t : null;
-      c.toggle('zcur-link', !!(el && el.closest('a, button, [role="button"], .zbox, .zc-dl, .zp-lg, .zlock-hit, .zg-canvas, summary, label')));
+      c.toggle('zcur-link', !!(el && el.closest('a, button, [role="button"], .zrn, .zc-dl, .zp-lg, .zlock-hit, .zg-canvas, summary, label')));
       c.toggle('zcur-rkn', !!(el && el.closest('.zr-rkn, .zf-rkn, .zx-rig-rkn, .zx-rig-stamp, .zx-rig-defeat')));
       c.toggle('zcur-love', !!(el && el.closest('.zj-help, .zlock, a[href*="zapretvpns_bot"]')));
       c.toggle('zcur-text', !!(el && !el.closest('a, button') && el.closest('p, h1, h2, h3, li span, dd, code, .zt-t') && !el.closest('.zr-rkn')));
@@ -1008,7 +1008,7 @@
     addEventListener('pointerdown', function (e) {
       if (e.pointerType !== 'mouse' || e.button !== 0) return;
       root.classList.add('zcur-down');
-      var hot = e.target.closest && e.target.closest('a, button, [role="button"], .zbox, .zlock-hit, .zg-canvas, input, textarea, select');
+      var hot = e.target.closest && e.target.closest('a, button, [role="button"], .zrn, .zlock-hit, .zg-canvas, input, textarea, select');
       if (root.classList.contains('zcur-love')) hearts(e.clientX, e.clientY);
       else if (hot) ripple(e.clientX, e.clientY); else block(e.clientX, e.clientY);
       kick();
@@ -1070,7 +1070,7 @@
             g.strokeRect(-s / 2, -s / 2, s, s);
             g.fillStyle = 'rgba(255,107,131,' + close + ')'; g.font = '700 9px ui-monospace, monospace'; g.textAlign = 'center';
             g.fillText('ТСПУ', 0, -s / 2 - 5);
-            g.fillStyle = '#4fd1ff'; g.fillRect(-6, -4.5, 12, 9);
+            g.fillStyle = '#5b7fff'; g.fillRect(-6, -4.5, 12, 9);
             if (k > 0.3) { g.fillStyle = 'rgba(255,255,255,' + (1 - (k - 0.3) / 0.12) + ')'; g.beginPath(); g.arc(0, 0, 16, 0, 6.28); g.fill() }
           } else {
             // пакет раскалывается и уходит в обход, рамка ломается
@@ -1083,7 +1083,7 @@
               g.beginPath(); g.moveTo(-9, 0); g.lineTo(9, 0); g.stroke(); g.restore();
             });
             g.globalAlpha = 1 - e * 0.8;
-            g.fillStyle = '#4fd1ff';
+            g.fillStyle = '#5b7fff';
             g.fillRect(-6 - d * 1.2, -4.5 - d * 0.5, 5.5, 9);
             g.fillRect(0.5 + d * 1.2, -4.5 + d * 0.5, 5.5, 9);
             g.fillStyle = 'rgba(79,209,255,' + (1 - e) + ')'; g.font = '700 10px ui-monospace, monospace'; g.textAlign = 'center';

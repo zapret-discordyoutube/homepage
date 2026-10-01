@@ -120,7 +120,7 @@
 					<p class="zx-final-k">zapret.moe</p>
 					<h2>Интернет должен быть <span>свободным</span></h2>
 					<p class="zx-final-s">Мы делаем инструменты обхода открыто и бесплатно. Присоединяйтесь.</p>
-					<div class="zx-final-btns"><button type="button" class="zb zb-main" data-go="#zpm-arsenal">скачать инструменты</button><a class="zb" href="https://t.me/zapretvpns_bot" target="_blank" rel="noopener noreferrer">поддержать проект</a><button type="button" class="zb zb-ghost" data-go="">на сайт</button></div>
+					<div class="zx-final-btns"><button type="button" class="zb zb-main" data-go="#zpm-arsenal">скачать инструменты</button><a class="zb" href="https://t.me/zapretvpns_bot" target="_blank" rel="noopener noreferrer">поддержать проект</a><button type="button" class="zb" data-go="">на сайт</button></div>
 				</div>
 			</section>
 			<section class="zx-s zx-fly" data-s="fly">
@@ -158,7 +158,7 @@
 				<div class="zh-actions">
 					<a class="zb zb-main" href="#zpm-arsenal">к инструментам<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m-4-5 5 5-5 5"/></svg></a>
 					<a class="zb" href="{{AppSubUrl}}/explore/repos">все репозитории</a>
-					{{if .IsSigned}}<a class="zb zb-ghost" href="{{AppSubUrl}}/">моя лента</a>{{else}}<a class="zb zb-ghost" href="{{AppSubUrl}}/user/sign_up">аккаунт без почты</a>{{end}}
+					{{if .IsSigned}}<a class="zb" href="{{AppSubUrl}}/">моя лента</a>{{else}}<a class="zb" href="{{AppSubUrl}}/user/sign_up">аккаунт без почты</a>{{end}}
 				</div>
 				<p class="zh-replay" id="zpm-replay" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z"/></svg>история zapret.moe: <button type="button" data-mode="full">целиком · 2 мин</button> <button type="button" data-mode="short">коротко</button></p>
 			</div>
@@ -259,7 +259,6 @@
 						</div>
 					</div>
 					<a class="zc-win" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui" aria-label="Открыть репозиторий Zapret 2 GUI">
-						<span class="zc-win-bar" aria-hidden="true"><i></i><i></i><i></i></span>
 						<img src="{{AppSubUrl}}/assets/zapret-moe/shot-gui.webp" width="1200" height="804" alt="Окно Zapret 2 GUI: статус обхода, пресеты и настройки программы" loading="lazy">
 					</a>
 				</article>
@@ -348,73 +347,47 @@
 				<h2 id="zpm-rel-title">Свежее — в Releases</h2>
 				<p class="zsec-note">APK и архивы лежат рядом с исходниками. Не доверяете сборке — соберите сами.</p>
 			</div>
-			<div class="zr-shelf" id="zr-shelf" data-api="{{AppSubUrl}}/api/v1/repos/">
-				<a class="zbox" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/releases" data-repo="zapretdiscordyoutube/zapretgui" style="--c:#4fd1ff">
-					<span class="zbox-lid" aria-hidden="true"></span>
-					<span class="zbox-body">
-						<span class="zbox-os">windows</span>
-						<strong>Zapret 2 GUI</strong>
-						<span class="zbox-ver" data-f="ver">последняя сборка</span>
-						<span class="zbox-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zbox-new">new</span>
-					</span>
-					<span class="zbox-dl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v13m-6-6 6 6 6-6M5 21h14"/></svg></span>
-				</a>
-				<a class="zbox" href="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/releases" data-repo="zapretkvn/ZapretKVN-android" style="--c:#37e39a">
-					<span class="zbox-lid" aria-hidden="true"></span>
-					<span class="zbox-body">
-						<span class="zbox-os">android</span>
-						<strong>Zapret KVN</strong>
-						<span class="zbox-ver" data-f="ver">последняя сборка</span>
-						<span class="zbox-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zbox-new">new</span>
-					</span>
-					<span class="zbox-dl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v13m-6-6 6 6 6-6M5 21h14"/></svg></span>
-				</a>
-				<a class="zbox" href="{{AppSubUrl}}/zapretkvn/zapret-kvn/releases" data-repo="zapretkvn/zapret-kvn" style="--c:#4fd1ff">
-					<span class="zbox-lid" aria-hidden="true"></span>
-					<span class="zbox-body">
-						<span class="zbox-os">windows</span>
-						<strong>Zapret KVN</strong>
-						<span class="zbox-ver" data-f="ver">последняя сборка</span>
-						<span class="zbox-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zbox-new">new</span>
-					</span>
-					<span class="zbox-dl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v13m-6-6 6 6 6-6M5 21h14"/></svg></span>
-				</a>
-				<a class="zbox" href="{{AppSubUrl}}/zastogram/ZaStoGram/releases" data-repo="zastogram/ZaStoGram" style="--c:#37e39a">
-					<span class="zbox-lid" aria-hidden="true"></span>
-					<span class="zbox-body">
-						<span class="zbox-os">android</span>
-						<strong>ZaStoGram</strong>
-						<span class="zbox-ver" data-f="ver">последняя сборка</span>
-						<span class="zbox-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zbox-new">new</span>
-					</span>
-					<span class="zbox-dl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v13m-6-6 6 6 6-6M5 21h14"/></svg></span>
-				</a>
-				<a class="zbox" href="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/releases" data-repo="zastogram/ZaStoGram_desktop" style="--c:#9b7bff">
-					<span class="zbox-lid" aria-hidden="true"></span>
-					<span class="zbox-body">
-						<span class="zbox-os">desktop</span>
-						<strong>ZaStoGram</strong>
-						<span class="zbox-ver" data-f="ver">последняя сборка</span>
-						<span class="zbox-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zbox-new">new</span>
-					</span>
-					<span class="zbox-dl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v13m-6-6 6 6 6-6M5 21h14"/></svg></span>
-				</a>
-				<a class="zbox" href="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2/releases" data-repo="zapretdiscordyoutube/magisk-zapret2" style="--c:#ff6bb3">
-					<span class="zbox-lid" aria-hidden="true"></span>
-					<span class="zbox-body">
-						<span class="zbox-os">android · root</span>
-						<strong>Magisk Zapret 2</strong>
-						<span class="zbox-ver" data-f="ver">последняя сборка</span>
-						<span class="zbox-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zbox-new">new</span>
-					</span>
-					<span class="zbox-dl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v13m-6-6 6 6 6-6M5 21h14"/></svg></span>
-				</a>
+			<div class="zr-net" id="zr-net" data-api="{{AppSubUrl}}/api/v1/repos/">
+				<p class="zr-hub"><b>git.zapret.moe</b>/releases</p>
+				<svg class="zr-wires" viewBox="0 0 100 600" preserveAspectRatio="none" aria-hidden="true"><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 50, 100 50"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 50, 100 50"/></g><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 150, 100 150"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 150, 100 150"/></g><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 250, 100 250"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 250, 100 250"/></g><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 350, 100 350"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 350, 100 350"/></g><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 450, 100 450"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 450, 100 450"/></g><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 550, 100 550"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 550, 100 550"/></g></svg>
+				<div class="zr-nodes">
+					<a class="zrn" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/releases" data-repo="zapretdiscordyoutube/zapretgui">
+						<i class="zrn-dot" aria-hidden="true"></i>
+						<span class="zrn-t"><strong>Zapret 2 GUI</strong><span class="zrn-os">windows</span></span>
+						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
+						<span class="zrn-ver" data-f="ver">последняя сборка</span>
+					</a>
+					<a class="zrn" href="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/releases" data-repo="zapretkvn/ZapretKVN-android">
+						<i class="zrn-dot" aria-hidden="true"></i>
+						<span class="zrn-t"><strong>Zapret KVN</strong><span class="zrn-os">android</span></span>
+						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
+						<span class="zrn-ver" data-f="ver">последняя сборка</span>
+					</a>
+					<a class="zrn" href="{{AppSubUrl}}/zapretkvn/zapret-kvn/releases" data-repo="zapretkvn/zapret-kvn">
+						<i class="zrn-dot" aria-hidden="true"></i>
+						<span class="zrn-t"><strong>Zapret KVN</strong><span class="zrn-os">windows</span></span>
+						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
+						<span class="zrn-ver" data-f="ver">последняя сборка</span>
+					</a>
+					<a class="zrn" href="{{AppSubUrl}}/zastogram/ZaStoGram/releases" data-repo="zastogram/ZaStoGram">
+						<i class="zrn-dot" aria-hidden="true"></i>
+						<span class="zrn-t"><strong>ZaStoGram</strong><span class="zrn-os">android</span></span>
+						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
+						<span class="zrn-ver" data-f="ver">последняя сборка</span>
+					</a>
+					<a class="zrn" href="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/releases" data-repo="zastogram/ZaStoGram_desktop">
+						<i class="zrn-dot" aria-hidden="true"></i>
+						<span class="zrn-t"><strong>ZaStoGram</strong><span class="zrn-os">desktop</span></span>
+						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
+						<span class="zrn-ver" data-f="ver">последняя сборка</span>
+					</a>
+					<a class="zrn" href="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2/releases" data-repo="zapretdiscordyoutube/magisk-zapret2">
+						<i class="zrn-dot" aria-hidden="true"></i>
+						<span class="zrn-t"><strong>Magisk Zapret 2</strong><span class="zrn-os">android · root</span></span>
+						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
+						<span class="zrn-ver" data-f="ver">последняя сборка</span>
+					</a>
+				</div>
 			</div>
 			<a class="zfd" href="/fdroid/repo/">
 				<span class="zfd-phone" aria-hidden="true">
@@ -449,8 +422,8 @@
 				<p class="zsec-note">Релизы собирает Forgejo Actions из открытых исходников. Видно, что код не подменён и в архив не подложено лишнего.</p>
 			</div>
 			<div class="zci-lab" id="zci-lab">
-				<div class="zci-term">
-					<div class="zci-bar"><i></i><i></i><i></i><span>Forgejo Actions · zapretgui · release.yml</span></div>
+				<div class="zci-run">
+					<p class="zci-cmd"><b>$</b>forgejo-runner exec release.yml<small># zapretgui</small></p>
 					<ol class="zci-log">
 						<li class="ok"><b class="zci-sp"></b><span><strong>checkout</strong><small>git checkout 3f9c2a1</small></span><em data-t="2 с">2 с</em></li>
 						<li class="ok"><b class="zci-sp"></b><span><strong>setup</strong><small>python 3.12 · pyinstaller</small></span><em data-t="18 с">18 с</em></li>
@@ -458,20 +431,20 @@
 						<li class="ok"><b class="zci-sp"></b><span><strong>sha256</strong><small>sha256sum Zapret.zip</small></span><em data-t="0,4 с">0,4 с</em></li>
 						<li class="ok"><b class="zci-sp"></b><span><strong>release</strong><small>загрузка в Releases</small></span><em data-t="3 с">3 с</em></li>
 					</ol>
+					<div class="zci-hash">
+						<p class="zci-cmd"><b>$</b>sha256sum Zapret.zip</p>
+						<div class="zci-h zci-h-a"><span>собрали мы · Actions</span><code>9f2c4be17a03d6581c2e7f94b0a6d3e85c1f07a2b94e6d38c05a7f1e2b3c4e41</code></div>
+						<div class="zci-h zci-h-b"><span>собрали вы · у себя</span><code>9f2c4be17a03d6581c2e7f94b0a6d3e85c1f07a2b94e6d38c05a7f1e2b3c4e41</code></div>
+						<p class="zci-ok">[ ok ] хеши совпадают</p>
+					</div>
 				</div>
-				<div class="zci-hash">
-					<p class="zci-hl">sha256 архива</p>
-					<div class="zci-h zci-h-a"><span>собрали мы · Actions</span><code>9f2c4be17a03d6581c2e7f94b0a6d3e85c1f07a2b94e6d38c05a7f1e2b3c4e41</code></div>
-					<div class="zci-h zci-h-b"><span>собрали вы · у себя</span><code>9f2c4be17a03d6581c2e7f94b0a6d3e85c1f07a2b94e6d38c05a7f1e2b3c4e41</code></div>
-					<div class="zci-stamp">совпадает ✓</div>
+				<div class="zci-points">
+					<div><strong>Из этого же кода</strong><p>Сборку запускает Actions прямо из коммита в репозитории — руками в артефакт никто не лезет.</p></div>
+					<div><strong>Публичные логи</strong><p>Каждый шаг открыт: окружение, команды и коммит, из которого собран файл.</p></div>
+					<div><strong>Воспроизводимо</strong><p>Повторите шаги у себя и сравните контрольные суммы — подложить что-то незаметно не выйдет.</p></div>
+					<a class="zb" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/actions">смотреть Actions</a>
 				</div>
 			</div>
-			<div class="zci-points">
-				<div><strong>Из этого же кода</strong><p>Сборку запускает Actions прямо из коммита в репозитории — руками в артефакт никто не лезет.</p></div>
-				<div><strong>Публичные логи</strong><p>Каждый шаг открыт: окружение, команды и коммит, из которого собран файл.</p></div>
-				<div><strong>Воспроизводимо</strong><p>Повторите шаги у себя и сравните контрольные суммы — подложить что-то незаметно не выйдет.</p></div>
-			</div>
-			<a class="zb" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/actions">смотреть Actions</a>
 		</div>
 	</section>
 
@@ -520,13 +493,15 @@
 
 			<div class="zj-join">
 				<h2>Как присоединиться</h2>
-				<ol class="zj-steps">
-					<li><b>1</b><strong>Смотрите и качайте</strong><span>Код и релизы открыты, аккаунт не нужен.</span></li>
-					<li><b>2</b><strong>Регистрируйтесь</strong><span>Логин и пароль — почта не нужна.</span></li>
-					<li><b>3</b><strong>Пишите в Issues</strong><span>Ошибки, идеи и вопросы обсуждаются прямо в проектах.</span></li>
+				<p class="zj-sub">Три пакета — и соединение установлено.</p>
+				<p class="zj-ends" aria-hidden="true"><span>вы</span><span>git.zapret.moe</span></p>
+				<ol class="zj-hs">
+					<li style="--n:0"><b>SYN</b><i class="zj-wire" aria-hidden="true"></i><strong>Смотрите и качайте</strong><span>Код и релизы открыты, аккаунт не нужен.</span></li>
+					<li class="zj-back" style="--n:1"><b>SYN-ACK</b><i class="zj-wire" aria-hidden="true"></i><strong>Регистрируйтесь</strong><span>Логин и пароль — почта не нужна.</span></li>
+					<li style="--n:2"><b>ACK</b><i class="zj-wire" aria-hidden="true"></i><strong>Пишите в Issues</strong><span>Ошибки, идеи и вопросы обсуждаются прямо в проектах.</span></li>
 				</ol>
 				<div class="zj-cta">
-					<p>Мы против монополии GitHub: открытый код нельзя выключить одним решением платформы.</p>
+					<p><b>ESTABLISHED</b>Мы против монополии GitHub: открытый код нельзя выключить одним решением платформы.</p>
 					{{if .IsSigned}}
 						<a class="zb zb-main" href="{{AppSubUrl}}/explore/repos">к проектам</a>
 					{{else}}

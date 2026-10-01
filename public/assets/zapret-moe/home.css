@@ -47,88 +47,87 @@
 /* ── Окружение страницы: тёмные шапка и подвал Forgejo ─────────────── */
 
 body {
-  background: #04060f;
+  background: #07080c;
 }
 
 #navbar {
-  background: rgba(4, 6, 15, 0.86);
-  border-bottom: 1px solid rgba(120, 160, 255, 0.12);
+  background: rgba(7, 8, 12, 0.86);
   backdrop-filter: blur(12px);
 }
 
 #navbar .item,
 #navbar a.item {
-  color: #c7d3f2;
+  color: #cfccc5;
 }
 
 #navbar .item.active,
 #navbar a.item.active {
   color: #fff;
-  background: rgba(79, 209, 255, 0.14);
-  box-shadow: inset 0 -2px 0 #4fd1ff;
+  background: none;
+  box-shadow: inset 0 -2px 0 #5b7fff;
 }
 
 #navbar .item:hover,
 #navbar a.item:hover {
   color: #fff;
-  background: rgba(79, 209, 255, 0.08);
+  background: rgba(242, 238, 230, 0.06);
 }
 
 /* у вошедших «+» и меню профиля — не .item, а <details class="dropdown"> */
 #navbar details.dropdown > summary {
-  color: #c7d3f2;
+  color: #cfccc5;
 }
 
 #navbar details.dropdown > summary:hover,
 #navbar details.dropdown[open] > summary {
   color: #fff;
-  background: rgba(79, 209, 255, 0.08);
+  background: rgba(242, 238, 230, 0.06);
 }
 
 .page-footer {
-  color: #7f8db3;
-  background: #04060f;
-  border-top: 1px solid rgba(120, 160, 255, 0.12);
+  color: #6f6d69;
+  background: #07080c;
+  border-top: 1px solid rgba(242, 238, 230, 0.12);
 }
 
 .page-footer a,
 .page-footer .item {
-  color: #9fb4e6;
+  color: #a9a69f;
 }
 
 .zpm-wikibar {
-  background: #04060f;
-  border-top-color: rgba(120, 160, 255, 0.1);
+  background: #07080c;
+  border-top-color: rgba(242, 238, 230, 0.12);
 }
 
 .zpm-wikibar-label {
-  color: #5b6a90;
+  color: #6f6d69;
 }
 
 .zpm-wikibar a {
-  color: #8fa3d0;
+  color: #a9a69f;
 }
 
 .zpm-wikibar a:hover {
-  color: #4fd1ff;
+  color: #5b7fff;
 }
 
 /* ── Основа ─────────────────────────────────────────────────────────── */
 
 .page-content.home.zpm-home {
-  --bg: #04060f;
-  --bg2: #0a1022;
-  --bg3: #10183a;
-  --ink: #e8efff;
-  --mut: #97a6c9;
-  --dim: #5b6a90;
-  --blu: #3b82ff;
-  --cy: #4fd1ff;
-  --vio: #9b7bff;
+  /* тушь, бумага и одна краска. Свечений и переливов в интерфейсе нет:
+     цвет несут арты, а не обводки. */
+  --bg: #07080c;
+  --bg2: #0d0f16;
+  --bg3: #161925;
+  --ink: #f2eee6;
+  --mut: #a9a69f;
+  --dim: #6f6d69;
+  --acc: #5b7fff;
   --red: #ff3b5c;
-  --gold: #ffcf5a;
-  --line: rgba(120, 160, 255, 0.14);
-  --line2: rgba(120, 180, 255, 0.32);
+  --gold: #e9bd55;
+  --line: rgba(242, 238, 230, 0.12);
+  --line2: rgba(242, 238, 230, 0.28);
   --disp: "Unbounded", "Onest", system-ui, sans-serif;
   --txt: "Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "SF Mono", Consolas, monospace;
@@ -140,10 +139,7 @@ body {
   font-family: var(--txt);
   font-size: 16px;
   line-height: 1.6;
-  background:
-    radial-gradient(60rem 36rem at 85% -8rem, rgba(155, 123, 255, 0.14), transparent 70%),
-    radial-gradient(70rem 40rem at 10% -10rem, rgba(59, 130, 255, 0.16), transparent 70%),
-    var(--bg);
+  background: var(--bg);
 }
 
 .zpm-home *,
@@ -169,7 +165,7 @@ body {
 }
 
 .zpm-home :is(a, button):focus-visible {
-  outline: 3px solid var(--cy);
+  outline: 3px solid var(--acc);
   outline-offset: 3px;
 }
 
@@ -190,13 +186,13 @@ body {
   margin-inline: auto;
 }
 
-/* надзаголовок: бегущий пакет вместо «//» */
+/* надзаголовок: пакет бежит по проводу */
 .zeb {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 14px;
-  color: var(--cy);
+  color: var(--acc);
   font-family: var(--mono);
   font-size: 13px;
   letter-spacing: 0.04em;
@@ -204,18 +200,17 @@ body {
 
 .zeb::before {
   width: 28px;
-  height: 8px;
+  height: 7px;
   content: "";
-  border-radius: 3px;
-  background: linear-gradient(90deg, transparent, var(--cy)) no-repeat;
-  background-size: 12px 8px;
-  box-shadow: inset 0 0 0 1px rgba(79, 209, 255, 0.25);
+  background:
+    radial-gradient(circle, var(--acc) 0 3px, transparent 3.5px) no-repeat -7px 0 / 7px 7px,
+    linear-gradient(rgba(91, 127, 255, 0.35), rgba(91, 127, 255, 0.35)) no-repeat 0 50% / 100% 1px;
   animation: zeb-run 2.4s ease-in-out infinite;
 }
 
 @keyframes zeb-run {
-  0% { background-position: -12px 0; }
-  60%, 100% { background-position: 28px 0; }
+  0% { background-position: -7px 0, 0 50%; }
+  60%, 100% { background-position: 28px 0, 0 50%; }
 }
 
 .zsec-head {
@@ -238,7 +233,7 @@ body {
 
 .zpm-home .zmore {
   margin-top: 18px;
-  color: var(--cy);
+  color: var(--acc);
   font-family: var(--mono);
   font-size: 14px;
 }
@@ -250,30 +245,39 @@ body {
 
 /* ── Кнопки ─────────────────────────────────────────────────────────── */
 
+/* Главное действие — залитая кнопка, всё остальное — ссылка со стрелкой:
+   обводок и пилюль на странице нет. */
 .zb {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   min-height: 48px;
-  padding: 12px 22px;
-  overflow: hidden;
+  padding: 12px 0;
   color: var(--ink);
   font-family: var(--txt);
   font-size: 15px;
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
-  border: 1px solid var(--line2);
-  border-radius: 999px;
-  background: rgba(16, 24, 58, 0.55);
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s, background 0.2s;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  transition: color 0.2s;
 }
 
-.zb:hover {
-  border-color: var(--cy);
-  box-shadow: 0 0 0 4px rgba(79, 209, 255, 0.1), 0 10px 30px -12px rgba(79, 209, 255, 0.6);
-  transform: translateY(-1px);
+.zb:not(.zb-main)::after {
+  color: var(--acc);
+  content: "→";
+  transition: transform 0.2s;
+}
+
+.zpm-home .zb:not(.zb-main):hover {
+  color: var(--acc);
+}
+
+.zb:not(.zb-main):hover::after {
+  transform: translateX(4px);
 }
 
 .zb svg {
@@ -292,44 +296,29 @@ body {
 }
 
 .zb-main {
-  color: #031024;
-  border-color: transparent;
-  background: linear-gradient(120deg, var(--cy), var(--blu) 60%, var(--vio));
-  background-size: 160% 100%;
-  transition: background-position 0.4s, box-shadow 0.2s, transform 0.2s;
+  padding: 12px 24px;
+  color: var(--bg);
+  border-radius: 6px;
+  background: var(--ink);
+  transition: background 0.2s;
 }
 
 .zpm-home .zb-main,
 .zpm-home .zb-main:hover {
-  color: #031024;
+  color: var(--bg);
 }
 
 .zb-main:hover {
-  background-position: 100% 0;
-}
-
-.zb-main::after {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
-  transform: translateX(-120%);
-}
-
-.zb-main:hover::after {
-  transform: translateX(120%);
-  transition: transform 0.7s;
-}
-
-.zb-ghost {
-  background: transparent;
-  border-style: dashed;
+  background: #fff;
 }
 
 .zb-sm {
   min-height: 40px;
-  padding: 9px 18px;
   font-size: 14px;
+}
+
+.zb-main.zb-sm {
+  padding: 9px 18px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -430,12 +419,8 @@ html.zpm-intro-lock body {
   align-items: center;
   gap: 10px;
   margin-bottom: 26px;
-  padding: 7px 14px 7px 10px;
-  color: #b9c6ea;
+  color: #a9a69f;
   font-size: 14px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(16, 24, 58, 0.5);
 }
 
 .zh-live {
@@ -444,7 +429,6 @@ html.zpm-intro-lock body {
   height: 9px;
   border-radius: 50%;
   background: #37e39a;
-  box-shadow: 0 0 10px #37e39a;
 }
 
 .zh-live::after {
@@ -502,12 +486,7 @@ html.zpm-intro-lock body {
 
 .zh-l {
   display: inline-block;
-  color: transparent;
-  background: linear-gradient(100deg, var(--cy), var(--blu) 30%, var(--vio) 62%, var(--cy));
-  background-size: 900% 100%;
-  background-position: calc(var(--i) * 12.5%) 0;
-  -webkit-background-clip: text;
-  background-clip: text;
+  color: var(--acc);
   animation:
     zh-drop 0.65s cubic-bezier(0.2, 0.9, 0.3, 1.35) calc(0.6s + var(--i) * 0.055s) both,
     zh-shiver 0.5s linear calc(1.85s + var(--i) * 0.02s) both,
@@ -731,12 +710,11 @@ html.zpm-intro-lock body {
 
 .zh-under path {
   fill: none;
-  stroke: var(--cy);
+  stroke: var(--acc);
   stroke-width: 5;
   stroke-linecap: round;
   stroke-dasharray: 460;
   stroke-dashoffset: 460;
-  filter: drop-shadow(0 0 6px rgba(79, 209, 255, 0.7));
   animation: zh-underline 0.9s cubic-bezier(0.6, 0, 0.2, 1) 2.95s forwards;
 }
 
@@ -802,7 +780,7 @@ html.zpm-intro-lock body {
 
 .zh-flip > span {
   grid-area: 1 / 1;
-  color: var(--cy);
+  color: var(--acc);
   font-weight: 700;
   opacity: 0;
   animation: zh-flip 12s cubic-bezier(0.3, 0, 0.2, 1) infinite;
@@ -859,7 +837,7 @@ html.zpm-intro-lock body {
 .zh-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 4px 28px;
   margin-top: 34px;
 }
 
@@ -884,22 +862,20 @@ html.zpm-intro-lock body {
 }
 
 .zh-replay button {
-  padding: 6px 14px;
+  margin-left: 6px;
+  padding: 6px 0;
   color: var(--mut);
-  font: 600 13px/1.2 var(--txt);
+  font: 600 14px/1.2 var(--txt);
+  text-decoration: underline dotted;
+  text-underline-offset: 5px;
   cursor: pointer;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(16, 24, 58, 0.55);
-  transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  border: 0;
+  background: none;
+  transition: color 0.2s;
 }
 
-.zh-replay button:hover,
-.zh-replay button:focus-visible {
-  color: var(--ink);
-  border-color: var(--cy);
-  box-shadow: 0 0 0 3px rgba(79, 209, 255, 0.12);
-  outline: none;
+.zh-replay button:hover {
+  color: var(--acc);
 }
 
 /* арт с Запрет-тян */
@@ -912,29 +888,15 @@ html.zpm-intro-lock body {
   50% { transform: translateY(-10px) rotate(0.6deg); }
 }
 
-.zh-art::before {
-  position: absolute;
-  inset: -10%;
-  z-index: -1;
-  content: "";
-  background:
-    radial-gradient(closest-side, rgba(155, 123, 255, 0.35), transparent),
-    radial-gradient(closest-side at 30% 70%, rgba(79, 209, 255, 0.25), transparent);
-  filter: blur(20px);
-}
-
+/* арт без рамки: края растворяются в фоне страницы */
 .zh-art-frame {
   position: relative;
   aspect-ratio: 1;
   overflow: hidden;
-  border-radius: 32px;
-  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(155, 123, 255, 0.35);
-  transform: perspective(1200px) rotateY(-7deg) rotateX(3deg);
-  transition: transform 0.6s;
-}
-
-.zh-art:hover .zh-art-frame {
-  transform: perspective(1200px) rotateY(0) rotateX(0);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 84%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 84%, transparent);
+  mask-composite: intersect;
 }
 
 .zh-art-frame img {
@@ -986,7 +948,7 @@ html.zpm-intro-lock body {
 }
 
 .zh-scan {
-  stroke: rgba(79, 209, 255, 0.45);
+  stroke: rgba(91, 127, 255, 0.45);
   stroke-width: 2;
   animation: zh-scan 6s linear infinite;
 }
@@ -1210,12 +1172,10 @@ html.zpm-intro-lock body {
   justify-content: center;
   margin-top: clamp(40px, 6vw, 72px);
   overflow: hidden;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
   background:
     radial-gradient(38rem 24rem at 22% 62%, rgba(59, 130, 255, 0.24), transparent 70%),
     radial-gradient(38rem 24rem at 78% 62%, rgba(255, 59, 92, 0.2), transparent 70%),
-    linear-gradient(180deg, #04060f, #070a18);
+    linear-gradient(180deg, #07080c, #070a18);
 }
 
 .zd {
@@ -1349,11 +1309,7 @@ html.zpm-intro-lock body {
   gap: 2px;
   max-width: 280px;
   margin: 0;
-  padding: 12px 16px;
-  border: 1px solid var(--line2);
-  border-radius: 16px;
-  background: rgba(4, 6, 15, 0.78);
-  backdrop-filter: blur(8px);
+  text-shadow: 0 0 14px #07080c, 0 0 4px #07080c;
 }
 
 .zd-card b {
@@ -1368,16 +1324,15 @@ html.zpm-intro-lock body {
 
 .zd-card-zt {
   left: 4%;
-  border-color: rgba(79, 209, 255, 0.45);
 }
 
 .zd-card-zt b {
-  color: var(--cy);
+  color: var(--acc);
 }
 
 .zd-card-rkn {
   right: 4%;
-  border-color: rgba(255, 59, 92, 0.45);
+  text-align: right;
 }
 
 .zd-card-rkn b {
@@ -1426,7 +1381,7 @@ html.zpm-intro-lock body {
 .zd-bolt {
   stroke: #f2f9ff;
   stroke-width: 4;
-  filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px #4fd1ff) drop-shadow(0 0 22px #ff3b5c);
+  filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px #5b7fff) drop-shadow(0 0 22px #ff3b5c);
 }
 
 .zd-bolt-a {
@@ -1443,7 +1398,7 @@ html.zpm-intro-lock body {
 .zd-branch {
   stroke: #dff4ff;
   stroke-width: 2.5;
-  filter: drop-shadow(0 0 6px #4fd1ff);
+  filter: drop-shadow(0 0 6px #5b7fff);
 }
 
 .zd-bolt-b { animation-delay: -0.95s; }
@@ -1500,11 +1455,7 @@ html.zpm-intro-lock body {
   position: relative;
   font: 900 clamp(28px, 4.2vw, 60px) var(--disp);
   letter-spacing: -0.04em;
-  background: linear-gradient(100deg, var(--cy), #fff 50%, #ff5a74);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 0 18px rgba(155, 123, 255, 0.8));
+  color: var(--ink);
   animation: zd-vs 1.6s ease-in-out infinite alternate;
 }
 
@@ -1537,8 +1488,7 @@ html.zpm-intro-lock body {
     bottom: auto;
     left: auto;
     max-width: none;
-    margin: 0 8px;
-    padding: 8px 12px;
+    margin: 0 16px;
   }
 
   .zd-card b {
@@ -1651,8 +1601,8 @@ html.zpm-intro-lock body {
   background:
     linear-gradient(90deg, transparent 46%, #fff 50%, transparent 54%),
     linear-gradient(0deg, transparent 46%, #fff 50%, transparent 54%),
-    radial-gradient(circle, #fff 0 6%, rgba(79, 209, 255, 0.9) 12%, transparent 40%);
-  filter: drop-shadow(0 0 6px #4fd1ff);
+    radial-gradient(circle, #fff 0 6%, rgba(91, 127, 255, 0.9) 12%, transparent 40%);
+  filter: drop-shadow(0 0 6px #5b7fff);
   opacity: 0;
   animation: zr-twinkle2 2.2s ease-in-out var(--d) infinite;
 }
@@ -1739,23 +1689,20 @@ html.zpm-intro-lock body {
   display: none;
 }
 
+/* цифры стоят прямо на странице: одна огромная и строка поменьше */
 .zp-kpis {
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.5fr) repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin: 0 0 16px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 28px 32px;
+  margin: 0 0 48px;
 }
 
 .zp-kpi {
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 8px;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 6px;
   min-width: 0;
-  padding: 16px 18px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: rgba(10, 16, 34, 0.6);
 }
 
 .zp-kpi[hidden] {
@@ -1770,63 +1717,67 @@ html.zpm-intro-lock body {
 .zp-kpi dd {
   margin: 0;
   color: var(--ink);
-  font: 700 clamp(20px, 2.1vw, 28px) / 1.1 var(--disp);
+  font: 700 clamp(22px, 2.4vw, 32px) / 1.1 var(--disp);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .zp-kpi-main {
-  border-color: rgba(79, 209, 255, 0.35);
-  background: linear-gradient(135deg, rgba(79, 209, 255, 0.16), rgba(155, 123, 255, 0.12));
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 24px;
+  align-items: end;
+  margin-bottom: 8px;
 }
 
 .zp-kpi-main dd {
-  color: var(--cy);
-  font-size: clamp(34px, 4vw, 52px);
+  grid-row: 1 / 3;
+  grid-column: 1;
+  font-size: clamp(56px, 10vw, 128px);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+
+.zp-kpi-main dt {
+  grid-column: 2;
+  align-self: end;
+  font-size: 14px;
 }
 
 .zp-kpi-sub {
+  grid-column: 2;
+  padding-bottom: 6px;
   color: var(--mut);
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .zp-kpi-sub b {
-  color: var(--cy);
-}
-
-.zp-panel {
-  padding: 16px 16px 6px;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  background: rgba(7, 11, 26, 0.85);
+  color: var(--acc);
 }
 
 .zp-ctl {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 20px;
+  gap: 12px 32px;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 
 .zp-range {
   display: inline-flex;
-  padding: 4px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(16, 24, 58, 0.7);
+  gap: 20px;
 }
 
 .zp-range button {
-  padding: 7px 14px;
-  color: var(--mut);
-  font: 600 13px var(--txt);
+  padding: 7px 0;
+  color: var(--dim);
+  font: 600 14px var(--txt);
   cursor: pointer;
   border: 0;
-  border-radius: 999px;
   background: none;
-  transition: color 0.2s, background 0.2s;
+  transition: color 0.2s, box-shadow 0.2s;
 }
 
 .zp-range button:hover {
@@ -1834,40 +1785,38 @@ html.zpm-intro-lock body {
 }
 
 .zp-range button[aria-pressed="true"] {
-  color: #031024;
-  background: var(--cy);
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--acc);
 }
 
 .zp-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 2px 20px;
 }
 
 .zp-lg {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  color: var(--ink);
+  padding: 6px 0;
+  color: var(--mut);
   font: 500 13px var(--txt);
   cursor: pointer;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(16, 24, 58, 0.5);
-  transition: opacity 0.2s, border-color 0.2s;
+  border: 0;
+  background: none;
+  transition: opacity 0.2s, color 0.2s;
 }
 
 .zp-lg:hover {
-  border-color: var(--c);
+  color: var(--ink);
 }
 
 .zp-lg i {
   width: 10px;
   height: 10px;
-  border-radius: 3px;
+  border-radius: 2px;
   background: var(--c);
-  box-shadow: 0 0 8px var(--c);
 }
 
 .zp-lg small {
@@ -1932,13 +1881,12 @@ html.zpm-intro-lock body {
 }
 
 .zp-dot {
-  fill: #04060f;
+  fill: #07080c;
   stroke-width: 2.5;
 }
 
 .zp-best circle {
   fill: var(--gold);
-  filter: drop-shadow(0 0 6px var(--gold));
   animation: zp-best 1.6s ease-in-out infinite alternate;
 }
 
@@ -1960,9 +1908,8 @@ html.zpm-intro-lock body {
   padding: 10px 14px;
   font-size: 13px;
   pointer-events: none;
-  border: 1px solid var(--line2);
-  border-radius: 14px;
-  background: rgba(4, 6, 15, 0.95);
+  border-radius: 8px;
+  background: rgba(7, 8, 12, 0.95);
   box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.9);
   transform: translateX(-50%);
 }
@@ -2021,10 +1968,6 @@ html.zpm-intro-lock body {
   .zp-kpis {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
-  .zp-kpi-main {
-    grid-column: 1 / -1;
-  }
 }
 
 @media (max-width: 560px) {
@@ -2032,8 +1975,15 @@ html.zpm-intro-lock body {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .zp-panel {
-    padding: 12px 10px 4px;
+  .zp-kpi-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .zp-kpi-main dd,
+  .zp-kpi-main dt,
+  .zp-kpi-sub {
+    grid-row: auto;
+    grid-column: 1;
   }
 
   .zp-ctl {
@@ -2057,53 +2007,14 @@ html.zpm-intro-lock body {
 .za-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 22px;
+  gap: clamp(48px, 6vw, 80px) 40px;
 }
 
+/* проект — обложка и текст прямо на странице, без карточки */
 .zc {
   position: relative;
-  isolation: isolate;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 28px;
-  background: linear-gradient(180deg, var(--bg2), #070b1a);
-  transition: transform 0.35s, border-color 0.35s, box-shadow 0.35s;
-}
-
-/* вращающаяся неоновая кромка при наведении */
-.zc::before {
-  position: absolute;
-  inset: -1px;
-  z-index: -1;
-  content: "";
-  padding: 1px;
-  border-radius: inherit;
-  background: conic-gradient(from var(--zang), transparent 0 60%, var(--cy) 72%, var(--vio) 84%, transparent 96%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.35s;
-}
-
-.zc:hover::before {
-  animation: zc-spin 4s linear infinite;
-}
-
-@keyframes zc-spin {
-  to { --zang: 360deg; }
-}
-
-.zc:hover {
-  border-color: transparent;
-  box-shadow: 0 30px 60px -30px rgba(79, 209, 255, 0.35);
-  transform: translateY(-4px);
-}
-
-.zc:hover::before {
-  opacity: 1;
 }
 
 .zc-cover {
@@ -2112,11 +2023,11 @@ html.zpm-intro-lock body {
   object-fit: cover;
   -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
   mask-image: linear-gradient(to bottom, #000 60%, transparent);
-  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition: filter 0.4s;
 }
 
 .zc:hover .zc-cover {
-  transform: scale(1.05);
+  filter: brightness(1.12);
 }
 
 .zc-body {
@@ -2124,10 +2035,10 @@ html.zpm-intro-lock body {
   flex: 1;
   flex-direction: column;
   gap: 12px;
-  padding: 8px 28px 28px;
 }
 
 .zc-body > p:not(.zc-tags) {
+  max-width: 520px;
   color: var(--mut);
 }
 
@@ -2139,29 +2050,27 @@ html.zpm-intro-lock body {
 .zc-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  color: var(--acc);
+  font: 12.5px var(--mono);
 }
 
-.zc-tags span {
-  padding: 3px 10px;
-  color: var(--cy);
-  font: 12px var(--mono);
-  border: 1px solid rgba(79, 209, 255, 0.28);
-  border-radius: 999px;
-  background: rgba(79, 209, 255, 0.06);
+.zc-tags span + span::before {
+  margin: 0 8px;
+  color: var(--dim);
+  content: "/";
 }
 
 .zc-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 4px 24px;
+  align-items: center;
   margin-top: auto;
   padding-top: 8px;
 }
 
+/* версии под платформы — строки списка */
 .zc-vers {
-  display: grid;
-  gap: 8px;
   margin: auto 0 0;
   padding: 8px 0 0;
   list-style: none;
@@ -2170,22 +2079,21 @@ html.zpm-intro-lock body {
 .zc-vers li {
   display: flex;
   align-items: stretch;
-  gap: 8px;
+  border-top: 1px solid var(--line);
 }
 
 .zc-vers a:first-child {
-  display: flex;
+  display: grid;
   flex: 1;
-  flex-direction: column;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
   min-width: 0;
-  padding: 10px 16px;
+  padding: 13px 0;
   color: var(--mut);
-  font-size: 14px;
+  font-size: 14.5px;
   line-height: 1.35;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: rgba(4, 6, 15, 0.5);
-  transition: border-color 0.2s, background 0.2s;
+  transition: color 0.2s;
 }
 
 .zc-vers a:first-child b {
@@ -2196,26 +2104,21 @@ html.zpm-intro-lock body {
 }
 
 .zc-vers a:first-child:hover {
-  border-color: var(--line2);
-  background: rgba(16, 24, 58, 0.7);
+  color: var(--ink);
 }
 
 .zpm-home .zc-dl {
   display: grid;
-  flex: 0 0 52px;
-  place-items: center;
-  color: var(--cy);
+  flex: 0 0 44px;
+  place-items: center end;
+  color: var(--acc);
   font-size: 20px;
   font-weight: 700;
-  border: 1px solid rgba(79, 209, 255, 0.3);
-  border-radius: 16px;
-  background: rgba(79, 209, 255, 0.06);
-  transition: background 0.2s, color 0.2s;
+  transition: color 0.2s;
 }
 
 .zpm-home .zc-dl:hover {
-  color: #031024;
-  background: var(--cy);
+  color: var(--ink);
   animation: zc-bounce 0.6s ease-in-out infinite;
 }
 
@@ -2223,19 +2126,13 @@ html.zpm-intro-lock body {
   50% { transform: translateY(3px); }
 }
 
-/* флагман: окно программы */
+/* флагман: текст и снимок окна программы */
 .zc-gui {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 28px 48px;
   align-items: center;
-  background:
-    radial-gradient(40rem 20rem at 100% 100%, rgba(59, 130, 255, 0.18), transparent 70%),
-    linear-gradient(180deg, var(--bg2), #070b1a);
-}
-
-.zc-gui .zc-body {
-  padding: 40px;
 }
 
 .zc-gui h3 {
@@ -2244,44 +2141,16 @@ html.zpm-intro-lock body {
 
 .zc-win {
   display: block;
-  margin: 36px 36px 36px 0;
   overflow: hidden;
-  border: 1px solid var(--line2);
-  border-radius: 14px;
-  background: #1b1d24;
-  box-shadow: 0 40px 70px -30px rgba(0, 0, 0, 0.9);
-  transform: perspective(1400px) rotateY(-9deg) rotateX(4deg) rotate(0.5deg);
-  transform-origin: left center;
-  transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  border-radius: 8px;
 }
 
-.zc-gui:hover .zc-win {
-  transform: perspective(1400px) rotateY(0) rotateX(0);
-}
-
-.zc-win-bar {
-  display: flex;
-  gap: 6px;
-  padding: 10px 12px;
-  background: #121318;
-}
-
-.zc-win-bar i {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #3a3d48;
-}
-
-.zc-win-bar i:first-child {
-  background: #ff5f57;
-}
-
-/* широкая карточка Magisk */
+/* широкий блок Magisk */
 .zc-wide {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 20px 40px;
 }
 
 .zc-wide .zc-cover {
@@ -2293,7 +2162,10 @@ html.zpm-intro-lock body {
 
 .zc-wide .zc-body {
   justify-content: center;
-  padding: 36px 40px 36px 8px;
+}
+
+.zc-wide .zc-links {
+  margin-top: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -2330,10 +2202,10 @@ html.zpm-intro-lock body {
 .zt-list a {
   position: relative;
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) auto;
-  gap: 18px;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 20px;
   align-items: center;
-  padding: 20px 12px;
+  padding: 20px 0;
   overflow: hidden;
 }
 
@@ -2342,7 +2214,7 @@ html.zpm-intro-lock body {
   inset: 0;
   z-index: -1;
   content: "";
-  background: linear-gradient(90deg, rgba(79, 209, 255, 0.1), rgba(155, 123, 255, 0.06) 60%, transparent);
+  background: rgba(242, 238, 230, 0.05);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
@@ -2375,27 +2247,22 @@ html.zpm-intro-lock body {
 }
 
 .zt-ico {
-  width: 48px;
-  height: 48px;
-  padding: 4px;
+  width: 40px;
+  height: 40px;
   fill: none;
-  stroke: var(--cy);
+  stroke: var(--acc);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: rgba(16, 24, 58, 0.6);
-  transition: border-color 0.3s, transform 0.3s;
+  transition: transform 0.3s;
 }
 
 .zt-fill {
-  fill: var(--cy);
+  fill: var(--acc);
   stroke: none;
 }
 
 .zt-list a:hover .zt-ico {
-  border-color: var(--cy);
   transform: rotate(-6deg) scale(1.06);
 }
 
@@ -2472,227 +2339,184 @@ html.zpm-intro-lock body {
 
 .zr {
   padding: clamp(56px, 7vw, 88px) 0;
-  border-top: 1px solid var(--line);
-  background:
-    radial-gradient(50rem 26rem at 0% 0%, rgba(55, 227, 154, 0.07), transparent 70%),
-    #050814;
 }
 
-/* ── Стеллаж сборок: коробки падают на полку, данные — из API релизов ── */
-.zr-shelf {
-  position: relative;
+/* ── Сборки как схема сети: от узла releases к каждому релизу идёт провод,
+   по проводам бегут пакеты. Версии и даты подставляет home.js из API релизов.
+   Провода — один SVG, растянутый на высоту списка: строки равной высоты,
+   поэтому концы путей (50, 150, … из 600) попадают в середины строк. ── */
+.zr-net {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 14px;
-  margin: 8px 0 44px;
-  padding-bottom: 12px;
+  grid-template-columns: auto clamp(80px, 13vw, 190px) minmax(0, 1fr);
+  margin: 8px 0 clamp(48px, 6vw, 72px);
 }
 
-.zr-shelf::after {
-  position: absolute;
-  right: -12px;
-  bottom: 0;
-  left: -12px;
-  height: 10px;
-  content: "";
-  border-radius: 3px;
-  background: linear-gradient(180deg, #1c2a55, #0b1330);
-  box-shadow: 0 1px 0 rgba(120, 180, 255, 0.35) inset, 0 18px 30px -12px rgba(79, 209, 255, 0.35);
-}
-
-.zbox {
-  position: relative;
-  display: block;
-  padding-top: 20px;
-  perspective: 500px;
-  --c: var(--cy);
-}
-
-.zbox-lid {
-  position: absolute;
-  top: 6px;
-  right: 3%;
-  left: 3%;
-  z-index: 2;
-  height: 20px;
-  border: 1px solid color-mix(in srgb, var(--c) 45%, transparent);
-  border-radius: 8px 8px 4px 4px;
-  background: linear-gradient(180deg, #1d2a58, #121a3c);
-  transform-origin: 50% 100%;
-  transition: transform 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
-}
-
-/* лента-скотч на крышке */
-.zbox-lid::after {
-  position: absolute;
-  top: -1px;
-  bottom: -1px;
-  left: 50%;
-  width: 22%;
-  content: "";
-  background: color-mix(in srgb, var(--c) 55%, transparent);
-  transform: translateX(-50%);
-}
-
-.zbox-body {
-  position: relative;
+.zr-hub {
   display: grid;
-  gap: 3px;
-  min-height: 132px;
-  padding: 16px 16px 14px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 4px 4px 16px 16px;
-  background: linear-gradient(180deg, #0f1836, #080d1f);
-  transition: border-color 0.3s, box-shadow 0.3s;
+  align-self: center;
+  gap: 2px;
+  padding-right: 14px;
+  color: var(--dim);
+  font: 13px var(--mono);
 }
 
-.zbox-body::before {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 22%;
-  height: 26px;
-  content: "";
-  background: color-mix(in srgb, var(--c) 30%, transparent);
-  transform: translateX(-50%);
-}
-
-.zbox-os {
-  position: relative;
-  color: var(--c);
-  font: 12px var(--mono);
-}
-
-.zbox-body strong {
-  font: 700 16px/1.25 var(--disp);
-}
-
-.zbox-ver {
-  margin-top: 6px;
+.zr-hub b {
   color: var(--ink);
-  font: 700 20px var(--disp);
-  font-variant-numeric: tabular-nums;
+  font: 600 15px var(--disp);
 }
 
-.zbox-meta {
+/* высоту задают строки релизов, а не пропорции viewBox */
+.zr-wires {
+  width: 100%;
+  height: 0;
+  min-height: 100%;
+}
+
+.zr-wires path {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.zr-w {
+  stroke: var(--w, var(--line2));
+  stroke-width: 1;
+  transition: stroke 0.3s;
+}
+
+/* пакет — короткий штрих, который едет по тому же пути */
+.zr-pk {
+  stroke: var(--pk, var(--acc));
+  stroke-width: 6;
+  stroke-dasharray: 3 97;
+  stroke-dashoffset: 3;
+  animation: zr-pk var(--t, 3s) linear var(--d, 0s) infinite;
+  transition: stroke 0.3s;
+}
+
+@keyframes zr-pk {
+  to { stroke-dashoffset: -97; }
+}
+
+.zr-wires g:nth-child(1) { --t: 3.4s; --d: -0.4s; }
+.zr-wires g:nth-child(2) { --t: 2.6s; --d: -1.7s; }
+.zr-wires g:nth-child(3) { --t: 3.9s; --d: -2.9s; }
+.zr-wires g:nth-child(4) { --t: 2.9s; --d: -0.9s; }
+.zr-wires g:nth-child(5) { --t: 3.6s; --d: -2.2s; }
+.zr-wires g:nth-child(6) { --t: 3.1s; --d: -1.3s; }
+
+/* провод своего релиза загорается при наведении и у свежей сборки */
+.zr-net:has(.zrn:nth-child(1):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(1) { --w: var(--acc); --pk: var(--ink); }
+.zr-net:has(.zrn:nth-child(2):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(2) { --w: var(--acc); --pk: var(--ink); }
+.zr-net:has(.zrn:nth-child(3):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(3) { --w: var(--acc); --pk: var(--ink); }
+.zr-net:has(.zrn:nth-child(4):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(4) { --w: var(--acc); --pk: var(--ink); }
+.zr-net:has(.zrn:nth-child(5):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(5) { --w: var(--acc); --pk: var(--ink); }
+.zr-net:has(.zrn:nth-child(6):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(6) { --w: var(--acc); --pk: var(--ink); }
+
+.zrn {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto minmax(180px, auto);
+  gap: 0 20px;
+  align-items: center;
+  height: 76px;
+}
+
+/* конец провода */
+.zrn-dot {
+  width: 9px;
+  height: 9px;
+  background: var(--acc);
+  transition: scale 0.25s, background 0.25s;
+}
+
+.zrn-t {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px 10px;
-  color: var(--dim);
-  font: 11.5px var(--mono);
+  gap: 2px 14px;
+  align-items: baseline;
+  min-width: 0;
 }
 
-.zbox-meta span:empty {
-  display: none;
+.zrn strong {
+  font: 600 clamp(17px, 1.7vw, 21px) / 1.25 var(--disp);
+  transition: color 0.2s;
 }
 
-.zbox-new {
-  position: absolute;
-  top: 12px;
-  right: 10px;
-  display: none;
-  padding: 2px 8px;
-  color: #031024;
-  font: 700 11px var(--mono);
-  border-radius: 999px;
-  background: var(--c);
-  box-shadow: 0 0 12px var(--c);
-  animation: zbox-new 1.6s ease-in-out infinite;
+.zrn-os {
+  color: var(--acc);
+  font: 12.5px var(--mono);
 }
 
-.zbox-fresh .zbox-new {
-  display: block;
-}
-
-@keyframes zbox-new {
-  50% { box-shadow: 0 0 2px var(--c); }
-}
-
-.zbox-dl {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  z-index: 1;
+.zrn-meta {
   display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: var(--c);
-  box-shadow: 0 0 20px var(--c);
-  opacity: 0;
-  transform: translate(-50%, 20px) scale(0.6);
-  transition: opacity 0.3s, transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1);
+  grid-template-columns: 140px 76px;
+  gap: 14px;
+  color: var(--dim);
+  font: 12.5px var(--mono);
 }
 
-.zbox-dl svg {
-  width: 20px;
-  fill: none;
-  stroke: #031024;
-  stroke-width: 2.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.zrn-meta span:last-child {
+  text-align: right;
 }
 
-.zbox:hover .zbox-lid,
-.zbox:focus-visible .zbox-lid {
-  transform: translateY(-4px) rotateX(-75deg);
+.zrn-ver {
+  font: 700 clamp(20px, 2.4vw, 32px) / 1 var(--disp);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  text-align: right;
+  white-space: nowrap;
+  transition: color 0.2s;
 }
 
-.zbox:hover .zbox-dl,
-.zbox:focus-visible .zbox-dl {
-  opacity: 1;
-  transform: translate(-50%, -26px) scale(1);
-  animation: zbox-bob 0.9s ease-in-out 0.45s infinite alternate;
+/* пока API не ответил — подпись, а не крупный текст */
+.zrn-ver:not(.zrn-ver-on) {
+  color: var(--dim);
+  font: 12.5px var(--mono);
+  letter-spacing: 0;
 }
 
-@keyframes zbox-bob {
-  to { translate: 0 -5px; }
+.zrn:hover strong,
+.zrn:hover .zrn-ver-on {
+  color: var(--acc);
 }
 
-.zbox:hover .zbox-body {
-  border-color: color-mix(in srgb, var(--c) 55%, transparent);
-  box-shadow: 0 16px 30px -18px var(--c);
+.zrn:hover .zrn-dot {
+  scale: 1.6;
+  background: var(--ink);
 }
 
-.rv-in.rv-drop {
-  animation-name: rv-drop;
-  animation-duration: 0.9s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.3, 1);
+/* сборке меньше трёх дней */
+.zrn-fresh .zrn-meta span:first-child {
+  color: var(--acc);
 }
 
-@keyframes rv-drop {
-  0% { opacity: 0; translate: 0 -160px; rotate: -6deg; }
-  55% { opacity: 1; translate: 0 6px; rotate: 1deg; }
-  72% { translate: 0 -8px; rotate: -0.5deg; }
-  86% { translate: 0 2px; rotate: 0deg; }
-  100% { translate: 0 0; }
+.zrn-fresh .zrn-dot {
+  animation: zrn-new 1.2s steps(2, jump-none) infinite;
+}
+
+@keyframes zrn-new {
+  to { background: var(--ink); }
 }
 
 /* ── F-Droid: телефон, на который прилетает обновление ── */
 .zfd {
   display: grid;
-  grid-template-columns: 110px minmax(0, 1fr) auto;
-  gap: 26px;
+  grid-template-columns: 86px minmax(0, 1fr) auto;
+  gap: 28px;
   align-items: center;
-  padding: 18px 30px 18px 22px;
-  border: 1px solid rgba(55, 227, 154, 0.3);
-  border-radius: 24px;
-  background: linear-gradient(100deg, rgba(55, 227, 154, 0.12), rgba(10, 16, 34, 0.7) 55%);
-  transition: border-color 0.3s, transform 0.3s;
 }
 
-.zfd:hover {
-  border-color: #37e39a;
-  transform: translateY(-2px);
+.zfd-copy strong {
+  transition: color 0.2s;
+}
+
+.zfd:hover .zfd-copy strong {
+  color: #37e39a;
 }
 
 .zfd-phone svg {
   display: block;
   width: 86px;
   overflow: visible;
-  margin: -34px auto -10px;
 }
 
 .zfd-body { fill: #0a1226; stroke: #37e39a; stroke-width: 2.5; }
@@ -2721,7 +2545,6 @@ html.zpm-intro-lock body {
 
 .zfd-pkt {
   fill: #37e39a;
-  filter: drop-shadow(0 0 5px #37e39a);
   animation: zfd-pkt 4s ease-in infinite;
 }
 
@@ -2788,27 +2611,47 @@ html.zpm-intro-lock body {
   transform: translateX(6px);
 }
 
-@media (max-width: 980px) {
-  .zr-shelf {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    row-gap: 30px;
+@media (max-width: 860px) {
+  /* на узком экране веер проводов не помещается: остаётся магистраль слева */
+  .zr-net {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .zr-wires {
+    display: none;
+  }
+
+  .zr-hub {
+    padding: 0 0 14px;
+  }
+
+  .zr-nodes {
+    background: linear-gradient(var(--line2), var(--line2)) no-repeat 4px 0 / 1px 100%;
+  }
+
+  .zrn {
+    grid-template-columns: 9px minmax(0, 1fr) auto;
+    gap: 2px 14px;
+    height: auto;
+    padding: 12px 0;
+  }
+
+  .zrn-meta {
+    display: flex;
+    grid-row: 2;
+    grid-column: 2 / -1;
+    gap: 14px;
   }
 }
 
 @media (max-width: 560px) {
-  .zr-shelf {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .zfd {
-    grid-template-columns: 70px minmax(0, 1fr);
+    grid-template-columns: 60px minmax(0, 1fr);
     gap: 16px;
-    padding: 16px;
   }
 
   .zfd-phone svg {
     width: 60px;
-    margin: -20px auto -6px;
   }
 
   .zfd-go {
@@ -2824,70 +2667,54 @@ html.zpm-intro-lock body {
   padding: clamp(56px, 7vw, 88px) 0;
 }
 
-/* ── Лаборатория доверия: лог сборки и сверка контрольных сумм ──────── */
+/* ── Сборка в прямом эфире: вывод терминала без окна. Шаги печатаются
+   построчно (pending → run → ok переключает home.js), потом посимвольно
+   сверяются контрольные суммы. ── */
 .zci-lab {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-  gap: 18px;
-  margin-bottom: 40px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 48px clamp(40px, 7vw, 104px);
+  align-items: start;
 }
 
-.zci-term,
-.zci-hash {
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  background: #060a17;
+.zci-run {
+  font-family: var(--mono);
 }
 
-.zci-bar {
-  display: flex;
-  gap: 7px;
-  align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--line);
-  background: #0a1022;
+/* строка-команда */
+.zci-cmd {
+  color: var(--ink);
+  font: 600 14px/1.6 var(--mono);
 }
 
-.zci-bar i {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #2a3252;
+.zci-cmd b {
+  margin-right: 10px;
+  color: var(--acc);
 }
 
-.zci-bar i:first-child { background: #ff5f57; }
-.zci-bar i:nth-child(2) { background: #febc2e; }
-.zci-bar i:nth-child(3) { background: #28c840; }
-
-.zci-bar span {
-  margin-left: 8px;
-  overflow: hidden;
+.zci-cmd small {
+  margin-left: 12px;
   color: var(--dim);
-  font: 12px var(--mono);
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  font-weight: 400;
+  font-size: 12.5px;
 }
 
 .zci-log {
   margin: 0;
-  padding: 8px 0;
+  padding: 6px 0 22px;
   list-style: none;
-  font-family: var(--mono);
 }
 
 .zci-log li {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto;
-  gap: 14px;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  gap: 12px;
   align-items: center;
-  padding: 11px 20px;
-  transition: background 0.3s, opacity 0.3s;
+  padding: 8px 0;
 }
 
 .zci-log li span {
   display: grid;
-  gap: 1px;
   min-width: 0;
 }
 
@@ -2911,17 +2738,11 @@ html.zpm-intro-lock body {
   font-style: normal;
 }
 
-/* значок шага: ожидание → крутится → галочка */
+/* значок шага: крутится → галочка */
 .zci-sp {
   position: relative;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-}
-
-.zci-log li.ok .zci-sp {
-  background: rgba(55, 227, 154, 0.15);
-  box-shadow: inset 0 0 0 1.5px #37e39a;
+  width: 16px;
+  height: 16px;
 }
 
 .zci-log li.ok .zci-sp::after {
@@ -2931,29 +2752,22 @@ html.zpm-intro-lock body {
   place-items: center;
   color: #37e39a;
   content: "✓";
-  font: 700 12px var(--txt);
+  font: 700 15px var(--txt);
   animation: zci-pop 0.35s cubic-bezier(0.3, 1.8, 0.5, 1);
 }
 
-.zci-log li.run {
-  background: linear-gradient(90deg, rgba(79, 209, 255, 0.1), transparent 70%);
-}
-
 .zci-log li.run .zci-sp {
-  border: 2px solid rgba(79, 209, 255, 0.25);
-  border-top-color: var(--cy);
+  border: 2px solid var(--line2);
+  border-top-color: var(--acc);
+  border-radius: 50%;
   animation: zci-spin 0.6s linear infinite;
 }
 
+/* ещё не напечатано */
 .zci-log li.pending {
-  opacity: 0.35;
+  visibility: hidden;
 }
 
-.zci-log li.pending .zci-sp {
-  box-shadow: inset 0 0 0 1.5px var(--dim);
-}
-
-.zci-log li.pending em,
 .zci-log li.run em {
   visibility: hidden;
 }
@@ -2968,41 +2782,28 @@ html.zpm-intro-lock body {
 
 /* сверка хешей */
 .zci-hash {
-  position: relative;
   display: grid;
-  align-content: center;
-  gap: 16px;
-  padding: 24px;
-  background:
-    radial-gradient(24rem 14rem at 100% 100%, rgba(55, 227, 154, 0.08), transparent 70%),
-    #060a17;
-}
-
-.zci-hl {
-  color: var(--dim);
-  font: 12px var(--mono);
+  gap: 12px;
 }
 
 .zci-h {
   display: grid;
-  gap: 6px;
+  gap: 3px;
 }
 
 .zci-h span {
-  color: var(--mut);
-  font: 12.5px var(--mono);
+  color: var(--dim);
+  font-size: 12.5px;
 }
 
 .zci-h code {
   display: block;
-  padding: 10px 12px;
+  padding: 0;
   color: #37e39a;
-  font: 500 13.5px/1.55 var(--mono);
-  letter-spacing: 0.04em;
+  font: 500 14.5px/1.5 var(--mono);
+  letter-spacing: 0.03em;
   word-break: break-all;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #0a1022;
+  background: none;
 }
 
 .zci-h code i {
@@ -3014,83 +2815,56 @@ html.zpm-intro-lock body {
 }
 
 .zci-live .zci-h code i.lk {
-  color: var(--cy);
+  color: var(--ink);
 }
 
 .zci-live.zci-match .zci-h code i.lk {
   color: #37e39a;
-  text-shadow: 0 0 8px rgba(55, 227, 154, 0.6);
   transition: color 0.3s calc(var(--n) * 6ms);
 }
 
-.zci-stamp {
-  justify-self: end;
-  margin-top: 2px;
-  padding: 6px 14px;
+/* итог сверки */
+.zci-ok {
   color: #37e39a;
   font: 700 14px var(--mono);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border: 2.5px solid #37e39a;
-  border-radius: 8px;
-  rotate: -6deg;
 }
 
-.zci-live .zci-stamp {
+.zci-live .zci-ok {
   opacity: 0;
-  transform: scale(2.2);
 }
 
-.zci-live .zci-stamp.on {
+.zci-live .zci-ok.on {
   opacity: 1;
-  transform: none;
-  transition: opacity 0.2s, transform 0.35s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+
+.zci-points {
+  display: grid;
+  gap: 26px;
+}
+
+.zci-points strong {
+  font-family: var(--disp);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.zci-points strong::before {
+  margin-right: 10px;
+  color: #37e39a;
+  content: "✓";
+}
+
+.zci-points p {
+  max-width: 460px;
+  margin-top: 6px;
+  color: var(--mut);
+  font-size: 15px;
 }
 
 @media (max-width: 860px) {
   .zci-lab {
     grid-template-columns: minmax(0, 1fr);
   }
-}
-
-.zci-points {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
-  margin-bottom: 36px;
-}
-
-.zci-points > div {
-  position: relative;
-  padding-left: 42px;
-}
-
-.zci-points > div::before {
-  position: absolute;
-  top: 2px;
-  left: 0;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  color: #37e39a;
-  content: "✓";
-  font-size: 15px;
-  font-weight: 700;
-  border: 1px solid rgba(55, 227, 154, 0.4);
-  border-radius: 50%;
-}
-
-.zci-points strong {
-  font-family: var(--disp);
-  font-size: 17px;
-  font-weight: 600;
-}
-
-.zci-points p {
-  margin-top: 6px;
-  color: var(--mut);
-  font-size: 15px;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -3107,14 +2881,8 @@ html.zpm-intro-lock body {
   grid-template-columns: auto minmax(0, 1fr);
   gap: clamp(28px, 5vw, 64px);
   align-items: center;
-  padding: clamp(32px, 5vw, 56px);
+  padding: clamp(32px, 5vw, 56px) 0;
   overflow: hidden;
-  border: 1px solid rgba(155, 123, 255, 0.35);
-  border-radius: 32px;
-  background:
-    radial-gradient(30rem 20rem at 0% 50%, rgba(255, 59, 92, 0.12), transparent 70%),
-    radial-gradient(40rem 24rem at 100% 0%, rgba(155, 123, 255, 0.2), transparent 70%),
-    var(--bg2);
 }
 
 /* ── Объёмное сердце: 22 слоя-сечения на разной глубине ──────────────
@@ -3268,74 +3036,108 @@ html.zpm-intro-lock body {
   color: var(--ink);
 }
 
+/* ── «Как присоединиться»: TCP-рукопожатие. Слева вы, справа сервер,
+   три шага — три пакета: SYN туда, SYN-ACK обратно, ACK туда. ── */
 .zj-join {
-  margin-top: clamp(64px, 8vw, 100px);
+  max-width: 880px;
+  margin-top: clamp(72px, 9vw, 120px);
 }
 
 .zj-join h2 {
-  margin-bottom: 36px;
   font-size: clamp(26px, 3.6vw, 40px);
 }
 
-.zj-steps {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 28px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* провод, соединяющий шаги */
-.zj-steps::before {
-  position: absolute;
-  top: 26px;
-  right: 16%;
-  left: 16%;
-  height: 2px;
-  content: "";
-  background: repeating-linear-gradient(90deg, var(--cy) 0 10px, transparent 10px 22px);
-  opacity: 0.4;
-  animation: zj-wire 1.2s linear infinite;
-}
-
-@keyframes zj-wire {
-  to { background-position: 22px 0; }
-}
-
-.zj-steps li {
-  position: relative;
-  display: grid;
-  align-content: start;
-  justify-items: center;
-  gap: 6px;
-  text-align: center;
-}
-
-.zj-steps b {
-  display: grid;
-  place-items: center;
-  width: 54px;
-  height: 54px;
-  margin-bottom: 10px;
-  color: var(--cy);
-  font-family: var(--disp);
-  font-size: 20px;
-  border: 1px solid var(--line2);
-  border-radius: 50%;
-  background: var(--bg);
-  box-shadow: 0 0 0 6px var(--bg), 0 0 24px -4px rgba(79, 209, 255, 0.5);
-}
-
-.zj-steps strong {
-  font-family: var(--disp);
+.zj-sub {
+  margin: 12px 0 36px;
+  color: var(--mut);
   font-size: 17px;
+}
+
+.zj-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: var(--dim);
+  font: 12.5px var(--mono);
+}
+
+/* две «линии жизни» по краям */
+.zj-hs {
+  display: grid;
+  gap: 30px;
+  margin: 0;
+  padding: 18px 0;
+  list-style: none;
+  background:
+    linear-gradient(var(--line2), var(--line2)) no-repeat 0 0 / 1px 100%,
+    linear-gradient(var(--line2), var(--line2)) no-repeat 100% 0 / 1px 100%;
+}
+
+.zj-hs li {
+  display: grid;
+  gap: 4px;
+  padding: 0 26px;
+}
+
+.zj-hs b {
+  color: var(--acc);
+  font: 700 13px var(--mono);
+  letter-spacing: 0.1em;
+}
+
+/* провод между сторонами со стрелкой и бегущим пакетом */
+.zj-wire {
+  position: relative;
+  height: 9px;
+  margin: 4px -26px 10px;
+  background: linear-gradient(var(--line2), var(--line2)) no-repeat 0 50% / 100% 1px;
+}
+
+.zj-wire::after {
+  position: absolute;
+  top: 0;
+  right: 1px;
+  content: "";
+  border: solid transparent;
+  border-width: 4.5px 0 4.5px 8px;
+  border-left-color: var(--mut);
+}
+
+.zj-wire::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  content: "";
+  background: var(--acc);
+  opacity: 0;
+  animation: zj-pk 5.4s cubic-bezier(0.5, 0, 0.3, 1) calc(var(--n) * 1.6s) infinite;
+}
+
+@keyframes zj-pk {
+  0% { left: 0; opacity: 0; }
+  3% { opacity: 1; }
+  26% { left: calc(100% - 18px); opacity: 1; }
+  30%, 100% { left: calc(100% - 18px); opacity: 0; }
+}
+
+/* ответ сервера идёт справа налево */
+.zj-back {
+  text-align: right;
+}
+
+.zj-back .zj-wire {
+  scale: -1 1;
+}
+
+.zj-hs strong {
+  font-family: var(--disp);
+  font-size: clamp(17px, 2vw, 21px);
   font-weight: 600;
 }
 
-.zj-steps span {
-  max-width: 280px;
+.zj-hs li > span {
   color: var(--mut);
   font-size: 15px;
 }
@@ -3343,19 +3145,22 @@ html.zpm-intro-lock body {
 .zj-cta {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 16px 36px;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 48px;
-  padding: 24px 28px;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  background: rgba(10, 16, 34, 0.7);
+  margin-top: 30px;
 }
 
 .zj-cta p {
-  max-width: 640px;
+  flex: 1 1 320px;
   color: var(--mut);
+}
+
+.zj-cta p b {
+  display: block;
+  margin-bottom: 4px;
+  color: #37e39a;
+  font: 700 13px var(--mono);
+  letter-spacing: 0.1em;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -3365,13 +3170,9 @@ html.zpm-intro-lock body {
 .zg-badge {
   display: inline-block;
   width: max-content;
-  padding: 3px 10px;
-  color: #031024;
-  font: 700 11.5px var(--mono);
+  color: var(--gold);
+  font: 12.5px var(--mono);
   letter-spacing: 0.04em;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--gold), #ff9f43);
-  box-shadow: 0 0 14px rgba(255, 207, 90, 0.5);
 }
 
 /* ── «Спасите пакеты» ── */
@@ -3379,12 +3180,6 @@ html.zpm-intro-lock body {
   position: relative;
   margin-top: clamp(40px, 5vw, 64px);
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  background:
-    radial-gradient(40rem 12rem at 85% 0%, rgba(255, 59, 92, 0.1), transparent 70%),
-    radial-gradient(40rem 12rem at 10% 100%, rgba(79, 209, 255, 0.1), transparent 70%),
-    #060a17;
 }
 
 .zg-top {
@@ -3393,7 +3188,6 @@ html.zpm-intro-lock body {
   gap: 12px 24px;
   align-items: flex-end;
   justify-content: space-between;
-  padding: 18px 22px 0;
 }
 
 .zg-title {
@@ -3424,7 +3218,7 @@ html.zpm-intro-lock body {
   font-variant-numeric: tabular-nums;
 }
 
-.zg-score span:first-child b { color: var(--cy); }
+.zg-score span:first-child b { color: var(--acc); }
 .zg-score span:nth-child(2) b { color: #ff6b83; }
 .zg-score span:nth-child(3) b { color: var(--gold); }
 
@@ -3450,10 +3244,8 @@ html.zpm-intro-lock body {
   padding: 10px 16px;
   font-size: 14px;
   text-align: center;
-  border: 1px solid rgba(255, 207, 90, 0.5);
-  border-radius: 14px;
+  border-radius: 8px;
   background: rgba(10, 12, 26, 0.94);
-  box-shadow: 0 0 30px rgba(255, 207, 90, 0.25);
   transform: translateX(-50%);
   animation: zg-toast 0.5s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
@@ -3471,7 +3263,7 @@ html.zpm-intro-lock body {
 }
 
 .zpm-home .zg-toast a {
-  color: var(--cy);
+  color: var(--acc);
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -3487,13 +3279,7 @@ html.zpm-intro-lock body {
   grid-template-columns: auto minmax(0, 1fr);
   gap: clamp(24px, 4vw, 56px);
   align-items: center;
-  margin-top: 22px;
-  padding: clamp(24px, 4vw, 40px);
-  border: 1px solid rgba(255, 207, 90, 0.3);
-  border-radius: 28px;
-  background:
-    radial-gradient(30rem 16rem at 0% 50%, rgba(255, 59, 92, 0.14), transparent 70%),
-    var(--bg2);
+  margin-top: clamp(40px, 6vw, 72px);
 }
 
 .zlock-hit {
@@ -3742,8 +3528,7 @@ html.zpm-intro-lock body {
   width: 100%;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #ff3b5c, #ff9f43);
-  box-shadow: 0 0 10px #ff3b5c;
+  background: var(--red);
   transition: width 0.25s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
 
@@ -3772,7 +3557,7 @@ html.zpm-intro-lock body {
 }
 
 @keyframes zl-glow {
-  50% { box-shadow: 0 0 0 6px rgba(79, 209, 255, 0.18), 0 0 34px rgba(79, 209, 255, 0.7); }
+  50% { background: var(--gold); }
 }
 
 @media (max-width: 640px) {
@@ -3888,14 +3673,6 @@ html.zpm-intro-lock body {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .zc-win {
-    margin: 0 24px 28px;
-    transform: none;
-  }
-
-  .zc-gui .zc-body {
-    padding: 32px 28px 24px;
-  }
 
   .zc-wide .zc-cover {
     min-height: 0;
@@ -3903,39 +3680,11 @@ html.zpm-intro-lock body {
     -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
     mask-image: linear-gradient(to bottom, #000 60%, transparent);
   }
-
-  .zc-wide .zc-body {
-    padding: 8px 28px 28px;
-  }
 }
 
 @media (max-width: 760px) {
-  .za-grid,
-  .zci-points,
-  .zj-steps {
+  .za-grid {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .zj-steps::before {
-    top: 16px;
-    bottom: 16px;
-    left: 26px;
-    right: auto;
-    width: 2px;
-    height: auto;
-    background: repeating-linear-gradient(180deg, var(--cy) 0 10px, transparent 10px 22px);
-  }
-
-  .zj-steps li {
-    grid-template-columns: 54px minmax(0, 1fr);
-    justify-items: start;
-    column-gap: 18px;
-    text-align: left;
-  }
-
-  .zj-steps b {
-    grid-row: span 2;
-    margin: 0;
   }
 
   .zj-help {
@@ -3943,8 +3692,8 @@ html.zpm-intro-lock body {
   }
 
   .zt-list a {
-    grid-template-columns: 44px minmax(0, 1fr);
-    padding: 18px 4px;
+    grid-template-columns: 40px minmax(0, 1fr);
+    padding: 18px 0;
   }
 
   .zt-list em {
@@ -3959,23 +3708,8 @@ html.zpm-intro-lock body {
     width: calc(100% - 32px);
   }
 
-  .zh-actions .zb {
+  .zh-actions .zb-main {
     flex: 1 1 100%;
-    justify-content: center;
-  }
-
-  .zc-body,
-  .zc-gui .zc-body,
-  .zc-wide .zc-body {
-    padding-inline: 20px;
-  }
-
-  .zc-win {
-    margin-inline: 16px;
-  }
-
-  .zj-cta .zb {
-    width: 100%;
     justify-content: center;
   }
 
@@ -4027,10 +3761,9 @@ html.zpm-intro-lock body {
   padding: 6px;
   color: #e8efff;
   font: 14px/1.3 "Onest", system-ui, sans-serif;
-  border: 1px solid rgba(120, 180, 255, 0.28);
-  border-radius: 16px;
-  background: rgba(8, 12, 28, 0.86);
-  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(155, 123, 255, 0.12), 0 0 40px -10px rgba(79, 209, 255, 0.35);
+  border-radius: 10px;
+  background: rgba(13, 15, 22, 0.94);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(16px) saturate(1.4);
   transform-origin: var(--ox, 0) var(--oy, 0);
   animation: zcm-in 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.2);
@@ -4052,14 +3785,14 @@ html.zpm-intro-lock body {
   margin: 2px 2px 6px;
   padding: 8px 10px;
   border-radius: 11px;
-  background: linear-gradient(100deg, rgba(79, 209, 255, 0.14), rgba(155, 123, 255, 0.12));
+  background: linear-gradient(100deg, rgba(91, 127, 255, 0.14), rgba(155, 123, 255, 0.12));
 }
 
 .zcm-head img {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  box-shadow: 0 0 0 2px #4fd1ff;
+  box-shadow: 0 0 0 2px #5b7fff;
 }
 
 .zcm-head b {
@@ -4068,7 +3801,7 @@ html.zpm-intro-lock body {
 }
 
 .zcm-head small {
-  color: #8fa3d0;
+  color: #a9a69f;
   font-size: 11.5px;
 }
 
@@ -4094,7 +3827,7 @@ html.zpm-intro-lock body {
 .zcm-row button:hover,
 .zcm-row button.on {
   color: #031024;
-  background: #4fd1ff;
+  background: #5b7fff;
 }
 
 .zcm-row button:disabled {
@@ -4121,7 +3854,7 @@ html.zpm-intro-lock body {
 .zcm-lbl {
   padding: 6px 12px 3px;
   overflow: hidden;
-  color: #5b6a90;
+  color: #6f6d69;
   font: 11px ui-monospace, monospace;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -4146,18 +3879,18 @@ html.zpm-intro-lock body {
 
 .zcm-it svg {
   flex: none;
-  color: #4fd1ff;
+  color: #5b7fff;
 }
 
 .zcm-it kbd {
   margin-left: auto;
-  color: #5b6a90;
+  color: #6f6d69;
   font: 11px ui-monospace, monospace;
 }
 
 .zcm-it:hover,
 .zcm-it.on {
-  background: rgba(79, 209, 255, 0.14);
+  background: rgba(91, 127, 255, 0.14);
 }
 
 .zcm-it.on::before {
@@ -4168,8 +3901,7 @@ html.zpm-intro-lock body {
   width: 3px;
   content: "";
   border-radius: 3px;
-  background: #4fd1ff;
-  box-shadow: 0 0 8px #4fd1ff;
+  background: #5b7fff;
 }
 
 .zcm-it.hot svg {
@@ -4187,7 +3919,7 @@ html.zpm-intro-lock body {
 
 .zcm-foot {
   padding: 6px 12px 4px;
-  color: #5b6a90;
+  color: #6f6d69;
   font-size: 11px;
 }
 
@@ -4200,8 +3932,7 @@ html.zpm-intro-lock body {
   color: #031024;
   font: 600 13px "Onest", sans-serif;
   border-radius: 999px;
-  background: #4fd1ff;
-  box-shadow: 0 0 24px rgba(79, 209, 255, 0.6);
+  background: #f2eee6;
   transform: translateX(-50%);
   animation: zcm-toast 1.8s ease forwards;
   pointer-events: none;
@@ -4266,8 +3997,7 @@ html.zcur-on textarea {
   height: 9px;
   margin: -4.5px 0 0 -6px;
   border-radius: 3px;
-  background: #bff0ff;
-  box-shadow: 0 0 6px #4fd1ff, 0 0 14px rgba(79, 209, 255, 0.7);
+  background: #f2eee6;
   transition: width 0.2s, height 0.2s, margin 0.2s, background 0.2s, border-radius 0.2s, opacity 0.2s;
 }
 
@@ -4275,7 +4005,7 @@ html.zcur-on textarea {
   width: 34px;
   height: 34px;
   margin: -17px 0 0 -17px;
-  border: 1.5px solid rgba(79, 209, 255, 0.55);
+  border: 1.5px solid rgba(91, 127, 255, 0.55);
   border-radius: 50%;
   transition: width 0.25s cubic-bezier(0.3, 1.4, 0.5, 1), height 0.25s cubic-bezier(0.3, 1.4, 0.5, 1), margin 0.25s cubic-bezier(0.3, 1.4, 0.5, 1), border-color 0.2s, background 0.2s, border-radius 0.25s;
 }
@@ -4284,9 +4014,8 @@ html.zcur-on textarea {
   width: 54px;
   height: 54px;
   margin: -27px 0 0 -27px;
-  border-color: #4fd1ff;
-  background: rgba(79, 209, 255, 0.1);
-  box-shadow: 0 0 18px rgba(79, 209, 255, 0.35);
+  border-color: #5b7fff;
+  background: rgba(91, 127, 255, 0.1);
 }
 
 .zcur-link .zcur-dot {
@@ -4338,8 +4067,7 @@ html.zcur-on textarea {
   margin: -14px 0 0 -1.5px;
   border: 0;
   border-radius: 2px;
-  background: #4fd1ff;
-  box-shadow: 0 0 8px #4fd1ff;
+  background: #5b7fff;
 }
 
 .zcur-text .zcur-dot {

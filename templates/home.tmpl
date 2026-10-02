@@ -347,47 +347,32 @@
 				<h2 id="zpm-rel-title">Свежее — в Releases</h2>
 				<p class="zsec-note">APK и архивы лежат рядом с исходниками. Не доверяете сборке — соберите сами.</p>
 			</div>
+			<p class="zr-cap"><b>tcp reassembly</b> · сегменты приходят вразнобой — так Zapret сбивает DPI.<span class="zr-cap-hover"> Наведите на строку, чтобы разобрать её снова.</span></p>
 			<div class="zr-net" id="zr-net" data-api="{{AppSubUrl}}/api/v1/repos/">
-				<p class="zr-hub"><b>git.zapret.moe</b>/releases</p>
-				<svg class="zr-wires" viewBox="0 0 100 600" preserveAspectRatio="none" aria-hidden="true"><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 50, 100 50"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 50, 100 50"/></g><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 150, 100 150"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 150, 100 150"/></g><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 250, 100 250"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 250, 100 250"/></g><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 350, 100 350"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 350, 100 350"/></g><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 450, 100 450"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 450, 100 450"/></g><g><path class="zr-w" pathLength="100" d="M0 300 C 60 300, 40 550, 100 550"/><path class="zr-pk" pathLength="100" d="M0 300 C 60 300, 40 550, 100 550"/></g></svg>
-				<div class="zr-nodes">
-					<a class="zrn" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/releases" data-repo="zapretdiscordyoutube/zapretgui">
-						<i class="zrn-dot" aria-hidden="true"></i>
-						<span class="zrn-t"><strong>Zapret 2 GUI</strong><span class="zrn-os">windows</span></span>
-						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zrn-ver" data-f="ver">последняя сборка</span>
-					</a>
-					<a class="zrn" href="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/releases" data-repo="zapretkvn/ZapretKVN-android">
-						<i class="zrn-dot" aria-hidden="true"></i>
-						<span class="zrn-t"><strong>Zapret KVN</strong><span class="zrn-os">android</span></span>
-						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zrn-ver" data-f="ver">последняя сборка</span>
-					</a>
-					<a class="zrn" href="{{AppSubUrl}}/zapretkvn/zapret-kvn/releases" data-repo="zapretkvn/zapret-kvn">
-						<i class="zrn-dot" aria-hidden="true"></i>
-						<span class="zrn-t"><strong>Zapret KVN</strong><span class="zrn-os">windows</span></span>
-						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zrn-ver" data-f="ver">последняя сборка</span>
-					</a>
-					<a class="zrn" href="{{AppSubUrl}}/zastogram/ZaStoGram/releases" data-repo="zastogram/ZaStoGram">
-						<i class="zrn-dot" aria-hidden="true"></i>
-						<span class="zrn-t"><strong>ZaStoGram</strong><span class="zrn-os">android</span></span>
-						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zrn-ver" data-f="ver">последняя сборка</span>
-					</a>
-					<a class="zrn" href="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/releases" data-repo="zastogram/ZaStoGram_desktop">
-						<i class="zrn-dot" aria-hidden="true"></i>
-						<span class="zrn-t"><strong>ZaStoGram</strong><span class="zrn-os">desktop</span></span>
-						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zrn-ver" data-f="ver">последняя сборка</span>
-					</a>
-					<a class="zrn" href="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2/releases" data-repo="zapretdiscordyoutube/magisk-zapret2">
-						<i class="zrn-dot" aria-hidden="true"></i>
-						<span class="zrn-t"><strong>Magisk Zapret 2</strong><span class="zrn-os">android · root</span></span>
-						<span class="zrn-meta"><span data-f="age"></span><span data-f="dl"></span></span>
-						<span class="zrn-ver" data-f="ver">последняя сборка</span>
-					</a>
-				</div>
+				<a class="zrn" href="{{AppSubUrl}}/zapretdiscordyoutube/zapretgui/releases" data-repo="zapretdiscordyoutube/zapretgui">
+					<span class="zrn-line"><strong>Zapret 2 GUI</strong><span class="zrn-ver" data-f="ver"></span></span>
+					<span class="zrn-meta"><span class="zrn-os">windows</span><span data-f="age"></span><span data-f="dl"></span></span>
+				</a>
+				<a class="zrn" href="{{AppSubUrl}}/zapretkvn/ZapretKVN-android/releases" data-repo="zapretkvn/ZapretKVN-android">
+					<span class="zrn-line"><strong>Zapret KVN</strong><span class="zrn-ver" data-f="ver"></span></span>
+					<span class="zrn-meta"><span class="zrn-os">android</span><span data-f="age"></span><span data-f="dl"></span></span>
+				</a>
+				<a class="zrn" href="{{AppSubUrl}}/zapretkvn/zapret-kvn/releases" data-repo="zapretkvn/zapret-kvn">
+					<span class="zrn-line"><strong>Zapret KVN</strong><span class="zrn-ver" data-f="ver"></span></span>
+					<span class="zrn-meta"><span class="zrn-os">windows</span><span data-f="age"></span><span data-f="dl"></span></span>
+				</a>
+				<a class="zrn" href="{{AppSubUrl}}/zastogram/ZaStoGram/releases" data-repo="zastogram/ZaStoGram">
+					<span class="zrn-line"><strong>ZaStoGram</strong><span class="zrn-ver" data-f="ver"></span></span>
+					<span class="zrn-meta"><span class="zrn-os">android</span><span data-f="age"></span><span data-f="dl"></span></span>
+				</a>
+				<a class="zrn" href="{{AppSubUrl}}/zastogram/ZaStoGram_desktop/releases" data-repo="zastogram/ZaStoGram_desktop">
+					<span class="zrn-line"><strong>ZaStoGram</strong><span class="zrn-ver" data-f="ver"></span></span>
+					<span class="zrn-meta"><span class="zrn-os">desktop</span><span data-f="age"></span><span data-f="dl"></span></span>
+				</a>
+				<a class="zrn" href="{{AppSubUrl}}/zapretdiscordyoutube/magisk-zapret2/releases" data-repo="zapretdiscordyoutube/magisk-zapret2">
+					<span class="zrn-line"><strong>Magisk Zapret 2</strong><span class="zrn-ver" data-f="ver"></span></span>
+					<span class="zrn-meta"><span class="zrn-os">android · root</span><span data-f="age"></span><span data-f="dl"></span></span>
+				</a>
 			</div>
 			<a class="zfd" href="/fdroid/repo/">
 				<span class="zfd-phone" aria-hidden="true">

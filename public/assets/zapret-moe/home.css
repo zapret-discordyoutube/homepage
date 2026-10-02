@@ -2325,114 +2325,65 @@ html.zpm-intro-lock body {
   padding: clamp(56px, 7vw, 88px) 0;
 }
 
-/* ── Сборки как схема сети: от узла releases к каждому релизу идёт провод,
-   по проводам бегут пакеты. Версии и даты подставляет home.js из API релизов.
-   Провода — один SVG, растянутый на высоту списка: строки равной высоты,
-   поэтому концы путей (50, 150, … из 600) попадают в середины строк. ── */
+/* ── Сборка из сегментов. Название и версия релиза режутся на куски по
+   2–4 знака, прилетают не по порядку и встают на место — тот самый приём
+   (split + disorder), которым Zapret сбивает DPI. Режет и запускает home.js;
+   версии и даты он же берёт из API релизов.
+   Сегмент всегда стоит на своём месте в строке: разлёт есть только в первом
+   кадре анимации, поэтому без JS и при «меньше движения» текст просто целый. ── */
+.zr-cap {
+  margin: -20px 0 28px;
+  color: var(--dim);
+  font: 12.5px var(--mono);
+}
+
+.zr-cap b {
+  color: var(--acc);
+  font-weight: 400;
+}
+
+/* подсказка про наведение — только там, где есть курсор */
+@media (hover: none) {
+  .zr-cap-hover {
+    display: none;
+  }
+}
+
 .zr-net {
   display: grid;
-  grid-template-columns: auto clamp(80px, 13vw, 190px) minmax(0, 1fr);
-  margin: 8px 0 clamp(48px, 6vw, 72px);
+  gap: clamp(14px, 2vw, 22px);
+  margin: 0 0 clamp(48px, 6vw, 72px);
 }
-
-.zr-hub {
-  display: grid;
-  align-self: center;
-  gap: 2px;
-  padding-right: 14px;
-  color: var(--dim);
-  font: 13px var(--mono);
-}
-
-.zr-hub b {
-  color: var(--ink);
-  font: 600 15px var(--disp);
-}
-
-/* высоту задают строки релизов, а не пропорции viewBox */
-.zr-wires {
-  width: 100%;
-  height: 0;
-  min-height: 100%;
-}
-
-.zr-wires path {
-  fill: none;
-  vector-effect: non-scaling-stroke;
-}
-
-.zr-w {
-  stroke: var(--w, var(--line2));
-  stroke-width: 1;
-  transition: stroke 0.3s;
-}
-
-/* пакет — короткий штрих, который едет по тому же пути */
-.zr-pk {
-  stroke: var(--pk, var(--acc));
-  stroke-width: 6;
-  stroke-dasharray: 3 97;
-  stroke-dashoffset: 3;
-  animation: zr-pk var(--t, 3s) linear var(--d, 0s) infinite;
-  transition: stroke 0.3s;
-}
-
-@keyframes zr-pk {
-  to { stroke-dashoffset: -97; }
-}
-
-.zr-wires g:nth-child(1) { --t: 3.4s; --d: -0.4s; }
-.zr-wires g:nth-child(2) { --t: 2.6s; --d: -1.7s; }
-.zr-wires g:nth-child(3) { --t: 3.9s; --d: -2.9s; }
-.zr-wires g:nth-child(4) { --t: 2.9s; --d: -0.9s; }
-.zr-wires g:nth-child(5) { --t: 3.6s; --d: -2.2s; }
-.zr-wires g:nth-child(6) { --t: 3.1s; --d: -1.3s; }
-
-/* провод своего релиза загорается при наведении и у свежей сборки */
-.zr-net:has(.zrn:nth-child(1):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(1) { --w: var(--acc); --pk: var(--ink); }
-.zr-net:has(.zrn:nth-child(2):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(2) { --w: var(--acc); --pk: var(--ink); }
-.zr-net:has(.zrn:nth-child(3):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(3) { --w: var(--acc); --pk: var(--ink); }
-.zr-net:has(.zrn:nth-child(4):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(4) { --w: var(--acc); --pk: var(--ink); }
-.zr-net:has(.zrn:nth-child(5):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(5) { --w: var(--acc); --pk: var(--ink); }
-.zr-net:has(.zrn:nth-child(6):is(:hover, :focus-visible, .zrn-fresh)) .zr-wires g:nth-child(6) { --w: var(--acc); --pk: var(--ink); }
 
 .zrn {
   display: grid;
-  grid-template-columns: 9px minmax(0, 1fr) auto minmax(180px, auto);
-  gap: 0 20px;
-  align-items: center;
-  height: 76px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 28px;
+  align-items: baseline;
 }
 
-/* конец провода */
-.zrn-dot {
-  width: 9px;
-  height: 9px;
-  background: var(--acc);
-  transition: scale 0.25s, background 0.25s;
-}
-
-.zrn-t {
+.zrn-line {
   display: flex;
   flex-wrap: wrap;
-  gap: 2px 14px;
-  align-items: baseline;
-  min-width: 0;
+  gap: 0 0.45em;
+  font: 700 clamp(22px, 3.3vw, 44px) / 1.15 var(--disp);
+  letter-spacing: -0.02em;
 }
 
-.zrn strong {
-  font: 600 clamp(17px, 1.7vw, 21px) / 1.25 var(--disp);
-  transition: color 0.2s;
+.zrn strong,
+.zrn-ver {
+  font: inherit;
+  white-space: nowrap;
 }
 
-.zrn-os {
+.zrn-ver {
   color: var(--acc);
-  font: 12.5px var(--mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .zrn-meta {
   display: grid;
-  grid-template-columns: 140px 76px;
+  grid-template-columns: 124px 140px 76px;
   gap: 14px;
   color: var(--dim);
   font: 12.5px var(--mono);
@@ -2442,43 +2393,72 @@ html.zpm-intro-lock body {
   text-align: right;
 }
 
-.zrn-ver {
-  font: 700 clamp(20px, 2.4vw, 32px) / 1 var(--disp);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  text-align: right;
-  white-space: nowrap;
-  transition: color 0.2s;
-}
-
-/* пока API не ответил — подпись, а не крупный текст */
-.zrn-ver:not(.zrn-ver-on) {
-  color: var(--dim);
-  font: 12.5px var(--mono);
-  letter-spacing: 0;
-}
-
-.zrn:hover strong,
-.zrn:hover .zrn-ver-on {
-  color: var(--acc);
-}
-
-.zrn:hover .zrn-dot {
-  scale: 1.6;
-  background: var(--ink);
+.zrn-os {
+  color: var(--mut);
 }
 
 /* сборке меньше трёх дней */
-.zrn-fresh .zrn-meta span:first-child {
+.zrn-fresh [data-f="age"] {
   color: var(--acc);
 }
 
-.zrn-fresh .zrn-dot {
+.zrn-fresh [data-f="age"]::before {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 8px;
+  content: "";
+  background: var(--acc);
   animation: zrn-new 1.2s steps(2, jump-none) infinite;
 }
 
 @keyframes zrn-new {
   to { background: var(--ink); }
+}
+
+/* сегмент: кусок строки со своим номером seq */
+.zsg {
+  position: relative;
+  display: inline-block;
+  white-space: pre;
+}
+
+/* строка порезана, но ещё не показалась на экране */
+.zrn-cut:not(.zrn-go) .zsg {
+  opacity: 0;
+}
+
+.zrn-go .zsg {
+  animation: zsg-in 0.75s cubic-bezier(0.2, 0.85, 0.25, 1) var(--d, 0s) both;
+}
+
+@keyframes zsg-in {
+  0% { opacity: 0; color: var(--acc); transform: translate(var(--x), var(--y)) rotate(var(--r)); }
+  25% { opacity: 1; }
+  80% { color: var(--acc); }
+  100% { transform: none; }
+}
+
+/* номер сегмента виден, пока тот в полёте */
+.zsg::before {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  color: var(--dim);
+  content: attr(data-seq);
+  font: 400 10px/1 var(--mono);
+  letter-spacing: 0;
+  opacity: 0;
+}
+
+.zrn-go .zsg::before {
+  animation: zsg-seq 0.75s linear var(--d, 0s) both;
+}
+
+@keyframes zsg-seq {
+  0% { opacity: 0; }
+  25%, 75% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 /* ── F-Droid: телефон, на который прилетает обновление ── */
@@ -2596,35 +2576,15 @@ html.zpm-intro-lock body {
 }
 
 @media (max-width: 860px) {
-  /* на узком экране веер проводов не помещается: остаётся магистраль слева */
-  .zr-net {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .zr-wires {
-    display: none;
-  }
-
-  .zr-hub {
-    padding: 0 0 14px;
-  }
-
-  .zr-nodes {
-    background: linear-gradient(var(--line2), var(--line2)) no-repeat 4px 0 / 1px 100%;
-  }
-
+  /* строка релиза — сверху, платформа и даты — под ней */
   .zrn {
-    grid-template-columns: 9px minmax(0, 1fr) auto;
-    gap: 2px 14px;
-    height: auto;
-    padding: 12px 0;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .zrn-meta {
     display: flex;
-    grid-row: 2;
-    grid-column: 2 / -1;
-    gap: 14px;
+    flex-wrap: wrap;
+    gap: 2px 14px;
   }
 }
 

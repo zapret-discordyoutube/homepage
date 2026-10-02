@@ -2949,13 +2949,21 @@ html.zpm-intro-lock body {
   padding: 0 0 clamp(56px, 7vw, 88px);
 }
 
+/* поддержка и замок-игра стоят в один ряд: слева призыв, справа игра */
+.zj-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+  gap: 40px clamp(32px, 5vw, 72px);
+  align-items: center;
+}
+
 .zj-help {
   position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: clamp(28px, 5vw, 64px);
+  gap: clamp(20px, 2.6vw, 36px);
   align-items: center;
-  padding: clamp(32px, 5vw, 56px) 0;
+  padding: 28px 0;
   overflow: hidden;
 }
 
@@ -2967,7 +2975,7 @@ html.zpm-intro-lock body {
   position: relative;
   display: grid;
   place-items: center;
-  width: clamp(170px, 20vw, 240px);
+  width: clamp(150px, 15vw, 200px);
   aspect-ratio: 1;
   perspective: 700px;
 }
@@ -3095,8 +3103,8 @@ html.zpm-intro-lock body {
 }
 
 .zj-help-copy h2 {
-  font-size: clamp(26px, 3.6vw, 44px);
-  line-height: 1.1;
+  font-size: clamp(24px, 2.6vw, 34px);
+  line-height: 1.12;
 }
 
 .zj-help-copy > p:not(.zeb) {
@@ -3351,9 +3359,8 @@ html.zpm-intro-lock body {
 .zlock {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: clamp(24px, 4vw, 56px);
+  gap: clamp(20px, 2.6vw, 36px);
   align-items: center;
-  margin-top: clamp(40px, 6vw, 72px);
 }
 
 .zlock-hit {
@@ -3368,7 +3375,7 @@ html.zpm-intro-lock body {
 
 .zlock-svg {
   display: block;
-  width: clamp(130px, 16vw, 180px);
+  width: clamp(120px, 12vw, 160px);
   overflow: visible;
   filter: drop-shadow(0 0 24px rgba(255, 59, 92, 0.45));
   transition: transform 0.1s;
@@ -3576,7 +3583,7 @@ html.zpm-intro-lock body {
 }
 
 .zlock-name {
-  font-size: clamp(22px, 2.6vw, 32px);
+  font-size: clamp(22px, 2.2vw, 28px);
   line-height: 1.15;
 }
 
@@ -3729,7 +3736,8 @@ html.zpm-intro-lock body {
 
 @media (max-width: 980px) {
   .zh-grid,
-  .zt-grid {
+  .zt-grid,
+  .zj-pair {
     grid-template-columns: minmax(0, 1fr);
   }
 

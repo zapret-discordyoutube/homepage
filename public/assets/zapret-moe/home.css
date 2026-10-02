@@ -2325,48 +2325,166 @@ html.zpm-intro-lock body {
   padding: clamp(56px, 7vw, 88px) 0;
 }
 
-/* ── Сборка из сегментов. Название и версия релиза режутся на куски по
-   2–4 знака, прилетают не по порядку и встают на место — тот самый приём
-   (split + disorder), которым Zapret сбивает DPI. Режет и запускает home.js;
-   версии и даты он же берёт из API релизов.
-   Сегмент всегда стоит на своём месте в строке: разлёт есть только в первом
-   кадре анимации, поэтому без JS и при «меньше движения» текст просто целый. ── */
-.zr-cap {
-  margin: -20px 0 28px;
+/* ── Досмотр на ТСПУ. Слева — что видит цензор: пакет притворяется
+   разрешённым сайтом (поддельный SNI) и шумит байтами. Посередине — рамка
+   ТСПУ с лучом сканера. Справа — что на самом деле доехало: релиз.
+   По проводу каждой строки едет пакет: до рамки красный, после — синий.
+   Сетка общая на все строки (subgrid), поэтому рамка стоит ровно в колонке.
+   Версии и даты подставляет home.js из API релизов. ── */
+.zr-net {
+  display: grid;
+  grid-template-columns: minmax(0, 0.62fr) 104px minmax(0, 1.5fr) auto;
+  column-gap: 24px;
+  margin: 0 0 clamp(48px, 6vw, 72px);
+}
+
+.zr-leg,
+.zrn {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+}
+
+.zr-leg {
+  grid-row: 1;
+  padding-bottom: 12px;
   color: var(--dim);
   font: 12.5px var(--mono);
 }
 
-.zr-cap b {
-  color: var(--acc);
-  font-weight: 400;
+.zr-leg-gate {
+  color: var(--red);
+  letter-spacing: 0.12em;
+  text-align: center;
 }
 
-/* подсказка про наведение — только там, где есть курсор */
-@media (hover: none) {
-  .zr-cap-hover {
-    display: none;
-  }
+/* рамка досмотра: две стойки и луч, который ходит вверх-вниз */
+.zr-gate {
+  position: relative;
+  grid-row: 2 / span 6;
+  grid-column: 2;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--red), var(--red)) no-repeat 0 0 / 1px 100%,
+    linear-gradient(var(--red), var(--red)) no-repeat 100% 0 / 1px 100%,
+    rgba(255, 59, 92, 0.05);
 }
 
-.zr-net {
-  display: grid;
-  gap: clamp(14px, 2vw, 22px);
-  margin: 0 0 clamp(48px, 6vw, 72px);
+.zr-gate::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  content: "";
+  background: var(--red);
+  animation: zr-sweep 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes zr-sweep {
+  to { top: calc(100% - 2px); }
 }
 
 .zrn {
+  grid-row: calc(var(--i) + 1);
+  align-items: center;
+  min-height: 76px;
+}
+
+/* провод от левого края через рамку до названия */
+.zrn-in {
+  position: relative;
+  display: flex;
+  grid-row: 1;
+  grid-column: 1 / 3;
+  align-items: center;
+  align-self: stretch;
+}
+
+.zrn-in::before {
+  position: absolute;
+  top: 50%;
+  right: -16px;
+  left: 0;
+  height: 1px;
+  content: "";
+  background: var(--line2);
+}
+
+/* что видит цензор: имя разрешённого сайта над проводом, шум байтов под ним */
+.zrn-fake {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px 28px;
-  align-items: baseline;
+  gap: 16px;
+  max-width: calc(100% - 128px);
+  overflow: hidden;
+  font: 12px/1 var(--mono);
+  white-space: nowrap;
+}
+
+.zrn-fake b {
+  color: var(--mut);
+  font-weight: 400;
+  transition: color 0.2s;
+}
+
+.zrn-fake i {
+  color: var(--dim);
+  font-style: normal;
+}
+
+.zrn:hover .zrn-fake b {
+  color: var(--red);
+}
+
+/* пакет: середина рамки — в 52px от правого края провода */
+.zrn-pk {
+  position: absolute;
+  top: calc(50% - 4px);
+  left: 0;
+  width: 9px;
+  height: 9px;
+  background: var(--red);
+  animation: zrn-pk var(--t, 3.4s) linear var(--d, 0s) infinite;
+}
+
+@keyframes zrn-pk {
+  0% { left: 0; background: var(--red); opacity: 0; }
+  5% { opacity: 1; }
+  70% { left: calc(100% - 100px); background: var(--red); }
+  76% { left: calc(100% - 57px); background: var(--red); }
+  80% { left: calc(100% - 57px); background: var(--ink); }
+  84% { left: calc(100% - 57px); background: var(--acc); }
+  96% { opacity: 1; }
+  100% { left: calc(100% + 8px); background: var(--acc); opacity: 0; }
+}
+
+/* вердикт сканера появляется, когда пакет стоит в рамке */
+.zrn-ok {
+  z-index: 1;
+  grid-row: 1;
+  grid-column: 2;
+  align-self: end;
+  justify-self: center;
+  padding-bottom: 10px;
+  color: #37e39a;
+  font: 11px var(--mono);
+  letter-spacing: 0.08em;
+  animation: zrn-ok var(--t, 3.4s) linear var(--d, 0s) infinite;
+}
+
+@keyframes zrn-ok {
+  0%, 78% { opacity: 0; }
+  82%, 97% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .zrn-line {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 0.45em;
-  font: 700 clamp(22px, 3.3vw, 44px) / 1.15 var(--disp);
+  grid-column: 3;
+  gap: 0 0.5em;
+  font: 700 clamp(19px, 2.3vw, 30px) / 1.2 var(--disp);
   letter-spacing: -0.02em;
 }
 
@@ -2374,6 +2492,7 @@ html.zpm-intro-lock body {
 .zrn-ver {
   font: inherit;
   white-space: nowrap;
+  transition: color 0.2s;
 }
 
 .zrn-ver {
@@ -2381,12 +2500,18 @@ html.zpm-intro-lock body {
   font-variant-numeric: tabular-nums;
 }
 
+.zrn:hover strong {
+  color: var(--acc);
+}
+
 .zrn-meta {
   display: grid;
-  grid-template-columns: 124px 140px 76px;
-  gap: 14px;
+  grid-column: 4;
+  grid-template-columns: 112px 130px 88px;
+  gap: 12px;
   color: var(--dim);
   font: 12.5px var(--mono);
+  white-space: nowrap;
 }
 
 .zrn-meta span:last-child {
@@ -2414,51 +2539,6 @@ html.zpm-intro-lock body {
 
 @keyframes zrn-new {
   to { background: var(--ink); }
-}
-
-/* сегмент: кусок строки со своим номером seq */
-.zsg {
-  position: relative;
-  display: inline-block;
-  white-space: pre;
-}
-
-/* строка порезана, но ещё не показалась на экране */
-.zrn-cut:not(.zrn-go) .zsg {
-  opacity: 0;
-}
-
-.zrn-go .zsg {
-  animation: zsg-in 0.75s cubic-bezier(0.2, 0.85, 0.25, 1) var(--d, 0s) both;
-}
-
-@keyframes zsg-in {
-  0% { opacity: 0; color: var(--acc); transform: translate(var(--x), var(--y)) rotate(var(--r)); }
-  25% { opacity: 1; }
-  80% { color: var(--acc); }
-  100% { transform: none; }
-}
-
-/* номер сегмента виден, пока тот в полёте */
-.zsg::before {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  color: var(--dim);
-  content: attr(data-seq);
-  font: 400 10px/1 var(--mono);
-  letter-spacing: 0;
-  opacity: 0;
-}
-
-.zrn-go .zsg::before {
-  animation: zsg-seq 0.75s linear var(--d, 0s) both;
-}
-
-@keyframes zsg-seq {
-  0% { opacity: 0; }
-  25%, 75% { opacity: 1; }
-  100% { opacity: 0; }
 }
 
 /* ── F-Droid: телефон, на который прилетает обновление ── */
@@ -2576,9 +2656,49 @@ html.zpm-intro-lock body {
 }
 
 @media (max-width: 860px) {
-  /* строка релиза — сверху, платформа и даты — под ней */
+  /* на узком экране рамка ТСПУ — узкая колонка слева, пакеты пролетают сквозь неё */
+  .zr-net {
+    grid-template-columns: 40px minmax(0, 1fr);
+    column-gap: 16px;
+  }
+
+  .zr-leg span:not(.zr-leg-gate),
+  .zrn-fake,
+  .zrn-ok {
+    display: none;
+  }
+
+  .zr-leg-gate {
+    letter-spacing: 0;
+    font-size: 11px;
+  }
+
+  .zr-gate {
+    grid-column: 1;
+  }
+
   .zrn {
-    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    padding: 12px 0;
+  }
+
+  .zrn-in {
+    grid-row: 1 / span 2;
+    grid-column: 1;
+  }
+
+  .zrn-in::before {
+    right: -10px;
+    left: -6px;
+  }
+
+  .zrn-pk {
+    animation-name: zrn-pk-m;
+  }
+
+  .zrn-line,
+  .zrn-meta {
+    grid-column: 2;
   }
 
   .zrn-meta {
@@ -2586,6 +2706,16 @@ html.zpm-intro-lock body {
     flex-wrap: wrap;
     gap: 2px 14px;
   }
+}
+
+@keyframes zrn-pk-m {
+  0% { left: -6px; background: var(--red); opacity: 0; }
+  10% { opacity: 1; }
+  40% { left: 15px; background: var(--red); }
+  55% { left: 15px; background: var(--ink); }
+  65% { left: 15px; background: var(--acc); }
+  95% { opacity: 1; }
+  100% { left: 44px; background: var(--acc); opacity: 0; }
 }
 
 @media (max-width: 560px) {

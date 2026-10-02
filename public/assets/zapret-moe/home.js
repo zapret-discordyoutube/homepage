@@ -471,7 +471,7 @@
     if (!window.IntersectionObserver || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
     var groups = [
       ['.zsec-head', ''], ['.zp-kpi', 'rv-pop'], ['.zp-panel', ''], ['.zc', 'rv-card'],
-      ['.zt-list li', 'rv-side'], ['.zr-cap', ''], ['.zfd', ''], ['.zci-run', ''],
+      ['.zt-list li', 'rv-side'], ['.zrn', 'rv-side'], ['.zfd', ''], ['.zci-run', ''],
       ['.zci-points > div', ''], ['.zj-help', 'rv-card'], ['.zj-join > h2', ''], ['.zj-hs li', 'rv-side'], ['.zj-cta', ''],
       ['.zci-points > .zb', 'rv-pop']
     ];
@@ -645,41 +645,11 @@
     new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) { size(); kick() } }).observe(duel);
   })();
 
-  /* ── Сборка из сегментов: релизы из API, строки режутся и собираются ── */
+  /* ── Досмотр на ТСПУ: релизы из API и шум байтов в «том, что видит цензор» ── */
   (function () {
     var net = document.getElementById('zr-net');
     if (!net) return;
     var rows = net.querySelectorAll('.zrn[data-repo]');
-    var calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    function rnd(a, b) { return a + Math.random() * (b - a) }
-
-    /* режет текст элемента на сегменты по 2–4 знака; seq — смещение в строке, как в TCP */
-    function cut(el, base) {
-      var text = el.textContent, i = 0, n;
-      el.textContent = '';
-      while (i < text.length) {
-        n = 2 + Math.floor(Math.random() * 3);
-        if (text.length - i - n < 2) n = text.length - i;
-        var s = document.createElement('span');
-        s.className = 'zsg'; s.textContent = text.slice(i, i + n); s.setAttribute('data-seq', base + i);
-        el.appendChild(s); i += n;
-      }
-      return base + text.length;
-    }
-    /* каждому сегменту — своя траектория и своя очередь: приходят не по порядку */
-    function fly(segs) {
-      var order = [], k;
-      for (k = 0; k < segs.length; k++) order.push(k);
-      order.sort(function () { return Math.random() - 0.5 });
-      for (k = 0; k < segs.length; k++) {
-        var st = segs[k].style;
-        st.setProperty('--x', rnd(-70, 70).toFixed(0) + 'px'); st.setProperty('--y', rnd(-30, 30).toFixed(0) + 'px');
-        st.setProperty('--r', rnd(-16, 16).toFixed(0) + 'deg'); st.setProperty('--d', order[k] * 85 + 'ms');
-        st.animation = 'none';
-      }
-      void net.offsetWidth; /* перезапуск анимации */
-      for (k = 0; k < segs.length; k++) segs[k].style.animation = '';
-    }
     function ago(ts) {
       var d = Math.floor((Date.now() - ts) / 864e5);
       if (d < 1) return 'сегодня';
@@ -688,30 +658,6 @@
       if (d < 60) { var w = Math.floor(d / 7); return w + ' ' + plural(w, 'неделю', 'недели', 'недель') + ' назад' }
       var m = Math.floor(d / 30); return m + ' ' + plural(m, 'месяц', 'месяца', 'месяцев') + ' назад';
     }
-
-    if (!calm && window.IntersectionObserver) {
-      var show = new IntersectionObserver(function (es) {
-        es.forEach(function (e) {
-          if (!e.isIntersecting) return;
-          show.unobserve(e.target);
-          fly(e.target.querySelectorAll('.zsg')); e.target.classList.add('zrn-go');
-        });
-      }, { threshold: 0.6 });
-      rows.forEach(function (row) {
-        var name = row.querySelector('strong');
-        row.setAttribute('aria-label', name.textContent + ', ' + row.querySelector('.zrn-os').textContent);
-        row._seq = cut(name, 0); row._t = 0;
-        row.classList.add('zrn-cut');
-        show.observe(row);
-        /* наведение разбирает строку и собирает заново */
-        row.addEventListener('pointerenter', function () {
-          var now = Date.now();
-          if (!row.classList.contains('zrn-go') || now - row._t < 900) return;
-          row._t = now; fly(row.querySelectorAll('.zsg'));
-        });
-      });
-    }
-
     function load() {
       rows.forEach(function (b) {
         fetch(net.getAttribute('data-api') + b.getAttribute('data-repo') + '/releases/latest')
@@ -720,24 +666,32 @@
             if (!r || !r.tag_name) return;
             var ts = Date.parse(r.published_at || r.created_at);
             var dl = (r.assets || []).reduce(function (a, x) { return a + (x.download_count || 0) }, 0);
-            var v = b.querySelector('[data-f="ver"]');
-            v.textContent = 'v' + String(r.tag_name).replace(/^(zsg-|v)/i, '');
-            if (b.classList.contains('zrn-cut')) {
-              b.setAttribute('aria-label', b.getAttribute('aria-label') + ', ' + v.textContent);
-              cut(v, b._seq + 1);
-              fly(v.querySelectorAll('.zsg')); /* версия долетает, когда ответит API */
-            }
+            b.querySelector('[data-f="ver"]').textContent = 'v' + String(r.tag_name).replace(/^(zsg-|v)/i, '');
             if (ts) b.querySelector('[data-f="age"]').textContent = ago(ts);
             if (dl) b.querySelector('[data-f="dl"]').textContent = '↓ ' + short(dl);
             if (ts && Date.now() - ts < 3 * 864e5) b.classList.add('zrn-fresh');
           }).catch(function () {});
       });
     }
-    if (!window.fetch) return;
-    if (window.IntersectionObserver) {
+    if (!window.IntersectionObserver) { if (window.fetch) load(); return }
+    if (window.fetch) {
       var io = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { io.disconnect(); load() } }, { rootMargin: '600px 0px' });
       io.observe(net);
-    } else load();
+    }
+    /* пока блок на экране, пара байтов в каждой строке меняется — цензор видит только шум */
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var hex = net.querySelectorAll('[data-hex]'), HEX = '0123456789abcdef', timer = 0;
+    function noise() {
+      hex.forEach(function (el) {
+        var bytes = el.textContent.split(' ');
+        for (var k = 0; k < 2; k++) bytes[Math.floor(Math.random() * bytes.length)] = HEX[Math.floor(Math.random() * 16)] + HEX[Math.floor(Math.random() * 16)];
+        el.textContent = bytes.join(' ');
+      });
+    }
+    new IntersectionObserver(function (es) {
+      clearInterval(timer);
+      if (es[0].isIntersecting) timer = setInterval(noise, 140);
+    }).observe(net);
   })();
 
   /* ── Лаборатория доверия: сборка по шагам и сверка sha256 ───────────── */

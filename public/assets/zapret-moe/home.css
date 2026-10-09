@@ -1800,8 +1800,240 @@ html.zpm-intro-lock body {
   color: var(--acc);
 }
 
+.zw {
+  /* два канала — две краски: синий акцент страницы и янтарь. Пара проверена
+     на различимость при нарушениях цветового зрения. */
+  --zw-stable: #5b7fff;
+  --zw-dev: #c2803a;
+}
+
+.zw-bar i {
+  cursor: pointer;
+}
+
+.zw-bar i.zw-hot,
+.zw-bar i:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.zw-read {
+  min-height: 1.5em;
+  margin: 12px 0 0;
+  color: var(--mut);
+  font-size: 14px;
+}
+
+.zw-read b {
+  color: var(--ink);
+}
+
+.zw-list li {
+  cursor: default;
+}
+
+.zw-list li.zw-hot b {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.zw-ctl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  align-items: center;
+  margin: 0 0 22px;
+}
+
+.zw-legend .zp-lg[data-c="stable"] i {
+  background: var(--zw-stable);
+}
+
+.zw-legend .zp-lg[data-c="dev"] i {
+  background: var(--zw-dev);
+}
+
+.zw-day,
+.zw-days {
+  margin: 0 0 44px;
+}
+
 .zw-chart {
-  height: clamp(140px, 16vw, 200px);
+  position: relative;
+  height: clamp(180px, 20vw, 260px);
+  touch-action: pan-y;
+}
+
+.zw-chart-s {
+  height: clamp(150px, 15vw, 200px);
+}
+
+.zw-chart .zp-tip b {
+  color: var(--ink);
+}
+
+.zw-chart .zp-tip p {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 2px 0 0;
+  color: var(--mut);
+  white-space: nowrap;
+}
+
+.zw-chart .zp-tip p:first-child {
+  margin: 0 0 4px;
+  color: var(--dim);
+  font: 12px var(--mono);
+}
+
+.zw-chart .zp-tip i {
+  flex: none;
+  width: 12px;
+  height: 2px;
+}
+
+.zw-a-stable {
+  fill: var(--zw-stable);
+  fill-opacity: 0.2;
+}
+
+.zw-a-dev {
+  fill: var(--zw-dev);
+  fill-opacity: 0.22;
+}
+
+.zw-l-stable,
+.zw-l-dev,
+.zw-l-roll {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.zw-l-stable,
+.zw-l-roll {
+  stroke: var(--zw-stable);
+}
+
+.zw-l-dev {
+  stroke: var(--zw-dev);
+}
+
+.zw-b-stable {
+  fill: var(--zw-stable);
+}
+
+.zw-b-dev {
+  fill: var(--zw-dev);
+}
+
+.zw-hit {
+  fill: transparent;
+  cursor: crosshair;
+}
+
+.zw-bcol.zw-hot rect:not(.zw-hit) {
+  filter: brightness(1.25);
+}
+
+.zw-mark {
+  stroke: var(--line2);
+  stroke-dasharray: 2 5;
+}
+
+.zw-mark-l {
+  fill: var(--dim);
+  font: 11px var(--mono);
+}
+
+.zw-tbl {
+  margin-top: 10px;
+  color: var(--mut);
+  font-size: 13px;
+}
+
+.zw-tbl summary {
+  width: fit-content;
+  color: var(--dim);
+  font: 12.5px var(--mono);
+  cursor: pointer;
+}
+
+.zw-tbl summary:hover {
+  color: var(--ink);
+}
+
+.zw-tbl table {
+  margin-top: 10px;
+  font-variant-numeric: tabular-nums;
+  border-collapse: collapse;
+}
+
+.zw-tbl th,
+.zw-tbl td {
+  padding: 4px 24px 4px 0;
+  font-weight: 400;
+  text-align: right;
+}
+
+.zw-tbl th {
+  color: var(--dim);
+  font: 12px var(--mono);
+}
+
+.zw-tbl th:first-child,
+.zw-tbl td:first-child {
+  text-align: left;
+}
+
+.zw-roll {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr);
+  gap: 24px 48px;
+  margin: 0 0 12px;
+}
+
+.zw-rels {
+  display: grid;
+  gap: 2px;
+}
+
+.zw-rel {
+  display: grid;
+  gap: 2px;
+  padding: 10px 0 10px 14px;
+  color: var(--mut);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  box-shadow: inset 2px 0 0 var(--line);
+}
+
+.zw-rel b {
+  color: var(--ink);
+  font: 600 15px var(--mono);
+}
+
+.zw-rel:hover {
+  box-shadow: inset 2px 0 0 var(--line2);
+}
+
+.zw-rel[aria-pressed="true"] {
+  box-shadow: inset 2px 0 0 var(--acc);
+}
+
+.zw-rel[aria-pressed="true"] b {
+  color: var(--acc);
+}
+
+@media (max-width: 760px) {
+  .zw-roll {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .zw-chart svg {

@@ -1115,38 +1115,107 @@
 
   /* ── На связи: программы, которые ждут сигнал о новой версии ─────────
      Числа раз в минуту считает сервер (служба очереди обновлений) и кладёт
-     в stats.json. Нет файла или в нём пусто — раздела на странице нет. */
+     в stats.json. Нет файла или в нём пусто — раздела на странице нет.
+     Ряд приходит строками [время, dev, stable, на последней версии, выдано
+     разрешений]; кривая выпуска — парами [минут от выхода, доля в ‰]. */
   (function () {
     var live = document.getElementById('zpm-live');
     if (!live || !window.fetch) return;
     var SVG = 'http://www.w3.org/2000/svg';
-    var first = true;
+    var CH = [['stable', 'Stable', 2], ['dev', 'Dev', 1]];   // ключ, подпись, столбец ряда
+    var S = null, first = true, range = '24h', on = { stable: true, dev: true }, picked = '';
 
-    function cell(key) { return live.querySelector('[data-k="' + key + '"]') }
-    function show(key, on) {
+    function q(sel) { return live.querySelector(sel) }
+    function cell(key) { return q('[data-k="' + key + '"]') }
+    function show(key, visible) {
       var box = cell(key);
       while (box && !box.classList.contains('zp-kpi')) box = box.parentNode;
-      if (box) box.hidden = !on;
+      if (box) box.hidden = !visible;
     }
     function put(key, text) { var el = cell(key); if (el) el.textContent = text }
+    function two(n) { return ('0' + n).slice(-2) }
+    function clock(ts) { var d = new Date(ts * 1000); return two(d.getHours()) + ':' + two(d.getMinutes()) }
+    function day(ts) { var d = new Date(ts * 1000); return d.getDate() + ' ' + MONTHS[d.getMonth()] }
     function minutes(m) {
       if (m < 1) return 'меньше минуты';
       if (m < 90) return m + ' мин';
-      return (m / 60).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' ч';
+      if (m < 48 * 60) return (m / 60).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' ч';
+      return Math.round(m / 1440) + ' дн.';
+    }
+    function pct(share) { return (share * 100).toLocaleString('ru-RU', { maximumFractionDigits: share < 0.1 ? 1 : 0 }) + '%' }
+    function niceTop(v) {
+      if (v <= 10) return Math.max(2, Math.ceil(v / 2) * 2);
+      var mag = Math.pow(10, Math.floor(Math.log(v) / Math.LN10)) / 2;
+      return Math.ceil(v / mag) * mag;
     }
 
-    function drawVersions(s) {
-      var wire = live.querySelector('.zw-wire');
-      var bar = wire.querySelector('.zw-bar');
-      var list = wire.querySelector('.zw-list');
-      var items = (s.online.versions || []).filter(function (v) { return v.count > 0 });
+    /* Холст графика: размеры по месту, узлы SVG и подсказка у курсора. */
+    function stage(box, padL) {
+      var svg = box.querySelector('svg'), tip = box.querySelector('.zp-tip');
+      var w = Math.max(300, box.clientWidth || 900), h = Math.max(120, box.clientHeight || 180);
+      svg.textContent = '';
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      tip.hidden = true;
+      var g = { svg: svg, tip: tip, w: w, h: h, l: padL, r: w - 6, t: 10, b: h - 24 };
+      g.node = function (name, attrs, text, parent) {
+        var el = document.createElementNS(SVG, name);
+        for (var k in attrs) el.setAttribute(k, attrs[k]);
+        if (text != null) el.textContent = text;
+        (parent || svg).appendChild(el);
+        return el;
+      };
+      g.grid = function (top, label) {
+        [0, 0.5, 1].forEach(function (k) {
+          var y = g.b - (g.b - g.t) * k;
+          g.node('line', { 'class': 'zp-gl', x1: g.l, x2: g.r, y1: y, y2: y });
+          g.node('text', { 'class': 'zp-yl', x: g.l - 8, y: y + 4 }, label(top * k));
+        });
+      };
+      /* строки подсказки: первая — заголовок, дальше [цвет|null, подпись, значение] */
+      g.say = function (x, title, rows) {
+        tip.textContent = '';
+        var head = document.createElement('p'); head.textContent = title; tip.appendChild(head);
+        rows.forEach(function (r) {
+          var p = document.createElement('p');
+          if (r[0]) { var key = document.createElement('i'); key.style.background = r[0]; p.appendChild(key) }
+          var val = document.createElement('b'); val.textContent = r[2]; p.appendChild(val);
+          p.appendChild(document.createTextNode(r[1]));
+          tip.appendChild(p);
+        });
+        tip.hidden = false;
+        var half = tip.offsetWidth / 2;
+        tip.style.left = Math.min(w - half - 2, Math.max(half + 2, x)) + 'px';
+      };
+      return g;
+    }
+    function color(key) { return getComputedStyle(live).getPropertyValue('--zw-' + key).trim() || '#5b7fff' }
+
+    function drawVersions() {
+      var wire = q('.zw-wire'), bar = wire.querySelector('.zw-bar'), list = wire.querySelector('.zw-list'), read = wire.querySelector('.zw-read');
+      var items = (S.online.versions || []).filter(function (v) { return v.count > 0 });
+      var total = S.online.total || 1;
       wire.hidden = !items.length;
-      bar.textContent = '';
-      list.textContent = '';
-      items.forEach(function (v) {
-        var now = !!v.channel && s.latest && s.latest[v.channel] === v.version;
+      bar.textContent = ''; list.textContent = '';
+      var pairs = [];
+      function tell(i) {
+        var v = items[i];
+        pairs.forEach(function (p, k) { p[0].classList.toggle('zw-hot', k === i); p[1].classList.toggle('zw-hot', k === i) });
+        read.textContent = '';
+        var name = document.createElement('b');
+        name.textContent = v.version === 'other' ? 'остальные версии' : v.version + (v.channel ? ' · ' + v.channel : '');
+        read.appendChild(name);
+        var text = ' — ' + fmt(v.count) + ' ' + plural(v.count, 'программа', 'программы', 'программ') + ' на связи, ' + pct(v.count / total) + ' от всех';
+        if (v.users) text += '; за сегодня — ' + fmt(v.users) + ' ' + plural(v.users, 'пользователь', 'пользователя', 'пользователей');
+        if (v.channel && S.latest && S.latest[v.channel] === v.version) text += '. Это последняя версия канала';
+        read.appendChild(document.createTextNode(text));
+      }
+      items.forEach(function (v, i) {
+        var now = !!v.channel && S.latest && S.latest[v.channel] === v.version;
         var seg = document.createElement('i');
         seg.style.flexGrow = String(v.count);
+        seg.tabIndex = 0;
+        seg.setAttribute('role', 'img');
+        seg.setAttribute('aria-label', v.version + ': ' + v.count);
         if (now) seg.className = 'zw-now';
         bar.appendChild(seg);
         var li = document.createElement('li');
@@ -1156,53 +1225,159 @@
         li.appendChild(name);
         li.appendChild(document.createTextNode(' ' + fmt(v.count) + (v.channel ? ' · ' + v.channel : '')));
         list.appendChild(li);
+        pairs.push([seg, li]);
+        [seg, li].forEach(function (el) {
+          el.addEventListener('pointerenter', function () { tell(i) });
+          el.addEventListener('focus', function () { tell(i) });
+          el.addEventListener('click', function () { tell(i) });
+        });
+      });
+      if (items.length) tell(0);
+    }
+
+    function drawOnline() {
+      var box = q('.zw-day'), rows = ((S.series || {})[range]) || [];
+      var keys = CH.filter(function (c) { return on[c[0]] });
+      box.hidden = rows.length < 2;
+      q('.zw-ctl').hidden = ((S.series || {})['24h'] || []).length < 2;
+      if (box.hidden) return;
+      var g = stage(box.querySelector('.zw-chart'), 48);
+      var t0 = rows[0][0], t1 = rows[rows.length - 1][0];
+      function sum(r) { var s = 0; keys.forEach(function (c) { s += r[c[2]] }); return s }
+      var top = niceTop(Math.max.apply(null, rows.map(sum)) || 1);
+      function x(t) { return g.l + (t - t0) / Math.max(1, t1 - t0) * (g.r - g.l) }
+      function y(v) { return g.b - v / top * (g.b - g.t) }
+      g.grid(top, short);
+      /* каналы лежат друг на друге: верхняя граница — все программы вместе */
+      var base = rows.map(function () { return 0 });
+      keys.forEach(function (c) {
+        var up = rows.map(function (r, i) { return base[i] + r[c[2]] });
+        var line = rows.map(function (r, i) { return x(r[0]).toFixed(1) + ',' + y(up[i]).toFixed(1) });
+        var back = rows.map(function (r, i) { return x(r[0]).toFixed(1) + ',' + y(base[i]).toFixed(1) }).reverse();
+        g.node('polygon', { 'class': 'zw-a-' + c[0], points: line.concat(back).join(' ') });
+        g.node('polyline', { 'class': 'zw-l-' + c[0], points: line.join(' ') });
+        base = up;
+      });
+      var ticks = g.w < 560 ? 3 : 6;
+      for (var i = 0; i <= ticks; i++) {
+        var t = t0 + (t1 - t0) * i / ticks;
+        g.node('text', { 'class': 'zp-xl', x: Math.min(g.r - 20, Math.max(g.l + 18, x(t))), y: g.h - 4 }, range === '24h' ? clock(t) : day(t));
+      }
+      var cur = g.node('line', { 'class': 'zp-cur', y1: g.t, y2: g.b, visibility: 'hidden' });
+      var hit = g.node('rect', { 'class': 'zw-hit', x: g.l, y: 0, width: g.r - g.l, height: g.h });
+      function at(ev) {
+        var rect = g.svg.getBoundingClientRect();
+        var px = (ev.clientX - rect.left) / rect.width * g.w;
+        var best = 0;
+        rows.forEach(function (r, i) { if (Math.abs(x(r[0]) - px) < Math.abs(x(rows[best][0]) - px)) best = i });
+        var r = rows[best], total = sum(r), all = r[1] + r[2];
+        cur.setAttribute('x1', x(r[0])); cur.setAttribute('x2', x(r[0])); cur.setAttribute('visibility', 'visible');
+        var lines = [[null, ' всего на связи', fmt(total)]];
+        keys.forEach(function (c) { lines.push([color(c[0]), ' ' + c[1], fmt(r[c[2]])]) });
+        if (all) lines.push([null, ' на последней версии', pct(r[3] / all)]);
+        if (r[4]) lines.push([null, ' обновлений выдано', fmt(r[4])]);
+        g.say(x(r[0]) / g.w * rect.width, day(r[0]) + ', ' + clock(r[0]), lines);
+      }
+      hit.addEventListener('pointermove', at);
+      hit.addEventListener('pointerdown', at);
+      hit.addEventListener('pointerleave', function () { cur.setAttribute('visibility', 'hidden'); g.tip.hidden = true });
+    }
+
+    function drawDays() {
+      var box = q('.zw-days'), days = S.days || [];
+      var keys = CH.filter(function (c) { return on[c[0]] });
+      box.hidden = days.length < 2;
+      if (box.hidden) return;
+      var body = box.querySelector('tbody');
+      body.textContent = '';
+      days.slice().reverse().forEach(function (d) {
+        var tr = document.createElement('tr');
+        [d.d.slice(8) + '.' + d.d.slice(5, 7), fmt(d.total), fmt(d.stable), fmt(d.dev)].forEach(function (text) {
+          var td = document.createElement('td'); td.textContent = text; tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+      var g = stage(box.querySelector('.zw-chart'), 48);
+      function sum(d) { var s = 0; keys.forEach(function (c) { s += d[c[0]] }); return s }
+      var top = niceTop(Math.max.apply(null, days.map(sum)) || 1);
+      var slot = (g.r - g.l) / days.length, bw = Math.max(3, Math.min(34, slot - 2));
+      function y(v) { return g.b - v / top * (g.b - g.t) }
+      g.grid(top, short);
+      var every = Math.ceil(days.length / (g.w < 560 ? 4 : 10));
+      days.forEach(function (d, i) {
+        var cx = g.l + slot * (i + 0.5), col = g.node('g', { 'class': 'zw-bcol' }), base = 0;
+        keys.forEach(function (c) {
+          var v = d[c[0]];
+          if (v > 0) g.node('rect', { 'class': 'zw-b-' + c[0], x: cx - bw / 2, width: bw, y: y(base + v), height: Math.max(1, y(base) - y(base + v) - (base ? 2 : 0)) }, null, col);
+          base += v;
+        });
+        if (i % every === 0 || i === days.length - 1) g.node('text', { 'class': 'zp-xl', x: cx, y: g.h - 4 }, d.d.slice(8) + '.' + d.d.slice(5, 7));
+        var hit = g.node('rect', { 'class': 'zw-hit', x: cx - slot / 2, width: slot, y: 0, height: g.h, tabindex: 0 }, null, col);
+        function tell() {
+          col.classList.add('zw-hot');
+          var lines = [[null, ' ' + plural(d.total, 'пользователь', 'пользователя', 'пользователей') + ' всего', fmt(d.total)]];
+          keys.forEach(function (c) { lines.push([color(c[0]), ' ' + c[1], fmt(d[c[0]])]) });
+          g.say(cx / g.w * g.svg.getBoundingClientRect().width, d.d.slice(8) + ' ' + MONTHS[+d.d.slice(5, 7) - 1], lines);
+        }
+        function hush() { col.classList.remove('zw-hot'); g.tip.hidden = true }
+        hit.addEventListener('pointerenter', tell); hit.addEventListener('focus', tell);
+        hit.addEventListener('pointerleave', hush); hit.addEventListener('blur', hush);
       });
     }
 
-    function drawDay(s) {
-      var box = live.querySelector('.zw-day');
-      var svg = box.querySelector('svg');
-      var pts = s.online_24h || [];
-      box.hidden = pts.length < 3;
+    function drawRollout() {
+      var box = q('.zw-roll'), rolls = (S.rollouts || []).filter(function (r) { return (r.curve || []).length > 1 });
+      box.hidden = !rolls.length;
       if (box.hidden) return;
-      var w = Math.max(320, svg.clientWidth || svg.parentNode.clientWidth || 900);
-      var h = Math.max(120, svg.clientHeight || 160);
-      var padL = 44, padB = 22, padT = 8;
-      var t0 = pts[0][0], t1 = pts[pts.length - 1][0];
-      var top = Math.max.apply(null, pts.map(function (p) { return p[1] })) || 1;
-      // верх шкалы — круглое число, чтобы подписи оси читались
-      if (top > 10) { var mag = Math.pow(10, Math.floor(Math.log(top) / Math.LN10)) / 2; top = Math.ceil(top / mag) * mag }
-      else top = Math.max(2, Math.ceil(top / 2) * 2);
-      function x(t) { return padL + (t - t0) / Math.max(1, t1 - t0) * (w - padL - 4) }
-      function y(v) { return padT + (1 - v / top) * (h - padT - padB) }
-      function node(name, attrs, text) {
-        var el = document.createElementNS(SVG, name);
-        for (var k in attrs) el.setAttribute(k, attrs[k]);
-        if (text != null) el.textContent = text;
-        svg.appendChild(el);
-      }
-      svg.textContent = '';
-      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-      [0, 0.5, 1].forEach(function (k) {
-        node('line', { 'class': 'zp-gl', x1: padL, x2: w - 4, y1: y(top * k), y2: y(top * k) });
-        node('text', { 'class': 'zp-yl', x: padL - 8, y: y(top * k) + 4 }, short(top * k));
+      var list = box.querySelector('.zw-rels');
+      function id(r) { return r.channel + '|' + r.version }
+      if (!rolls.some(function (r) { return id(r) === picked })) picked = id(rolls[0]);
+      list.textContent = '';
+      rolls.forEach(function (r) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'zw-rel';
+        b.setAttribute('aria-pressed', id(r) === picked ? 'true' : 'false');
+        var name = document.createElement('b'); name.textContent = r.version + ' · ' + r.channel; b.appendChild(name);
+        var when = document.createElement('span'); when.textContent = 'вышла ' + day(r.released_at) + ' в ' + clock(r.released_at); b.appendChild(when);
+        var speed = document.createElement('span');
+        speed.textContent = 'половина — ' + (r.half_min == null ? 'ещё нет' : 'за ' + minutes(r.half_min)) + ', 90% — ' + (r.ninety_min == null ? 'ещё нет' : 'за ' + minutes(r.ninety_min));
+        b.appendChild(speed);
+        b.addEventListener('click', function () { picked = id(r); drawRollout() });
+        list.appendChild(b);
       });
-      var line = pts.map(function (p) { return x(p[0]).toFixed(1) + ',' + y(p[1]).toFixed(1) }).join(' ');
-      node('polygon', { 'class': 'zw-ar', points: padL + ',' + y(0) + ' ' + line + ' ' + x(t1).toFixed(1) + ',' + y(0) });
-      node('polyline', { 'class': 'zw-ln', points: line });
-      var ticks = w < 560 ? 3 : 6;
-      for (var i = 0; i <= ticks; i++) {
-        var t = t0 + (t1 - t0) * i / ticks, d = new Date(t * 1000);
-        var label = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
-        node('text', { 'class': 'zp-xl', x: Math.min(w - 22, Math.max(padL + 16, x(t))), y: h - 4 }, label);
+      var roll = rolls.filter(function (r) { return id(r) === picked })[0];
+      q('.zw-roll-cap').textContent = 'доля программ канала ' + roll.channel + ' на версии ' + roll.version + ' после выхода';
+      var g = stage(box.querySelector('.zw-chart'), 48), pts = roll.curve;
+      var m1 = Math.max(10, pts[pts.length - 1][0]);
+      function x(m) { return g.l + m / m1 * (g.r - g.l) }
+      function y(v) { return g.b - v / 1000 * (g.b - g.t) }
+      g.grid(100, function (v) { return Math.round(v) + '%' });
+      g.node('line', { 'class': 'zw-mark', x1: g.l, x2: g.r, y1: y(900), y2: y(900) });
+      g.node('text', { 'class': 'zw-mark-l', x: g.r, y: y(900) - 5, 'text-anchor': 'end' }, '90%');
+      g.node('polyline', { 'class': 'zw-l-roll', points: pts.map(function (p) { return x(p[0]).toFixed(1) + ',' + y(p[1]).toFixed(1) }).join(' ') });
+      for (var i = 0; i <= 4; i++) g.node('text', { 'class': 'zp-xl', x: Math.min(g.r - 22, Math.max(g.l + 18, x(m1 * i / 4))), y: g.h - 4 }, i ? minutes(Math.round(m1 * i / 4)) : 'выход');
+      var cur = g.node('line', { 'class': 'zp-cur', y1: g.t, y2: g.b, visibility: 'hidden' });
+      var hit = g.node('rect', { 'class': 'zw-hit', x: g.l, y: 0, width: g.r - g.l, height: g.h });
+      function at(ev) {
+        var rect = g.svg.getBoundingClientRect(), px = (ev.clientX - rect.left) / rect.width * g.w, best = 0;
+        pts.forEach(function (p, k) { if (Math.abs(x(p[0]) - px) < Math.abs(x(pts[best][0]) - px)) best = k });
+        var p = pts[best];
+        cur.setAttribute('x1', x(p[0])); cur.setAttribute('x2', x(p[0])); cur.setAttribute('visibility', 'visible');
+        g.say(x(p[0]) / g.w * rect.width, p[0] ? 'через ' + minutes(p[0]) + ' после выхода' : 'в момент выхода', [[color('stable'), ' программ на версии ' + roll.version, pct(p[1] / 1000)]]);
       }
+      hit.addEventListener('pointermove', at);
+      hit.addEventListener('pointerdown', at);
+      hit.addEventListener('pointerleave', function () { cur.setAttribute('visibility', 'hidden'); g.tip.hidden = true });
     }
+
+    function drawCharts() { drawOnline(); drawDays(); drawRollout() }
 
     function render(s) {
       if (!s || !s.online) return;
       var online = s.online.total || 0;
       var users = (s.users_today && s.users_today.total) || 0;
       if (!online && !users && !(s.days || []).length) return;
+      S = s;
       live.hidden = false;
 
       var el = cell('online');
@@ -1212,12 +1387,9 @@
       put('users', fmt(users));
       put('users-word', plural(users, 'пользователь', 'пользователя', 'пользователей'));
 
-      var latest = s.latest || {};
-      var onLatest = 0;
-      (s.online.versions || []).forEach(function (v) {
-        if (v.channel && latest[v.channel] === v.version) onLatest += v.count;
-      });
-      put('share', online ? Math.round(onLatest / online * 100) + '%' : '—');
+      var latest = s.latest || {}, onLatest = 0;
+      (s.online.versions || []).forEach(function (v) { if (v.channel && latest[v.channel] === v.version) onLatest += v.count });
+      put('share', online ? pct(onLatest / online) : '—');
       show('latest-dev', !!latest.dev); put('latest-dev', latest.dev || '—');
       show('latest-stable', !!latest.stable); put('latest-stable', latest.stable || '—');
 
@@ -1230,10 +1402,37 @@
       }
       var queued = ((s.queued && s.queued.dev) || 0) + ((s.queued && s.queued.stable) || 0);
       show('queued', queued > 0); put('queued', fmt(queued));
+      var peak = s.peak_24h;
+      show('peak', !!peak && peak.total > online);
+      if (peak) { put('peak', fmt(peak.total)); put('peak-label', 'пик за сутки, в ' + clock(peak.t)) }
+      show('grants', (s.grants_24h || 0) > 0); put('grants', fmt(s.grants_24h || 0));
 
-      drawVersions(s);
-      drawDay(s);
+      drawVersions();
+      drawCharts();
     }
+
+    live.querySelectorAll('.zp-range button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        range = b.getAttribute('data-r');
+        live.querySelectorAll('.zp-range button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false') });
+        if (S) drawOnline();
+      });
+    });
+    live.querySelectorAll('.zw-legend .zp-lg').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var key = b.getAttribute('data-c');
+        /* последний включённый канал выключить нельзя: пустой график ничего не говорит */
+        if (on[key] && !CH.some(function (c) { return c[0] !== key && on[c[0]] })) return;
+        on[key] = !on[key];
+        b.setAttribute('aria-pressed', on[key] ? 'true' : 'false');
+        if (S) { drawOnline(); drawDays() }
+      });
+    });
+    var resizing = 0;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizing);
+      resizing = setTimeout(function () { if (S) drawCharts() }, 150);
+    });
 
     function load() {
       if (document.hidden) return;

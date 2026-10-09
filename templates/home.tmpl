@@ -254,15 +254,44 @@
 				<div class="zp-kpi" hidden><dt>последняя версия Stable</dt><dd data-k="latest-stable">—</dd></div>
 				<div class="zp-kpi" hidden><dt data-k="half-label">версия дошла до половины программ</dt><dd data-k="half">—</dd></div>
 				<div class="zp-kpi" hidden><dt>ждут очереди на скачивание</dt><dd data-k="queued">0</dd></div>
+				<div class="zp-kpi" hidden><dt data-k="peak-label">пик за сутки</dt><dd data-k="peak">0</dd></div>
+				<div class="zp-kpi" hidden><dt>обновлений выдано за сутки</dt><dd data-k="grants">0</dd></div>
 			</dl>
 			<div class="zw-wire" hidden>
-				<p class="zw-cap">версии на связи</p>
-				<div class="zw-bar" role="img" aria-label="Доли версий среди программ на связи"></div>
+				<p class="zw-cap">версии на связи — наведите на отрезок или строку</p>
+				<div class="zw-bar" role="group" aria-label="Доли версий среди программ на связи"></div>
+				<p class="zw-read" aria-live="polite"></p>
 				<ul class="zw-list"></ul>
 			</div>
+			<div class="zw-ctl" hidden>
+				<div class="zp-range" role="group" aria-label="Период">
+					<button type="button" data-r="24h" aria-pressed="true">сутки</button>
+					<button type="button" data-r="7d">неделя</button>
+					<button type="button" data-r="30d">месяц</button>
+				</div>
+				<div class="zp-legend zw-legend" role="group" aria-label="Каналы">
+					<button type="button" class="zp-lg" data-c="stable" aria-pressed="true"><i></i>Stable</button>
+					<button type="button" class="zp-lg" data-c="dev" aria-pressed="true"><i></i>Dev</button>
+				</div>
+			</div>
 			<div class="zw-day" hidden>
-				<p class="zw-cap">программ на связи за последние сутки</p>
-				<div class="zw-chart"><svg aria-label="График числа программ на связи за сутки" role="img"></svg></div>
+				<p class="zw-cap">программ на связи</p>
+				<div class="zw-chart"><svg aria-label="График числа программ на связи" role="img"></svg><div class="zp-tip" hidden></div></div>
+			</div>
+			<div class="zw-days" hidden>
+				<p class="zw-cap">разных пользователей по дням</p>
+				<div class="zw-chart zw-chart-s"><svg aria-label="График числа пользователей по дням" role="img"></svg><div class="zp-tip" hidden></div></div>
+				<details class="zw-tbl"><summary>показать таблицей</summary><table><thead><tr><th>день</th><th>всего</th><th>Stable</th><th>Dev</th></tr></thead><tbody></tbody></table></details>
+			</div>
+			<div class="zw-roll" hidden>
+				<div class="zw-roll-side">
+					<p class="zw-cap">как расходились версии — выберите выпуск</p>
+					<div class="zw-rels" role="group" aria-label="Выпуски"></div>
+				</div>
+				<div class="zw-roll-main">
+					<p class="zw-cap zw-roll-cap">доля программ канала на новой версии</p>
+					<div class="zw-chart zw-chart-s"><svg aria-label="График доли программ на новой версии после выпуска" role="img"></svg><div class="zp-tip" hidden></div></div>
+				</div>
 			</div>
 		</div>
 	</section>

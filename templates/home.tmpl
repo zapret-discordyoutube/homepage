@@ -239,6 +239,34 @@
 		</div>
 	</section>
 
+	<!-- ── На связи ─────────────────────────────────────────── -->
+	<section class="zw" id="zpm-live" data-stats="{{AppSubUrl}}/api/zapret/stats.json" hidden aria-labelledby="zpm-live-title">
+		<div class="zs">
+			<div class="zsec-head">
+				<p class="zeb">автообновление</p>
+				<h2 id="zpm-live-title">Кто сейчас на связи</h2>
+				<p class="zsec-note">Каждая запущенная программа держит одно соединение с нашим сервером и ждёт сигнал о новой версии. Мы считаем эти соединения, а адреса не храним. Пока в счёте только Zapret 2 GUI начиная с версии 21.1.7.121 — число растёт по мере обновления.</p>
+			</div>
+			<dl class="zp-kpis">
+				<div class="zp-kpi zp-kpi-main"><dt>программ на связи прямо сейчас</dt><dd data-k="online">0</dd><p class="zp-kpi-sub"><b data-k="users">0</b> <span data-k="users-word">пользователей</span> за сегодня</p></div>
+				<div class="zp-kpi"><dt>на последней версии</dt><dd data-k="share">—</dd></div>
+				<div class="zp-kpi" hidden><dt>последняя версия Dev</dt><dd data-k="latest-dev">—</dd></div>
+				<div class="zp-kpi" hidden><dt>последняя версия Stable</dt><dd data-k="latest-stable">—</dd></div>
+				<div class="zp-kpi" hidden><dt data-k="half-label">версия дошла до половины программ</dt><dd data-k="half">—</dd></div>
+				<div class="zp-kpi" hidden><dt>ждут очереди на скачивание</dt><dd data-k="queued">0</dd></div>
+			</dl>
+			<div class="zw-wire" hidden>
+				<p class="zw-cap">версии на связи</p>
+				<div class="zw-bar" role="img" aria-label="Доли версий среди программ на связи"></div>
+				<ul class="zw-list"></ul>
+			</div>
+			<div class="zw-day" hidden>
+				<p class="zw-cap">программ на связи за последние сутки</p>
+				<div class="zw-chart"><svg aria-label="График числа программ на связи за сутки" role="img"></svg></div>
+			</div>
+		</div>
+	</section>
+
 	<!-- ── Арсенал ──────────────────────────────────────────── -->
 	<section class="za" id="zpm-arsenal" aria-labelledby="zpm-arsenal-title">
 		<div class="zs">

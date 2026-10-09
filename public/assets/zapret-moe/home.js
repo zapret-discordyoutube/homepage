@@ -1113,6 +1113,140 @@
     }
   })();
 
+  /* ── На связи: программы, которые ждут сигнал о новой версии ─────────
+     Числа раз в минуту считает сервер (служба очереди обновлений) и кладёт
+     в stats.json. Нет файла или в нём пусто — раздела на странице нет. */
+  (function () {
+    var live = document.getElementById('zpm-live');
+    if (!live || !window.fetch) return;
+    var SVG = 'http://www.w3.org/2000/svg';
+    var first = true;
+
+    function cell(key) { return live.querySelector('[data-k="' + key + '"]') }
+    function show(key, on) {
+      var box = cell(key);
+      while (box && !box.classList.contains('zp-kpi')) box = box.parentNode;
+      if (box) box.hidden = !on;
+    }
+    function put(key, text) { var el = cell(key); if (el) el.textContent = text }
+    function minutes(m) {
+      if (m < 1) return 'меньше минуты';
+      if (m < 90) return m + ' мин';
+      return (m / 60).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' ч';
+    }
+
+    function drawVersions(s) {
+      var wire = live.querySelector('.zw-wire');
+      var bar = wire.querySelector('.zw-bar');
+      var list = wire.querySelector('.zw-list');
+      var items = (s.online.versions || []).filter(function (v) { return v.count > 0 });
+      wire.hidden = !items.length;
+      bar.textContent = '';
+      list.textContent = '';
+      items.forEach(function (v) {
+        var now = !!v.channel && s.latest && s.latest[v.channel] === v.version;
+        var seg = document.createElement('i');
+        seg.style.flexGrow = String(v.count);
+        if (now) seg.className = 'zw-now';
+        bar.appendChild(seg);
+        var li = document.createElement('li');
+        if (now) li.className = 'zw-now';
+        var name = document.createElement('b');
+        name.textContent = v.version === 'other' ? 'остальные' : v.version;
+        li.appendChild(name);
+        li.appendChild(document.createTextNode(' ' + fmt(v.count) + (v.channel ? ' · ' + v.channel : '')));
+        list.appendChild(li);
+      });
+    }
+
+    function drawDay(s) {
+      var box = live.querySelector('.zw-day');
+      var svg = box.querySelector('svg');
+      var pts = s.online_24h || [];
+      box.hidden = pts.length < 3;
+      if (box.hidden) return;
+      var w = Math.max(320, svg.clientWidth || svg.parentNode.clientWidth || 900);
+      var h = Math.max(120, svg.clientHeight || 160);
+      var padL = 44, padB = 22, padT = 8;
+      var t0 = pts[0][0], t1 = pts[pts.length - 1][0];
+      var top = Math.max.apply(null, pts.map(function (p) { return p[1] })) || 1;
+      // верх шкалы — круглое число, чтобы подписи оси читались
+      if (top > 10) { var mag = Math.pow(10, Math.floor(Math.log(top) / Math.LN10)) / 2; top = Math.ceil(top / mag) * mag }
+      else top = Math.max(2, Math.ceil(top / 2) * 2);
+      function x(t) { return padL + (t - t0) / Math.max(1, t1 - t0) * (w - padL - 4) }
+      function y(v) { return padT + (1 - v / top) * (h - padT - padB) }
+      function node(name, attrs, text) {
+        var el = document.createElementNS(SVG, name);
+        for (var k in attrs) el.setAttribute(k, attrs[k]);
+        if (text != null) el.textContent = text;
+        svg.appendChild(el);
+      }
+      svg.textContent = '';
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      [0, 0.5, 1].forEach(function (k) {
+        node('line', { 'class': 'zp-gl', x1: padL, x2: w - 4, y1: y(top * k), y2: y(top * k) });
+        node('text', { 'class': 'zp-yl', x: padL - 8, y: y(top * k) + 4 }, short(top * k));
+      });
+      var line = pts.map(function (p) { return x(p[0]).toFixed(1) + ',' + y(p[1]).toFixed(1) }).join(' ');
+      node('polygon', { 'class': 'zw-ar', points: padL + ',' + y(0) + ' ' + line + ' ' + x(t1).toFixed(1) + ',' + y(0) });
+      node('polyline', { 'class': 'zw-ln', points: line });
+      var ticks = w < 560 ? 3 : 6;
+      for (var i = 0; i <= ticks; i++) {
+        var t = t0 + (t1 - t0) * i / ticks, d = new Date(t * 1000);
+        var label = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+        node('text', { 'class': 'zp-xl', x: Math.min(w - 22, Math.max(padL + 16, x(t))), y: h - 4 }, label);
+      }
+    }
+
+    function render(s) {
+      if (!s || !s.online) return;
+      var online = s.online.total || 0;
+      var users = (s.users_today && s.users_today.total) || 0;
+      if (!online && !users && !(s.days || []).length) return;
+      live.hidden = false;
+
+      var el = cell('online');
+      if (first && online > 20 && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) countUp(el, online, 900);
+      else el.textContent = fmt(online);
+      first = false;
+      put('users', fmt(users));
+      put('users-word', plural(users, 'пользователь', 'пользователя', 'пользователей'));
+
+      var latest = s.latest || {};
+      var onLatest = 0;
+      (s.online.versions || []).forEach(function (v) {
+        if (v.channel && latest[v.channel] === v.version) onLatest += v.count;
+      });
+      put('share', online ? Math.round(onLatest / online * 100) + '%' : '—');
+      show('latest-dev', !!latest.dev); put('latest-dev', latest.dev || '—');
+      show('latest-stable', !!latest.stable); put('latest-stable', latest.stable || '—');
+
+      var roll = null;
+      (s.rollouts || []).forEach(function (r) { if (!roll && r.half_min != null) roll = r });
+      show('half', !!roll);
+      if (roll) {
+        put('half-label', roll.version + ' дошла до половины программ');
+        put('half', (roll.half_min < 1 ? '' : 'за ') + minutes(roll.half_min));
+      }
+      var queued = ((s.queued && s.queued.dev) || 0) + ((s.queued && s.queued.stable) || 0);
+      show('queued', queued > 0); put('queued', fmt(queued));
+
+      drawVersions(s);
+      drawDay(s);
+    }
+
+    function load() {
+      if (document.hidden) return;
+      fetch(live.getAttribute('data-stats') + '?m=' + Math.floor(Date.now() / 60000))
+        .then(function (r) { if (!r.ok) throw 0; return r.json() })
+        .then(render)
+        .catch(function () {});
+    }
+    load();
+    setInterval(load, 60000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) load() });
+  })();
+
   /* ── Пауза анимаций вне экрана ──────────────────────────────────────── */
   (function () {
     if (!window.IntersectionObserver) return;

@@ -1740,6 +1740,88 @@ html.zpm-intro-lock body {
   color: var(--acc);
 }
 
+/* ── На связи: программы, которые ждут сигнал о новой версии ──────────
+   Те же крупные цифры, что у «Пульса». Версии лежат на одном проводе:
+   длина отрезка — доля программ, синий отрезок — последняя версия. */
+.zw {
+  padding: clamp(56px, 7vw, 88px) 0 0;
+}
+
+.zw[hidden],
+.zw [hidden] {
+  display: none;
+}
+
+.zw-cap {
+  margin: 0 0 12px;
+  color: var(--dim);
+  font: 12.5px/1.3 var(--mono);
+}
+
+.zw-wire {
+  margin: 0 0 44px;
+}
+
+.zw-bar {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+}
+
+.zw-bar i {
+  display: block;
+  flex: 1 1 0;
+  min-width: 3px;
+  background: var(--line2);
+  transition: flex-grow 0.6s ease;
+}
+
+.zw-bar i.zw-now {
+  background: var(--acc);
+}
+
+.zw-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 28px;
+  margin: 14px 0 0;
+  padding: 0;
+  color: var(--mut);
+  font: 13px/1.5 var(--mono);
+  list-style: none;
+}
+
+.zw-list b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.zw-list .zw-now b {
+  color: var(--acc);
+}
+
+.zw-chart {
+  height: clamp(140px, 16vw, 200px);
+}
+
+.zw-chart svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.zw-ln {
+  fill: none;
+  stroke: var(--acc);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.zw-ar {
+  fill: rgba(91, 127, 255, 0.12);
+}
+
 .zp-ctl {
   display: flex;
   flex-wrap: wrap;

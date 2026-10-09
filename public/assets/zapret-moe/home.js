@@ -1424,6 +1424,8 @@
       }
       var queued = ((s.queued && s.queued.dev) || 0) + ((s.queued && s.queued.stable) || 0);
       show('queued', queued > 0); put('queued', fmt(queued));
+      /* сервер сам говорит, когда очередь дойдёт: он знает свой канал и вес установщика */
+      put('queued-label', 'ждут очереди на скачивание' + (queued > 0 && s.queue_eta ? ', дойдёт примерно за ' + minutes(Math.max(1, Math.round(s.queue_eta / 60))) : ''));
       var peak = s.peak_24h;
       show('peak', !!peak && peak.total > online);
       if (peak) { put('peak', fmt(peak.total)); put('peak-label', 'пик за сутки, в ' + clock(peak.t)) }

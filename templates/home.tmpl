@@ -240,13 +240,18 @@
 	</section>
 
 	<!-- ── На связи ─────────────────────────────────────────── -->
-	<section class="zw" id="zpm-live" data-stats="{{AppSubUrl}}/api/zapret/stats.json" hidden aria-labelledby="zpm-live-title">
+	<section class="zw" id="zpm-live" data-stats="{{AppSubUrl}}/api/zapret/stats.json" data-stats-kvn="{{AppSubUrl}}/api/zapret/kvn/stats.json" hidden aria-labelledby="zpm-live-title">
 		<div class="zs">
 			<div class="zsec-head">
 				<p class="zeb">автообновление</p>
 				<h2 id="zpm-live-title">Кто сейчас на связи</h2>
-				<p class="zsec-note">Каждая запущенная программа держит одно соединение с нашим сервером и ждёт сигнал о новой версии. Мы считаем эти соединения, а адреса не храним. Пока в счёте только Zapret 2 GUI начиная с версии 21.1.7.121 — число растёт по мере обновления.</p>
+				<p class="zsec-note">Каждая запущенная программа держит одно соединение с нашим сервером и ждёт сигнал о новой версии. Мы считаем эти соединения, а адреса не храним. <span data-k="scope">Пока в счёте только Zapret 2 GUI начиная с версии 21.1.7.121 — число растёт по мере обновления.</span></p>
+				<div class="zp-range zw-prod" role="group" aria-label="Программа">
+					<button type="button" data-p="gui" aria-pressed="true">Zapret 2 GUI</button>
+					<button type="button" data-p="kvn">Zapret KVN</button>
+				</div>
 			</div>
+			<p class="zw-empty" hidden>У Zapret KVN сигнал сервера о новой версии появляется со следующим выпуском. Как только первые программы обновятся, здесь будут те же числа и графики.</p>
 			<dl class="zp-kpis">
 				<div class="zp-kpi zp-kpi-main"><dt>программ на связи прямо сейчас</dt><dd data-k="online">0</dd><p class="zp-kpi-sub"><b data-k="users">0</b> <span data-k="users-word">пользователей</span> за сегодня</p></div>
 				<div class="zp-kpi"><dt>на последней версии</dt><dd data-k="share">—</dd></div>

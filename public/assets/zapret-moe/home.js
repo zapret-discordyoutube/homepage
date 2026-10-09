@@ -1132,6 +1132,12 @@
     var still = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
     var seen = false;                               // раздел уже побывал на экране
     var LIST = 8;                                   // выпусков в списке слева; в таблице — все
+    /* две программы — два итога сервера; подписи отличаются словами про своё */
+    var PRODUCTS = {
+      gui: { url: live.getAttribute('data-stats'), scope: 'Пока в счёте только Zapret 2 GUI начиная с версии 21.1.7.121 — число растёт по мере обновления.', run: 'обход включён' },
+      kvn: { url: live.getAttribute('data-stats-kvn'), scope: 'В счёте Zapret KVN для Windows начиная с выпуска, в котором появился сигнал сервера, — число растёт по мере обновления.', run: 'подключение включено' }
+    };
+    var product = 'gui', chosen = false;            // chosen — человек сам переключил программу
 
     function q(sel) { return live.querySelector(sel) }
     function cell(key) { return q('[data-k="' + key + '"]') }
@@ -1417,7 +1423,8 @@
       } else visible = true;
       document.addEventListener('visibilitychange', function () { last = 0; go() });
       window.addEventListener('resize', function () { if (dots.length) { size(); draw() } });
-      return { update: update };
+      function reset() { dots = []; fly = []; rings = []; grantsLeft = 0; grantedSeen = null; log.textContent = '' }
+      return { update: update, reset: reset };
     })();
 
     /* чем заняты программы — по их собственным словам; считается общим числом */
@@ -1451,7 +1458,7 @@
         list.appendChild(li);
       });
       var run = S.online.running || [0, 0], notes = [];
-      if (run[1]) notes.push('обход включён у ' + fmt(run[0]) + ' из ' + fmt(run[1]) + ' (' + pct(run[0] / run[1]) + ')');
+      if (run[1]) notes.push(PRODUCTS[product].run + ' у ' + fmt(run[0]) + ' из ' + fmt(run[1]) + ' (' + pct(run[0] / run[1]) + ')');
       if (total < (S.online.total || 0)) notes.push('о себе говорят ' + fmt(total) + ' из ' + fmt(S.online.total) + ' — остальные на прежних версиях программы');
       put('act-note', notes.join(' · '));
     }
@@ -1856,7 +1863,14 @@
       if (!s || !s.online) return;
       var online = s.online.total || 0;
       var users = (s.users_today && s.users_today.total) || 0;
-      if (!online && !users && !(s.days || []).length) return;
+      var none = !online && !users && !(s.days || []).length;
+      /* пусто: по умолчанию раздела просто нет; если программу выбрали
+         сами — честно говорим, что у неё чисел ещё нет */
+      if (none && !chosen) return;
+      live.classList.toggle('zw-none', none);
+      q('.zw-empty').hidden = !none;
+      put('scope', PRODUCTS[product].scope);
+      if (none) { live.hidden = false; return }
       /* итог прежнего вида: время расхождения было в минутах */
       (s.rollouts || []).forEach(function (r) {
         if (r.half_sec !== undefined || r.half_min === undefined) return;
@@ -1962,11 +1976,28 @@
 
     function load() {
       if (document.hidden) return;
-      fetch(live.getAttribute('data-stats') + '?m=' + Math.floor(Date.now() / 60000))
+      var asked = product;
+      fetch(PRODUCTS[asked].url + '?m=' + Math.floor(Date.now() / 60000))
         .then(function (r) { if (!r.ok) throw 0; return r.json() })
-        .then(render)
-        .catch(function () {});
+        /* ответ про программу, с которой уже ушли, не показываем */
+        .then(function (s) { if (asked === product) render(s) })
+        /* итога нет вовсе: у выбранной программы это то же «чисел ещё нет» */
+        .catch(function () { if (asked === product && chosen && !S) render({ online: { total: 0 } }) });
     }
+    live.querySelectorAll('.zw-prod button').forEach(function (b) {
+      /* у программы без своего итога кнопки нет вовсе */
+      if (!PRODUCTS[b.getAttribute('data-p')].url) { b.hidden = true; return }
+      b.addEventListener('click', function () {
+        var next = b.getAttribute('data-p');
+        if (next === product) return;
+        product = next; chosen = true;
+        live.querySelectorAll('.zw-prod button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false') });
+        /* графики новой программы появляются заново, выбор выпуска и отрезка сбрасывается */
+        S = null; first = true; picked = ''; zoom = -1;
+        scene.reset();
+        load();
+      });
+    });
     load();
     setInterval(load, 60000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) load() });

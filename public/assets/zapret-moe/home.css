@@ -2401,6 +2401,24 @@ html.zpm-intro-lock body {
   overflow-wrap: anywhere;
 }
 
+/* переключатель программы и пустое состояние: у программы ещё нет ни одной
+   установки, которая держит соединение с сервером */
+.zw-prod {
+  margin-top: 18px;
+}
+
+.zw-empty {
+  max-width: 62ch;
+  margin: 0 0 12px;
+  color: var(--mut);
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+.zw.zw-none > .zs > :not(.zsec-head):not(.zw-empty) {
+  display: none;
+}
+
 .zw-scene {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);

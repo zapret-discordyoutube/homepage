@@ -1811,30 +1811,50 @@ html.zpm-intro-lock body {
   cursor: pointer;
 }
 
-.zw-bar i.zw-hot,
 .zw-bar i:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
-.zw-read {
-  min-height: 1.5em;
-  margin: 12px 0 0;
-  color: var(--mut);
-  font-size: 14px;
+.zw-wire {
+  position: relative;
 }
 
-.zw-read b {
-  color: var(--ink);
+/* отрезок под курсором приподнимается, остальные гаснут */
+.zw-bar i {
+  transition: flex-grow 0.6s ease, opacity 0.15s ease, transform 0.15s ease;
+}
+
+.zw-bar.zw-hov i {
+  opacity: 0.35;
+}
+
+.zw-bar.zw-hov i.zw-hot {
+  opacity: 1;
+  transform: scaleY(1.6);
 }
 
 .zw-list li {
+  padding: 2px 0;
   cursor: default;
+  box-shadow: inset 0 -1px 0 transparent;
+  transition: color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.zw-list li.zw-hot b {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.zw-list li.zw-hot,
+.zw-list li:focus-visible {
+  color: var(--ink);
+  outline: none;
+  box-shadow: inset 0 -1px 0 var(--line2);
+}
+
+.zw-rel {
+  transition: color 0.15s ease, box-shadow 0.15s ease, padding-left 0.15s ease;
+}
+
+.zw-rel[aria-pressed="true"] {
+  padding-left: 20px;
+  color: var(--ink);
 }
 
 .zw-ctl {
@@ -1868,11 +1888,11 @@ html.zpm-intro-lock body {
   height: clamp(150px, 15vw, 200px);
 }
 
-.zw-chart .zp-tip b {
+.zw .zp-tip b {
   color: var(--ink);
 }
 
-.zw-chart .zp-tip p {
+.zw .zp-tip p {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -1881,13 +1901,13 @@ html.zpm-intro-lock body {
   white-space: nowrap;
 }
 
-.zw-chart .zp-tip p:first-child {
+.zw .zp-tip p:first-child {
   margin: 0 0 4px;
   color: var(--dim);
   font: 12px var(--mono);
 }
 
-.zw-chart .zp-tip i {
+.zw .zp-tip i {
   flex: none;
   width: 12px;
   height: 2px;

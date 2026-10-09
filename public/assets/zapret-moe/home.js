@@ -1171,18 +1171,8 @@
           g.node('text', { 'class': 'zp-yl', x: g.l - 8, y: y + 4 }, label(top * k));
         });
       };
-      /* строки подсказки: первая — заголовок, дальше [цвет|null, подпись, значение] */
       g.say = function (x, title, rows) {
-        tip.textContent = '';
-        var head = document.createElement('p'); head.textContent = title; tip.appendChild(head);
-        rows.forEach(function (r) {
-          var p = document.createElement('p');
-          if (r[0]) { var key = document.createElement('i'); key.style.background = r[0]; p.appendChild(key) }
-          var val = document.createElement('b'); val.textContent = r[2]; p.appendChild(val);
-          p.appendChild(document.createTextNode(r[1]));
-          tip.appendChild(p);
-        });
-        tip.hidden = false;
+        fillTip(tip, title, rows);
         var half = tip.offsetWidth / 2;
         tip.style.left = Math.min(w - half - 2, Math.max(half + 2, x)) + 'px';
       };
@@ -1190,24 +1180,46 @@
     }
     function color(key) { return getComputedStyle(live).getPropertyValue('--zw-' + key).trim() || '#5b7fff' }
 
+    /* подсказка у курсора: первая строка — заголовок, дальше [цвет|null, подпись, значение] */
+    function fillTip(tip, title, rows) {
+      tip.textContent = '';
+      var head = document.createElement('p'); head.textContent = title; tip.appendChild(head);
+      rows.forEach(function (r) {
+        var p = document.createElement('p');
+        if (r[0]) { var key = document.createElement('i'); key.style.background = r[0]; p.appendChild(key) }
+        var val = document.createElement('b'); val.textContent = r[2]; p.appendChild(val);
+        p.appendChild(document.createTextNode(r[1]));
+        tip.appendChild(p);
+      });
+      tip.hidden = false;
+    }
+
     function drawVersions() {
-      var wire = q('.zw-wire'), bar = wire.querySelector('.zw-bar'), list = wire.querySelector('.zw-list'), read = wire.querySelector('.zw-read');
+      var wire = q('.zw-wire'), bar = wire.querySelector('.zw-bar'), list = wire.querySelector('.zw-list'), tip = wire.querySelector('.zp-tip');
       var items = (S.online.versions || []).filter(function (v) { return v.count > 0 });
       var total = S.online.total || 1;
       wire.hidden = !items.length;
       bar.textContent = ''; list.textContent = '';
+      tip.hidden = true;
+      bar.classList.remove('zw-hov');
       var pairs = [];
       function tell(i) {
-        var v = items[i];
+        var v = items[i], seg = pairs[i][0];
         pairs.forEach(function (p, k) { p[0].classList.toggle('zw-hot', k === i); p[1].classList.toggle('zw-hot', k === i) });
-        read.textContent = '';
-        var name = document.createElement('b');
-        name.textContent = v.version === 'other' ? 'остальные версии' : v.version + (v.channel ? ' · ' + v.channel : '');
-        read.appendChild(name);
-        var text = ' — ' + fmt(v.count) + ' ' + plural(v.count, 'программа', 'программы', 'программ') + ' на связи, ' + pct(v.count / total) + ' от всех';
-        if (v.users) text += '; за сегодня — ' + fmt(v.users) + ' ' + plural(v.users, 'пользователь', 'пользователя', 'пользователей');
-        if (v.channel && S.latest && S.latest[v.channel] === v.version) text += '. Это последняя версия канала';
-        read.appendChild(document.createTextNode(text));
+        bar.classList.add('zw-hov');
+        var rows = [[null, ' ' + plural(v.count, 'программа', 'программы', 'программ') + ' на связи', fmt(v.count)], [null, ' от всех на связи', pct(v.count / total)]];
+        if (v.users) rows.push([null, ' ' + plural(v.users, 'пользователь', 'пользователя', 'пользователей') + ' за сегодня', fmt(v.users)]);
+        var last = !!v.channel && S.latest && S.latest[v.channel] === v.version;
+        fillTip(tip, (v.version === 'other' ? 'остальные версии' : v.version + (v.channel ? ' · ' + v.channel : '')) + (last ? ' · последняя' : ''), rows);
+        var half = tip.offsetWidth / 2, mid = seg.offsetLeft + seg.offsetWidth / 2;
+        tip.style.left = Math.min(wire.clientWidth - half, Math.max(half, mid)) + 'px';
+        /* над полосой: подсказка не закрывает ни отрезок под курсором, ни строки версий */
+        tip.style.top = (bar.offsetTop - tip.offsetHeight - 12) + 'px';
+      }
+      function hush() {
+        pairs.forEach(function (p) { p[0].classList.remove('zw-hot'); p[1].classList.remove('zw-hot') });
+        bar.classList.remove('zw-hov');
+        tip.hidden = true;
       }
       items.forEach(function (v, i) {
         var now = !!v.channel && S.latest && S.latest[v.channel] === v.version;
@@ -1215,24 +1227,26 @@
         seg.style.flexGrow = String(v.count);
         seg.tabIndex = 0;
         seg.setAttribute('role', 'img');
-        seg.setAttribute('aria-label', v.version + ': ' + v.count);
+        seg.setAttribute('aria-label', v.version + ': ' + v.count + ', ' + pct(v.count / total));
         if (now) seg.className = 'zw-now';
         bar.appendChild(seg);
         var li = document.createElement('li');
+        li.tabIndex = 0;
         if (now) li.className = 'zw-now';
         var name = document.createElement('b');
         name.textContent = v.version === 'other' ? 'остальные' : v.version;
         li.appendChild(name);
-        li.appendChild(document.createTextNode(' ' + fmt(v.count) + (v.channel ? ' · ' + v.channel : '')));
+        /* всё, что есть в подсказке, написано и в строке: наведение ничего не прячет */
+        li.appendChild(document.createTextNode(' ' + fmt(v.count) + ' · ' + pct(v.count / total) + (v.channel ? ' · ' + v.channel : '')));
         list.appendChild(li);
         pairs.push([seg, li]);
         [seg, li].forEach(function (el) {
           el.addEventListener('pointerenter', function () { tell(i) });
           el.addEventListener('focus', function () { tell(i) });
-          el.addEventListener('click', function () { tell(i) });
+          el.addEventListener('pointerleave', hush);
+          el.addEventListener('blur', hush);
         });
       });
-      if (items.length) tell(0);
     }
 
     function drawOnline() {
@@ -1325,26 +1339,34 @@
       });
     }
 
-    function drawRollout() {
+    function drawRollout(keepList) {
       var box = q('.zw-roll'), rolls = (S.rollouts || []).filter(function (r) { return (r.curve || []).length > 1 });
       box.hidden = !rolls.length;
       if (box.hidden) return;
       var list = box.querySelector('.zw-rels');
       function id(r) { return r.channel + '|' + r.version }
       if (!rolls.some(function (r) { return id(r) === picked })) picked = id(rolls[0]);
-      list.textContent = '';
-      rolls.forEach(function (r) {
-        var b = document.createElement('button');
-        b.type = 'button'; b.className = 'zw-rel';
-        b.setAttribute('aria-pressed', id(r) === picked ? 'true' : 'false');
-        var name = document.createElement('b'); name.textContent = r.version + ' · ' + r.channel; b.appendChild(name);
-        var when = document.createElement('span'); when.textContent = 'вышла ' + day(r.released_at) + ' в ' + clock(r.released_at); b.appendChild(when);
-        var speed = document.createElement('span');
-        speed.textContent = 'половина — ' + (r.half_min == null ? 'ещё нет' : 'за ' + minutes(r.half_min)) + ', 90% — ' + (r.ninety_min == null ? 'ещё нет' : 'за ' + minutes(r.ninety_min));
-        b.appendChild(speed);
-        b.addEventListener('click', function () { picked = id(r); drawRollout() });
-        list.appendChild(b);
-      });
+      /* выпуск выбирается наведением. Список при этом не перестраивается:
+         иначе строка под курсором исчезала бы и наведение срывалось. */
+      if (!keepList) {
+        list.textContent = '';
+        rolls.forEach(function (r) {
+          var b = document.createElement('button');
+          b.type = 'button'; b.className = 'zw-rel';
+          b.setAttribute('data-id', id(r));
+          var name = document.createElement('b'); name.textContent = r.version + ' · ' + r.channel; b.appendChild(name);
+          var when = document.createElement('span'); when.textContent = 'вышла ' + day(r.released_at) + ' в ' + clock(r.released_at); b.appendChild(when);
+          var speed = document.createElement('span');
+          speed.textContent = 'половина — ' + (r.half_min == null ? 'ещё нет' : 'за ' + minutes(r.half_min)) + ', 90% — ' + (r.ninety_min == null ? 'ещё нет' : 'за ' + minutes(r.ninety_min));
+          b.appendChild(speed);
+          function pick() { if (picked !== id(r)) { picked = id(r); drawRollout(true) } }
+          b.addEventListener('pointerenter', pick);
+          b.addEventListener('focus', pick);
+          b.addEventListener('click', pick);
+          list.appendChild(b);
+        });
+      }
+      list.querySelectorAll('.zw-rel').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-id') === picked ? 'true' : 'false') });
       var roll = rolls.filter(function (r) { return id(r) === picked })[0];
       q('.zw-roll-cap').textContent = 'доля программ канала ' + roll.channel + ' на версии ' + roll.version + ' после выхода';
       var g = stage(box.querySelector('.zw-chart'), 48), pts = roll.curve;

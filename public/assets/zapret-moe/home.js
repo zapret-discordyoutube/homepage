@@ -1117,13 +1117,21 @@
      Числа раз в минуту считает сервер (служба очереди обновлений) и кладёт
      в stats.json. Нет файла или в нём пусто — раздела на странице нет.
      Ряд приходит строками [время, dev, stable, на последней версии, выдано
-     разрешений]; кривая выпуска — парами [минут от выхода, доля в ‰]. */
+     разрешений, обновилось, не вышло]; кривая выпуска — парами [секунд от
+     выхода, доля в ‰]. Графики появляются плавно, когда раздел впервые попал
+     на экран и когда человек сам что-то переключил; при ежеминутном
+     обновлении чисел они не дёргаются. */
   (function () {
     var live = document.getElementById('zpm-live');
     if (!live || !window.fetch) return;
     var SVG = 'http://www.w3.org/2000/svg';
     var CH = [['stable', 'Stable', 2], ['dev', 'Dev', 1]];   // ключ, подпись, столбец ряда
     var S = null, first = true, range = '24h', on = { stable: true, dev: true }, picked = '';
+    var zoom = -1;                                  // отрезок кривой выпуска, секунд; 0 — всё время, -1 — выбрать самому
+    var sorts = { days: ['d', -1], rolls: ['released_at', -1] };
+    var still = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    var seen = false;                               // раздел уже побывал на экране
+    var LIST = 8;                                   // выпусков в списке слева; в таблице — все
 
     function q(sel) { return live.querySelector(sel) }
     function cell(key) { return q('[data-k="' + key + '"]') }
@@ -1136,12 +1144,25 @@
     function two(n) { return ('0' + n).slice(-2) }
     function clock(ts) { var d = new Date(ts * 1000); return two(d.getHours()) + ':' + two(d.getMinutes()) }
     function day(ts) { var d = new Date(ts * 1000); return d.getDate() + ' ' + MONTHS[d.getMonth()] }
-    function minutes(m) {
-      if (m < 1) return 'меньше минуты';
-      if (m < 90) return m + ' мин';
-      if (m < 48 * 60) return (m / 60).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' ч';
-      return Math.round(m / 1440) + ' дн.';
+    function span(s) {
+      if (s < 1) return 'сразу';
+      if (s < 90) return Math.round(s) + ' с';
+      if (s < 5400) return Math.round(s / 60) + ' мин';
+      if (s < 48 * 3600) return (s / 3600).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) + ' ч';
+      return Math.round(s / 86400) + ' дн.';
     }
+    /* «15–30 с», «2–5 мин»: единица пишется один раз, если она у границ общая */
+    function between(a, b) {
+      var u = b <= 60 ? [1, ' с'] : b <= 3600 && a >= 60 ? [60, ' мин'] : null;
+      return u ? a / u[0] + '–' + b / u[0] + u[1] : span(a) + ' – ' + span(b);
+    }
+    /* за сколько версия дошла до доли программ. У прежних выпусков время
+       мерилось минутами: «дошла за 0 минут» честно зовётся «меньше минуты» */
+    function reach(r, key) {
+      var s = r[key];
+      return s != null && s < 60 && !r.exact ? 'меньше минуты' : within(s);
+    }
+    function within(s) { return s == null ? 'ещё нет' : (s < 1 ? '' : 'за ') + span(s) }
     function pct(share) { return (share * 100).toLocaleString('ru-RU', { maximumFractionDigits: share < 0.1 ? 1 : 0 }) + '%' }
     function niceTop(v) {
       if (v <= 10) return Math.max(2, Math.ceil(v / 2) * 2);
@@ -1150,13 +1171,24 @@
     }
 
     /* Холст графика: размеры по месту, узлы SVG и подсказка у курсора. */
-    function stage(box, padL) {
+    function stage(box, padL, animate) {
       var svg = box.querySelector('svg'), tip = box.querySelector('.zp-tip');
+      /* класс снимается и ставится заново: так появление проигрывается ещё раз */
+      svg.classList.remove('zw-anim');
+      if (animate && !still) { void svg.getBoundingClientRect(); svg.classList.add('zw-anim') }
       var w = Math.max(300, box.clientWidth || 900), h = Math.max(120, box.clientHeight || 180);
       svg.textContent = '';
       svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
       tip.hidden = true;
       var g = { svg: svg, tip: tip, w: w, h: h, l: padL, r: w - 6, t: 10, b: h - 24 };
+      /* подписи времени под графиком: ticks+1 штука от начала до конца */
+      g.times = function (t0, t1, x, label) {
+        var ticks = w < 560 ? 3 : 6;
+        for (var i = 0; i <= ticks; i++) {
+          var t = t0 + (t1 - t0) * i / ticks;
+          g.node('text', { 'class': 'zp-xl', x: Math.min(g.r - 20, Math.max(g.l + 18, x(t))), y: h - 4 }, label(t, i));
+        }
+      };
       g.node = function (name, attrs, text, parent) {
         var el = document.createElementNS(SVG, name);
         for (var k in attrs) el.setAttribute(k, attrs[k]);
@@ -1193,6 +1225,195 @@
       });
       tip.hidden = false;
     }
+
+    /* ── Живая сценка ────────────────────────────────────────────────────
+       Сервер в середине, программы вокруг него. У каждой — открытое
+       соединение (тонкая нить). Сервер держит вопрос «есть новее?» до
+       четырёх с половиной минут; срок вышел — отвечает «пока нет», и
+       программа спрашивает снова. Этих переспросов на экране столько,
+       сколько сервер насчитал за последнюю минуту. Когда выходит версия,
+       от сервера к программам идут разрешения обновиться. */
+    var scene = (function () {
+      var box = q('.zw-scene'), cv = box.querySelector('canvas'), log = box.querySelector('.zw-log');
+      var ctx = cv.getContext && cv.getContext('2d');
+      if (!ctx) return { update: function () {} };
+      var MAX_DOTS = 420, MAX_RATE = 7;             // точек на холсте и пакетов в секунду — больше глаз не разберёт
+      var W = 0, H = 0, dpr = 1, dots = [], fly = [], rings = [], raf = 0, last = 0;
+      var rate = 0, askDebt = 0, grantsLeft = 0, grantDebt = 0, logAt = 0, visible = false, grantedSeen = null;
+      var info = { latest: '', channel: 'dev', old: '' };
+      var paint = {};
+      function tone(name, fallback) { return getComputedStyle(live).getPropertyValue(name).trim() || fallback }
+      function size() {
+        dpr = Math.min(2, window.devicePixelRatio || 1);
+        W = cv.clientWidth; H = cv.clientHeight;
+        cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+        paint = { acc: tone('--acc', '#5b7fff'), old: tone('--zw-dev', '#c2803a'), gold: tone('--gold', '#e9bd55'), ink: tone('--ink', '#f2eee6'), mut: tone('--mut', '#a9a69f'), dim: tone('--dim', '#6f6d69'), mono: tone('--mono', 'monospace') };
+        place();
+      }
+      /* точки лежат «подсолнухом»: ровно заполняют овал и не слипаются */
+      function place() {
+        var n = dots.length, rx = W / 2 - 10, ry = H / 2 - 10, hole = Math.min(0.3, 54 / Math.max(1, Math.min(rx, ry)));
+        dots.forEach(function (d, i) {
+          var k = hole + (1 - hole) * Math.sqrt((i + 0.5) / n), a = i * 2.399963;
+          d.x = W / 2 + Math.cos(a) * rx * k; d.y = H / 2 + Math.sin(a) * ry * k;
+        });
+      }
+      function say(code, gloss, grant) {
+        var li = document.createElement('li');
+        if (grant) li.className = 'zw-log-grant';
+        var c = document.createElement('code'); c.textContent = code; li.appendChild(c);
+        li.appendChild(document.createTextNode(gloss));
+        log.insertBefore(li, log.firstChild);
+        while (log.children.length > 4) log.removeChild(log.lastChild);
+      }
+      function sayAsk(d, now) {
+        if (now - logAt < 1500) return;
+        logAt = now;
+        var known = d.old && info.old ? info.old : info.latest;
+        say('GET /api/wait?channel=' + info.channel + '&known=' + known + (d.busy ? '&busy=1' : ''),
+          d.busy ? 'программа: «я на ' + known + ', но сейчас занята — не обновляйте»' : 'программа: «я на ' + known + ', есть новее?» — сервер держит вопрос открытым');
+      }
+      function ask(now) {
+        var d = dots[Math.floor(Math.random() * dots.length)];
+        if (!d || d.wait) return;
+        /* срок ожидания вышел: сервер отвечает «пока нет», программа тут же спрашивает снова */
+        d.wait = true;
+        fly.push({ d: d, t: 0, dur: 0.7, back: true, kind: 'no', then: function () {
+          fly.push({ d: d, t: 0, dur: 0.8, back: false, kind: 'ask', then: function () { d.wait = false; rings.push({ t: 0, dur: 0.5, r: 12, gold: false }) } });
+          sayAsk(d, performance.now());
+        } });
+      }
+      function grant() {
+        var pool = dots.filter(function (d) { return d.old && !d.busy && !d.wait });
+        var d = pool[Math.floor(Math.random() * pool.length)];
+        if (!d) return;
+        d.wait = true;
+        rings.push({ t: 0, dur: 0.6, r: 12, gold: true });
+        say('{"version":"' + info.latest + '","changed":true}', 'сервер: «вышла ' + info.latest + ', можно обновляться»', true);
+        fly.push({ d: d, t: 0, dur: 0.9, back: true, kind: 'grant', then: function () {
+          d.glow = 1.6;                              // программа качает и ставит версию
+          setTimeout(function () {
+            d.old = false; d.wait = false;
+            fly.push({ d: d, t: 0, dur: 0.8, back: false, kind: 'ask', then: function () {} });
+            say('GET /api/wait?channel=' + info.channel + '&known=' + info.latest + '&prev=' + (info.old || '…') + '&took=24', 'программа: «обновилась, снова на связи» — по этим ответам сервер открывает версию следующим', true);
+          }, 1600);
+        } });
+      }
+      function draw() {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+        var cx = W / 2, cy = H / 2;
+        /* нити — открытые соединения: одна на программу */
+        ctx.beginPath();
+        dots.forEach(function (d) { ctx.moveTo(cx, cy); ctx.lineTo(d.x, d.y) });
+        ctx.strokeStyle = 'rgba(242,238,230,' + (dots.length > 200 ? 0.035 : 0.06) + ')'; ctx.lineWidth = 1; ctx.stroke();
+        dots.forEach(function (d) {
+          var c = d.old ? paint.old : paint.acc;
+          if (d.glow > 0) {
+            ctx.beginPath(); ctx.arc(d.x, d.y, 4 + (1.6 - d.glow) * 9, 0, 6.2832);
+            ctx.strokeStyle = paint.gold; ctx.globalAlpha = Math.max(0, d.glow / 1.6); ctx.lineWidth = 1.5; ctx.stroke(); ctx.globalAlpha = 1;
+            c = paint.gold;
+          }
+          ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 6.2832);
+          if (d.busy) { ctx.strokeStyle = paint.mut; ctx.lineWidth = 1.5; ctx.stroke() }
+          else { ctx.fillStyle = c; ctx.fill() }
+        });
+        /* пакеты: вопрос светлый, «пока нет» серый, разрешение золотое */
+        fly.forEach(function (p) {
+          var k = p.t / p.dur, e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+          var u = p.back ? e : 1 - e;
+          var x = cx + (p.d.x - cx) * u, y = cy + (p.d.y - cy) * u;
+          ctx.save(); ctx.translate(x, y); ctx.rotate(Math.atan2(p.d.y - cy, p.d.x - cx));
+          ctx.fillStyle = p.kind === 'grant' ? paint.gold : p.kind === 'ask' ? '#bff0ff' : paint.dim;
+          var s = p.kind === 'grant' ? 1.3 : 1;
+          ctx.fillRect(-5 * s, -3 * s, 10 * s, 6 * s);
+          ctx.restore();
+          /* за пакетом светится его нить */
+          ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(p.d.x, p.d.y);
+          ctx.strokeStyle = p.kind === 'grant' ? 'rgba(233,189,85,' + (0.5 * (1 - k)) + ')' : 'rgba(91,127,255,' + (0.35 * (1 - k)) + ')';
+          ctx.lineWidth = 1; ctx.stroke();
+        });
+        rings.forEach(function (r) {
+          var k = r.t / r.dur;
+          ctx.beginPath(); ctx.arc(cx, cy, r.r + k * 22, 0, 6.2832);
+          ctx.strokeStyle = r.gold ? paint.gold : paint.acc; ctx.globalAlpha = (1 - k) * 0.8; ctx.lineWidth = 1.5; ctx.stroke(); ctx.globalAlpha = 1;
+        });
+        /* сервер: квадрат-узел, на котором сходятся все нити */
+        ctx.fillStyle = tone('--bg', '#07080c'); ctx.fillRect(cx - 13, cy - 13, 26, 26);
+        ctx.strokeStyle = paint.ink; ctx.lineWidth = 2; ctx.strokeRect(cx - 12, cy - 12, 24, 24);
+        ctx.fillStyle = paint.acc; ctx.fillRect(cx - 5, cy - 5, 10, 10);
+        ctx.fillStyle = paint.mut; ctx.font = '11px ' + paint.mono; ctx.textAlign = 'center';
+        ctx.fillText('сервер', cx, cy + 30);
+      }
+      function frame(now) {
+        raf = 0;
+        var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016; last = now;
+        askDebt += rate * dt;
+        while (askDebt >= 1) { askDebt -= 1; ask(now) }
+        if (grantsLeft > 0) {
+          grantDebt += Math.max(0.6, grantsLeft / 20) * dt;
+          while (grantDebt >= 1 && grantsLeft > 0) { grantDebt -= 1; grantsLeft -= 1; grant() }
+        }
+        fly = fly.filter(function (p) { p.t += dt; if (p.t >= p.dur) { p.then(); return false } return true });
+        rings = rings.filter(function (r) { r.t += dt; return r.t < r.dur });
+        dots.forEach(function (d) { if (d.glow > 0) d.glow -= dt });
+        draw();
+        go();
+      }
+      function go() { if (!raf && visible && !document.hidden && !still && dots.length) raf = requestAnimationFrame(frame) }
+      function update(s) {
+        var total = s.online.total || 0;
+        box.hidden = !total;
+        if (box.hidden) return;
+        var per = Math.max(1, Math.ceil(total / MAX_DOTS)), n = Math.max(1, Math.round(total / per));
+        var latest = s.latest || {}, onLatest = 0, old = '';
+        (s.online.versions || []).forEach(function (v) {
+          if (v.channel && latest[v.channel] === v.version) onLatest += v.count;
+          else if (!old && v.version !== 'other') old = v.version;
+        });
+        info.channel = latest.dev && (s.online.dev || 0) >= (s.online.stable || 0) ? 'dev' : 'stable';
+        info.latest = latest[info.channel] || latest.dev || latest.stable || '';
+        info.old = old;
+        var oldDots = Math.round((total - onLatest) / per), busyDots = Math.min(n, Math.round((s.online.busy || 0) / per));
+        if (dots.length !== n) {
+          dots = [];
+          for (var i = 0; i < n; i++) dots.push({ x: 0, y: 0, r: n > 260 ? 2 : n > 120 ? 2.6 : 3.2, old: false, busy: false, wait: false, glow: 0 });
+        }
+        /* кто на прежней версии и кто занят — раскиданы по полю, а не кучкой с краю */
+        var now = dots.filter(function (d) { return d.old }).length;
+        dots.forEach(function (d, i) {
+          if (now < oldDots && !d.old && (i * 7919) % n < oldDots * 2) { d.old = true; now++ }
+          else if (now > oldDots && d.old && !d.wait) { d.old = false; now-- }
+          d.busy = (i * 104729) % n < busyDots;
+        });
+        put('scene-scale', per > 1 ? 'точка — ' + fmt(per) + ' ' + plural(per, 'программа', 'программы', 'программ') : 'точка — одна программа');
+        var rpm = s.requests_min != null ? s.requests_min : Math.round(total / 4.5);
+        put('rpm', fmt(rpm)); put('held', fmt(total));
+        var busyBox = cell('busy').parentNode; busyBox.hidden = !(s.online.busy > 0); put('busy', fmt(s.online.busy || 0));
+        rate = Math.min(MAX_RATE, rpm / 60);
+        /* разрешения, выданные с прошлого обновления чисел, разыгрываются на сценке */
+        var granted = 0;
+        for (var key in (s.rollout || {})) granted += s.rollout[key].granted || 0;
+        if (grantedSeen != null && granted > grantedSeen) grantsLeft += Math.min(120, Math.ceil((granted - grantedSeen) / per));
+        grantedSeen = granted;
+        if (!W || cv.clientWidth !== W) size(); else place();
+        if (!log.children.length && info.latest) {
+          say('{"version":"' + info.latest + '","changed":false}', 'сервер: «новее ' + info.latest + ' пока нет — спросите снова»');
+          say('GET /api/wait?channel=' + info.channel + '&known=' + info.latest, 'программа: «я на ' + info.latest + ', есть новее?» — сервер держит вопрос открытым');
+        }
+        draw();
+        go();
+      }
+      if (window.IntersectionObserver) {
+        new IntersectionObserver(function (es) {
+          visible = es.some(function (e) { return e.isIntersecting });
+          last = 0; go();
+        }, { rootMargin: '80px 0px' }).observe(cv);
+      } else visible = true;
+      document.addEventListener('visibilitychange', function () { last = 0; go() });
+      window.addEventListener('resize', function () { if (dots.length) { size(); draw() } });
+      return { update: update };
+    })();
 
     function drawVersions() {
       var wire = q('.zw-wire'), bar = wire.querySelector('.zw-bar'), list = wire.querySelector('.zw-list'), tip = wire.querySelector('.zp-tip');
@@ -1249,13 +1470,13 @@
       });
     }
 
-    function drawOnline() {
+    function drawOnline(animate) {
       var box = q('.zw-day'), rows = ((S.series || {})[range]) || [];
       var keys = CH.filter(function (c) { return on[c[0]] });
       box.hidden = rows.length < 2;
       q('.zw-ctl').hidden = ((S.series || {})['24h'] || []).length < 2;
       if (box.hidden) return;
-      var g = stage(box.querySelector('.zw-chart'), 48);
+      var g = stage(box.querySelector('.zw-chart'), 48, animate);
       var t0 = rows[0][0], t1 = rows[rows.length - 1][0];
       function sum(r) { var s = 0; keys.forEach(function (c) { s += r[c[2]] }); return s }
       var top = niceTop(Math.max.apply(null, rows.map(sum)) || 1);
@@ -1268,15 +1489,11 @@
         var up = rows.map(function (r, i) { return base[i] + r[c[2]] });
         var line = rows.map(function (r, i) { return x(r[0]).toFixed(1) + ',' + y(up[i]).toFixed(1) });
         var back = rows.map(function (r, i) { return x(r[0]).toFixed(1) + ',' + y(base[i]).toFixed(1) }).reverse();
-        g.node('polygon', { 'class': 'zw-a-' + c[0], points: line.concat(back).join(' ') });
-        g.node('polyline', { 'class': 'zw-l-' + c[0], points: line.join(' ') });
+        g.node('polygon', { 'class': 'zw-fade zw-a-' + c[0], points: line.concat(back).join(' ') });
+        g.node('polyline', { 'class': 'zw-draw zw-l-' + c[0], pathLength: 1, points: line.join(' ') });
         base = up;
       });
-      var ticks = g.w < 560 ? 3 : 6;
-      for (var i = 0; i <= ticks; i++) {
-        var t = t0 + (t1 - t0) * i / ticks;
-        g.node('text', { 'class': 'zp-xl', x: Math.min(g.r - 20, Math.max(g.l + 18, x(t))), y: g.h - 4 }, range === '24h' ? clock(t) : day(t));
-      }
+      g.times(t0, t1, x, function (t) { return range === '24h' ? clock(t) : day(t) });
       var cur = g.node('line', { 'class': 'zp-cur', y1: g.t, y2: g.b, visibility: 'hidden' });
       var hit = g.node('rect', { 'class': 'zw-hit', x: g.l, y: 0, width: g.r - g.l, height: g.h });
       function at(ev) {
@@ -1289,7 +1506,6 @@
         var lines = [[null, ' всего на связи', fmt(total)]];
         keys.forEach(function (c) { lines.push([color(c[0]), ' ' + c[1], fmt(r[c[2]])]) });
         if (all) lines.push([null, ' на последней версии', pct(r[3] / all)]);
-        if (r[4]) lines.push([null, ' обновлений выдано', fmt(r[4])]);
         g.say(x(r[0]) / g.w * rect.width, day(r[0]) + ', ' + clock(r[0]), lines);
       }
       hit.addEventListener('pointermove', at);
@@ -1297,21 +1513,118 @@
       hit.addEventListener('pointerleave', function () { cur.setAttribute('visibility', 'hidden'); g.tip.hidden = true });
     }
 
-    function drawDays() {
+    /* обновления: контур — сколько программ получили разрешение, заливка —
+       сколько из них обновились и вышли на связь, красное — не удалось */
+    function drawUpdates(animate) {
+      var box = q('.zw-upd'), rows = ((S.series || {})[range]) || [];
+      var any = rows.some(function (r) { return (r[4] || 0) + (r[5] || 0) + (r[6] || 0) > 0 });
+      box.hidden = !any || rows.length < 2;
+      if (box.hidden) return;
+      var g = stage(box.querySelector('.zw-chart'), 48, animate);
+      var top = niceTop(Math.max.apply(null, rows.map(function (r) { return Math.max(r[4] || 0, (r[5] || 0) + (r[6] || 0)) })) || 1);
+      var slot = (g.r - g.l) / rows.length, bw = Math.max(2, Math.min(18, slot - 2));
+      function cx(i) { return g.l + slot * (i + 0.5) }
+      function y(v) { return g.b - v / top * (g.b - g.t) }
+      g.grid(top, short);
+      rows.forEach(function (r, i) {
+        var grant = r[4] || 0, done = r[5] || 0, fail = r[6] || 0;
+        if (!(grant + done + fail)) return;
+        var col = g.node('g', { 'class': 'zw-bcol zw-grow', style: '--i:' + i });
+        if (grant) g.node('rect', { 'class': 'zw-b-grant', x: cx(i) - bw / 2 + 0.5, width: Math.max(1, bw - 1), y: y(grant), height: Math.max(2, g.b - y(grant)) }, null, col);
+        if (done) g.node('rect', { 'class': 'zw-b-done', x: cx(i) - bw / 2, width: bw, y: Math.min(y(done), g.b - 2), height: Math.max(2, g.b - y(done)) }, null, col);
+        if (fail) g.node('rect', { 'class': 'zw-b-fail', x: cx(i) - bw / 2, width: bw, y: Math.min(y(done + fail), y(done) - 3), height: Math.max(3, y(done) - y(done + fail) - (done ? 2 : 0)) }, null, col);
+      });
+      g.times(0, rows.length - 1, function (i) { return cx(i) }, function (i) { var t = rows[Math.round(i)][0]; return range === '24h' ? clock(t) : day(t) });
+      var cur = g.node('line', { 'class': 'zp-cur', y1: g.t, y2: g.b, visibility: 'hidden' });
+      var hit = g.node('rect', { 'class': 'zw-hit', x: g.l, y: 0, width: g.r - g.l, height: g.h });
+      function at(ev) {
+        var rect = g.svg.getBoundingClientRect(), px = (ev.clientX - rect.left) / rect.width * g.w;
+        var i = Math.max(0, Math.min(rows.length - 1, Math.floor((px - g.l) / slot))), r = rows[i];
+        cur.setAttribute('x1', cx(i)); cur.setAttribute('x2', cx(i)); cur.setAttribute('visibility', 'visible');
+        g.say(cx(i) / g.w * rect.width, day(r[0]) + ', ' + clock(r[0]), [
+          [null, ' ' + plural(r[4] || 0, 'программа получила', 'программы получили', 'программ получили') + ' разрешение', fmt(r[4] || 0)],
+          [color('done'), ' обновились и вышли на связь', fmt(r[5] || 0)],
+          [color('fail'), ' обновиться не удалось', fmt(r[6] || 0)]
+        ]);
+      }
+      hit.addEventListener('pointermove', at);
+      hit.addEventListener('pointerdown', at);
+      hit.addEventListener('pointerleave', function () { cur.setAttribute('visibility', 'hidden'); g.tip.hidden = true });
+    }
+
+    /* Таблицы: сортировка по щелчку на заголовке, полоска в ячейке — доля от
+       наибольшего. cells(item) -> [[текст, доля|null, класс|''], …] */
+    function compare(a, b) {
+      if (a == null || a === '') return 1;
+      if (b == null || b === '') return -1;
+      if (typeof a === 'string' && /^\d+(\.\d+)+$/.test(a) && typeof b === 'string') {
+        var x = a.split('.'), y = b.split('.');
+        for (var i = 0; i < Math.max(x.length, y.length); i++) { var d = (+x[i] || 0) - (+y[i] || 0); if (d) return d }
+        return 0;
+      }
+      return a < b ? -1 : a > b ? 1 : 0;
+    }
+    function fillTable(table, items, cells) {
+      var sort = sorts[table.getAttribute('data-t')], body = table.querySelector('tbody');
+      var rows = items.slice().sort(function (a, b) {
+        /* пустые значения всегда внизу, в какую сторону ни сортируй */
+        var x = a[sort[0]], y = b[sort[0]];
+        if (x == null || y == null) return compare(x, y);
+        return compare(x, y) * sort[1];
+      });
+      body.textContent = '';
+      rows.forEach(function (item) {
+        var tr = document.createElement('tr');
+        if (item.halted) tr.className = 'zw-row-halt';
+        cells(item).forEach(function (c) {
+          var td = document.createElement('td');
+          td.textContent = c[0];
+          if (c[1] != null) { td.className = 'zw-barc'; td.style.setProperty('--v', Math.max(0, Math.min(1, c[1])).toFixed(3)) }
+          if (c[2]) td.classList.add(c[2]);
+          tr.appendChild(td);
+        });
+        body.appendChild(tr);
+      });
+      table.querySelectorAll('th').forEach(function (th) {
+        var mine = th.getAttribute('data-s') === sort[0];
+        th.setAttribute('aria-sort', mine ? (sort[1] > 0 ? 'ascending' : 'descending') : 'none');
+      });
+    }
+    function drawDayTable() {
+      var days = S.days || [], most = Math.max.apply(null, days.map(function (d) { return d.total })) || 1;
+      fillTable(q('table[data-t="days"]'), days, function (d) {
+        return [[d.d.slice(8) + '.' + d.d.slice(5, 7), null, ''], [fmt(d.total), d.total / most, ''], [fmt(d.stable), null, ''], [fmt(d.dev), null, '']];
+      });
+    }
+    function drawHistory() {
+      var box = q('.zw-hist'), rolls = S.rollouts || [];
+      box.hidden = !rolls.length;
+      if (box.hidden) return;
+      fillTable(q('table[data-t="rolls"]'), rolls, function (r) {
+        var staged = (r.stages || []).length > 0;
+        var open = r.halted ? 'остановлена на ' + r.percent + '%' : (r.full_sec != null ? within(r.full_sec) : (staged ? 'идёт, ' + r.percent + '%' : '—'));
+        var got = r.granted || 0, came = r.confirmed || 0;
+        return [
+          [r.version + ' · ' + r.channel, null, 'zw-td-name'],
+          [day(r.released_at) + ', ' + clock(r.released_at), null, ''],
+          [reach(r, 'half_sec'), null, ''],
+          [reach(r, 'ninety_sec'), null, ''],
+          [open, null, r.halted ? 'zw-td-bad' : ''],
+          [got ? fmt(got) : '—', null, ''],
+          [got ? fmt(came) + ' · ' + pct(Math.min(1, came / got)) : (came ? fmt(came) : '—'), got ? came / got : null, ''],
+          [r.failed ? fmt(r.failed) : '—', null, r.failed ? 'zw-td-bad' : ''],
+          [r.took_median != null ? span(r.took_median) : '—', null, '']
+        ];
+      });
+    }
+
+    function drawDays(animate) {
       var box = q('.zw-days'), days = S.days || [];
       var keys = CH.filter(function (c) { return on[c[0]] });
       box.hidden = days.length < 2;
       if (box.hidden) return;
-      var body = box.querySelector('tbody');
-      body.textContent = '';
-      days.slice().reverse().forEach(function (d) {
-        var tr = document.createElement('tr');
-        [d.d.slice(8) + '.' + d.d.slice(5, 7), fmt(d.total), fmt(d.stable), fmt(d.dev)].forEach(function (text) {
-          var td = document.createElement('td'); td.textContent = text; tr.appendChild(td);
-        });
-        body.appendChild(tr);
-      });
-      var g = stage(box.querySelector('.zw-chart'), 48);
+      drawDayTable();
+      var g = stage(box.querySelector('.zw-chart'), 48, animate);
       function sum(d) { var s = 0; keys.forEach(function (c) { s += d[c[0]] }); return s }
       var top = niceTop(Math.max.apply(null, days.map(sum)) || 1);
       var slot = (g.r - g.l) / days.length, bw = Math.max(3, Math.min(34, slot - 2));
@@ -1319,7 +1632,7 @@
       g.grid(top, short);
       var every = Math.ceil(days.length / (g.w < 560 ? 4 : 10));
       days.forEach(function (d, i) {
-        var cx = g.l + slot * (i + 0.5), col = g.node('g', { 'class': 'zw-bcol' }), base = 0;
+        var cx = g.l + slot * (i + 0.5), col = g.node('g', { 'class': 'zw-bcol zw-grow', style: '--i:' + i }), base = 0;
         keys.forEach(function (c) {
           var v = d[c[0]];
           if (v > 0) g.node('rect', { 'class': 'zw-b-' + c[0], x: cx - bw / 2, width: bw, y: y(base + v), height: Math.max(1, y(base) - y(base + v) - (base ? 2 : 0)) }, null, col);
@@ -1339,27 +1652,27 @@
       });
     }
 
-    function drawRollout(keepList) {
-      var box = q('.zw-roll'), rolls = (S.rollouts || []).filter(function (r) { return (r.curve || []).length > 1 });
+    function drawRollout(keepList, animate) {
+      var box = q('.zw-roll'), rolls = (S.rollouts || []).filter(function (r) { return (r.curve || []).length > 1 }).slice(0, LIST);
       box.hidden = !rolls.length;
       if (box.hidden) return;
       var list = box.querySelector('.zw-rels');
       function id(r) { return r.channel + '|' + r.version }
-      if (!rolls.some(function (r) { return id(r) === picked })) picked = id(rolls[0]);
+      if (!rolls.some(function (r) { return id(r) === picked })) { picked = id(rolls[0]); zoom = -1 }
       /* выпуск выбирается наведением. Список при этом не перестраивается:
          иначе строка под курсором исчезала бы и наведение срывалось. */
       if (!keepList) {
         list.textContent = '';
         rolls.forEach(function (r) {
           var b = document.createElement('button');
-          b.type = 'button'; b.className = 'zw-rel';
+          b.type = 'button'; b.className = 'zw-rel' + (r.halted ? ' zw-rel-halt' : '');
           b.setAttribute('data-id', id(r));
           var name = document.createElement('b'); name.textContent = r.version + ' · ' + r.channel; b.appendChild(name);
           var when = document.createElement('span'); when.textContent = 'вышла ' + day(r.released_at) + ' в ' + clock(r.released_at); b.appendChild(when);
           var speed = document.createElement('span');
-          speed.textContent = 'половина — ' + (r.half_min == null ? 'ещё нет' : 'за ' + minutes(r.half_min)) + ', 90% — ' + (r.ninety_min == null ? 'ещё нет' : 'за ' + minutes(r.ninety_min));
+          speed.textContent = r.halted ? 'раздача остановлена на ' + r.percent + '%' : 'половина — ' + reach(r, 'half_sec') + ', 90% — ' + reach(r, 'ninety_sec');
           b.appendChild(speed);
-          function pick() { if (picked !== id(r)) { picked = id(r); drawRollout(true) } }
+          function pick() { if (picked !== id(r)) { picked = id(r); zoom = -1; drawRollout(true, true) } }
           b.addEventListener('pointerenter', pick);
           b.addEventListener('focus', pick);
           b.addEventListener('click', pick);
@@ -1368,44 +1681,154 @@
       }
       list.querySelectorAll('.zw-rel').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-id') === picked ? 'true' : 'false') });
       var roll = rolls.filter(function (r) { return id(r) === picked })[0];
+      var all = roll.curve, end = all[all.length - 1][0];
+      /* отрезок по умолчанию — тот, где версия успела разойтись: у быстрого
+         выпуска первые минуты не сжимаются в точку на шкале в сутки */
+      if (zoom < 0) zoom = roll.ninety_sec != null && roll.ninety_sec < 400 && end > 600 ? 600 : (roll.ninety_sec != null && roll.ninety_sec < 2400 && end > 3600 ? 3600 : 0);
+      box.querySelectorAll('.zw-zoom button').forEach(function (b) {
+        var z = +b.getAttribute('data-z');
+        b.hidden = z > 0 && end <= z;
+        b.setAttribute('aria-pressed', z === zoom ? 'true' : 'false');
+      });
+      var pts = zoom ? all.filter(function (p) { return p[0] <= zoom }) : all;
+      if (pts.length < 2) pts = all;
       q('.zw-roll-cap').textContent = 'доля программ канала ' + roll.channel + ' на версии ' + roll.version + ' после выхода';
-      var g = stage(box.querySelector('.zw-chart'), 48), pts = roll.curve;
-      var m1 = Math.max(10, pts[pts.length - 1][0]);
+      var g = stage(box.querySelector('.zw-curve'), 48, animate);
+      var m1 = Math.max(60, zoom || pts[pts.length - 1][0]);
       function x(m) { return g.l + m / m1 * (g.r - g.l) }
       function y(v) { return g.b - v / 1000 * (g.b - g.t) }
       g.grid(100, function (v) { return Math.round(v) + '%' });
       g.node('line', { 'class': 'zw-mark', x1: g.l, x2: g.r, y1: y(900), y2: y(900) });
       g.node('text', { 'class': 'zw-mark-l', x: g.r, y: y(900) - 5, 'text-anchor': 'end' }, '90%');
-      g.node('polyline', { 'class': 'zw-l-roll', points: pts.map(function (p) { return x(p[0]).toFixed(1) + ',' + y(p[1]).toFixed(1) }).join(' ') });
-      for (var i = 0; i <= 4; i++) g.node('text', { 'class': 'zp-xl', x: Math.min(g.r - 22, Math.max(g.l + 18, x(m1 * i / 4))), y: g.h - 4 }, i ? minutes(Math.round(m1 * i / 4)) : 'выход');
+      /* ступени раздачи: с этого мига версию могла получить такая доля программ */
+      var marks = (roll.stages || []).filter(function (st) { return st[0] <= m1 });
+      marks.forEach(function (st, k) {
+        var sx = x(st[0]), next = marks[k + 1];
+        g.node('line', { 'class': 'zw-stage-l zw-fade', x1: sx, x2: sx, y1: g.t, y2: g.b });
+        /* ступени, слипшиеся на шкале, подписывает последняя из них */
+        if (next && x(next[0]) - sx < 34) return;
+        g.node('text', { 'class': 'zw-stage-t zw-fade', x: sx + 5, y: g.t + 10 }, st[1] >= 100 ? 'всем' : st[1] + '%');
+      });
+      var line = pts.map(function (p) { return x(p[0]).toFixed(1) + ',' + y(p[1]).toFixed(1) });
+      g.node('polygon', { 'class': 'zw-fade zw-a-roll', points: line.concat([x(pts[pts.length - 1][0]).toFixed(1) + ',' + g.b, x(pts[0][0]).toFixed(1) + ',' + g.b]).join(' ') });
+      g.node('polyline', { 'class': 'zw-draw zw-l-roll', pathLength: 1, points: line.join(' ') });
+      for (var i = 0; i <= 4; i++) g.node('text', { 'class': 'zp-xl', x: Math.min(g.r - 22, Math.max(g.l + 18, x(m1 * i / 4))), y: g.h - 4 }, i ? span(Math.round(m1 * i / 4)) : 'выход');
       var cur = g.node('line', { 'class': 'zp-cur', y1: g.t, y2: g.b, visibility: 'hidden' });
+      var dot = g.node('circle', { 'class': 'zw-dot', r: 4, visibility: 'hidden' });
       var hit = g.node('rect', { 'class': 'zw-hit', x: g.l, y: 0, width: g.r - g.l, height: g.h });
       function at(ev) {
         var rect = g.svg.getBoundingClientRect(), px = (ev.clientX - rect.left) / rect.width * g.w, best = 0;
         pts.forEach(function (p, k) { if (Math.abs(x(p[0]) - px) < Math.abs(x(pts[best][0]) - px)) best = k });
-        var p = pts[best];
+        var p = pts[best], open = 0;
+        (roll.stages || []).forEach(function (st) { if (st[0] <= p[0]) open = st[1] });
         cur.setAttribute('x1', x(p[0])); cur.setAttribute('x2', x(p[0])); cur.setAttribute('visibility', 'visible');
-        g.say(x(p[0]) / g.w * rect.width, p[0] ? 'через ' + minutes(p[0]) + ' после выхода' : 'в момент выхода', [[color('stable'), ' программ на версии ' + roll.version, pct(p[1] / 1000)]]);
+        dot.setAttribute('cx', x(p[0])); dot.setAttribute('cy', y(p[1])); dot.setAttribute('visibility', 'visible');
+        var lines = [[color('stable'), ' программ на версии ' + roll.version, pct(p[1] / 1000)]];
+        if (open) lines.push([null, open >= 100 ? ' версия открыта всем' : ' программ могли её получить', open >= 100 ? '' : open + '%']);
+        g.say(x(p[0]) / g.w * rect.width, p[0] ? 'через ' + span(p[0]) + ' после выхода' : 'в момент выхода', lines);
       }
       hit.addEventListener('pointermove', at);
       hit.addEventListener('pointerdown', at);
-      hit.addEventListener('pointerleave', function () { cur.setAttribute('visibility', 'hidden'); g.tip.hidden = true });
+      hit.addEventListener('pointerleave', function () { cur.setAttribute('visibility', 'hidden'); dot.setAttribute('visibility', 'hidden'); g.tip.hidden = true });
+
+      var facts = box.querySelector('.zw-facts'), parts = [];
+      if (roll.granted) {
+        parts.push('получили ' + fmt(roll.granted));
+        parts.push('обновились ' + fmt(roll.confirmed || 0) + ' (' + pct(Math.min(1, (roll.confirmed || 0) / roll.granted)) + ')');
+        parts.push('не вышло ' + fmt(roll.failed || 0));
+      }
+      if (roll.full_sec != null && (roll.stages || []).length > 1) parts.push('открыта всем ' + within(roll.full_sec));
+      if (roll.halted) parts.push('раздача остановлена' + (roll.reason ? ': ' + roll.reason : ''));
+      facts.hidden = !parts.length;
+      facts.textContent = parts.join(' · ');
+      facts.classList.toggle('zw-facts-halt', !!roll.halted);
+      drawTook(roll, animate);
     }
 
-    function drawCharts() { drawOnline(); drawDays(); drawRollout() }
+    /* сколько занимало обновление: столбцы по корзинам времени */
+    function drawTook(roll, animate) {
+      var box = q('.zw-took'), hist = roll.took || [], edges = S.took_buckets || [];
+      var total = hist.reduce(function (a, b) { return a + b }, 0);
+      box.hidden = !total || hist.length !== edges.length + 1;
+      if (box.hidden) return;
+      var g = stage(box.querySelector('.zw-chart'), 48, animate);
+      var top = niceTop(Math.max.apply(null, hist) || 1), slot = (g.r - g.l) / hist.length, bw = Math.min(72, slot * 0.62);
+      function y(v) { return g.b - v / top * (g.b - g.t) }
+      g.grid(top, short);
+      hist.forEach(function (n, i) {
+        var cx = g.l + slot * (i + 0.5), col = g.node('g', { 'class': 'zw-bcol zw-grow', style: '--i:' + i * 3 });
+        var label = i === 0 ? 'до ' + span(edges[0]) : (i === edges.length ? 'дольше ' + span(edges[i - 1]) : between(edges[i - 1], edges[i]));
+        if (n) g.node('rect', { 'class': 'zw-b-done', x: cx - bw / 2, width: bw, y: Math.min(y(n), g.b - 2), height: Math.max(2, g.b - y(n)) }, null, col);
+        g.node('text', { 'class': 'zp-xl', x: cx, y: g.h - 4 }, g.w < 560 && i % 2 ? '' : label);
+        var hit = g.node('rect', { 'class': 'zw-hit', x: cx - slot / 2, width: slot, y: 0, height: g.h, tabindex: 0 }, null, col);
+        function tell() {
+          col.classList.add('zw-hot');
+          g.say(cx / g.w * g.svg.getBoundingClientRect().width, 'обновление заняло ' + label, [
+            [color('done'), ' ' + plural(n, 'программа', 'программы', 'программ'), fmt(n)],
+            [null, ' от всех обновившихся', pct(n / total)]
+          ]);
+        }
+        function hush() { col.classList.remove('zw-hot'); g.tip.hidden = true }
+        hit.addEventListener('pointerenter', tell); hit.addEventListener('focus', tell);
+        hit.addEventListener('pointerleave', hush); hit.addEventListener('blur', hush);
+      });
+    }
+
+    /* Раздача по ступеням: лестница «5% → 25% → все» с тем, что уже пройдено */
+    function drawStage() {
+      var box = q('.zw-stage'), rows = box.querySelector('.zw-stage-rows'), now = S.updated || Date.now() / 1000;
+      rows.textContent = '';
+      CH.forEach(function (c) {
+        var r = (S.rollout || {})[c[0]];
+        if (!r || (r.ladder || []).length < 2) return;
+        /* спокойно розданная версия через сутки с доски уходит; остановленная — висит */
+        if (!r.halted && r.percent >= 100 && now - (r.announced || 0) > 86400) return;
+        var reached = {};
+        (r.stages || []).forEach(function (st) { if (!(st[1] in reached)) reached[st[1]] = st[0] });
+        var row = document.createElement('div'); row.className = 'zw-st' + (r.halted ? ' zw-st-halt' : '');
+        var name = document.createElement('b'); name.textContent = r.version + ' · ' + c[0]; row.appendChild(name);
+        var steps = document.createElement('ol'); steps.className = 'zw-steps';
+        r.ladder.forEach(function (p) {
+          var li = document.createElement('li'), cur = p === r.percent && (p < 100 || r.halted);
+          var state = cur ? (r.halted ? 'halt' : 'now') : (p in reached ? 'done' : 'next');
+          li.className = 'zw-step zw-step-' + state;
+          var big = document.createElement('span'); big.textContent = p >= 100 ? 'все' : p + '%'; li.appendChild(big);
+          var note = document.createElement('small');
+          note.textContent = state === 'halt' ? 'остановлена' : state === 'now' ? 'идёт сейчас' : state === 'next' ? 'ждёт' : (reached[p] < 1 ? 'с выхода' : 'через ' + span(reached[p]));
+          li.appendChild(note);
+          steps.appendChild(li);
+        });
+        row.appendChild(steps);
+        var sum = document.createElement('p');
+        sum.textContent = r.halted
+          ? 'Раздача остановлена' + (r.reason ? ': ' + r.reason : '') + '. Остальным программам эта версия сама не придёт.'
+          : 'получили ' + fmt(r.granted || 0) + ' · обновились и вышли на связь ' + fmt(r.confirmed || 0) + ' · не вышло ' + fmt(r.failed || 0);
+        row.appendChild(sum);
+        rows.appendChild(row);
+      });
+      box.hidden = !rows.children.length;
+    }
+
+    function drawCharts(animate) { drawOnline(animate); drawUpdates(animate); drawDays(animate); drawRollout(false, animate); drawHistory() }
 
     function render(s) {
       if (!s || !s.online) return;
       var online = s.online.total || 0;
       var users = (s.users_today && s.users_today.total) || 0;
       if (!online && !users && !(s.days || []).length) return;
+      /* итог прежнего вида: время расхождения было в минутах */
+      (s.rollouts || []).forEach(function (r) {
+        if (r.half_sec !== undefined || r.half_min === undefined) return;
+        r.half_sec = r.half_min == null ? null : r.half_min * 60;
+        r.ninety_sec = r.ninety_min == null ? null : r.ninety_min * 60;
+        r.curve = (r.curve || []).map(function (p) { return [p[0] * 60, p[1]] });
+      });
       S = s;
       live.hidden = false;
 
       var el = cell('online');
-      if (first && online > 20 && !(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) countUp(el, online, 900);
+      if (first && online > 20 && !still) countUp(el, online, 900);
       else el.textContent = fmt(online);
-      first = false;
       put('users', fmt(users));
       put('users-word', plural(users, 'пользователь', 'пользователя', 'пользователей'));
 
@@ -1415,31 +1838,68 @@
       show('latest-dev', !!latest.dev); put('latest-dev', latest.dev || '—');
       show('latest-stable', !!latest.stable); put('latest-stable', latest.stable || '—');
 
-      var roll = null;
-      (s.rollouts || []).forEach(function (r) { if (!roll && r.half_min != null) roll = r });
+      var roll = null, timed = null;
+      (s.rollouts || []).forEach(function (r) {
+        if (!roll && r.half_sec != null) roll = r;
+        if (!timed && r.took_median != null) timed = r;
+      });
       show('half', !!roll);
       if (roll) {
         put('half-label', roll.version + ' дошла до половины программ');
-        put('half', (roll.half_min < 1 ? '' : 'за ') + minutes(roll.half_min));
+        put('half', reach(roll, 'half_sec'));
       }
       var queued = ((s.queued && s.queued.dev) || 0) + ((s.queued && s.queued.stable) || 0);
       show('queued', queued > 0); put('queued', fmt(queued));
       /* сервер сам говорит, когда очередь дойдёт: он знает свой канал и вес установщика */
-      put('queued-label', 'ждут очереди на скачивание' + (queued > 0 && s.queue_eta ? ', дойдёт примерно за ' + minutes(Math.max(1, Math.round(s.queue_eta / 60))) : ''));
+      put('queued-label', 'ждут очереди на скачивание' + (queued > 0 && s.queue_eta ? ', дойдёт примерно за ' + span(Math.max(60, s.queue_eta)) : ''));
       var peak = s.peak_24h;
       show('peak', !!peak && peak.total > online);
       if (peak) { put('peak', fmt(peak.total)); put('peak-label', 'пик за сутки, в ' + clock(peak.t)) }
-      show('grants', (s.grants_24h || 0) > 0); put('grants', fmt(s.grants_24h || 0));
+      var upd = s.updates_24h || { grants: s.grants_24h || 0, done: 0, failed: 0 };
+      show('done', upd.done > 0 || upd.grants > 0);
+      put('done', fmt(upd.done || upd.grants));
+      put('done-label', upd.done ? 'программ обновилось за сутки' + (upd.grants ? ', из ' + fmt(upd.grants) + ' получивших разрешение' : '') : 'обновлений выдано за сутки');
+      show('took', !!timed);
+      if (timed) put('took', span(timed.took_median));
+      show('failed', upd.failed > 0); put('failed', fmt(upd.failed || 0));
 
+      scene.update(s);
+      drawStage();
       drawVersions();
-      drawCharts();
+      /* графики появляются плавно один раз — когда раздел на экране */
+      drawCharts(first && seen);
+      first = false;
     }
 
-    live.querySelectorAll('.zp-range button').forEach(function (b) {
+    /* сортировка таблиц: заголовок — кнопка; повторный щелчок меняет направление */
+    live.querySelectorAll('.zw-tbl th[data-s]').forEach(function (th) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.textContent = th.textContent;
+      th.textContent = ''; th.appendChild(b);
+      b.addEventListener('click', function () {
+        var table = th.closest('table'), name = table.getAttribute('data-t'), key = th.getAttribute('data-s');
+        sorts[name] = [key, sorts[name][0] === key ? -sorts[name][1] : -1];
+        if (!S) return;
+        if (name === 'days') drawDayTable(); else drawHistory();
+      });
+    });
+    live.querySelectorAll('.zw-zoom button').forEach(function (b) {
+      b.addEventListener('click', function () { zoom = +b.getAttribute('data-z'); if (S) drawRollout(true, true) });
+    });
+    if (window.IntersectionObserver) {
+      var io = new IntersectionObserver(function (es) {
+        if (seen || !es.some(function (e) { return e.isIntersecting })) return;
+        seen = true; io.disconnect();
+        if (S) drawCharts(true);
+      }, { threshold: 0.12 });
+      io.observe(live);
+    } else seen = true;
+
+    live.querySelectorAll('.zw-ctl .zp-range button').forEach(function (b) {
       b.addEventListener('click', function () {
         range = b.getAttribute('data-r');
-        live.querySelectorAll('.zp-range button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false') });
-        if (S) drawOnline();
+        live.querySelectorAll('.zw-ctl .zp-range button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false') });
+        if (S) { drawOnline(true); drawUpdates(true) }
       });
     });
     live.querySelectorAll('.zw-legend .zp-lg').forEach(function (b) {
@@ -1449,7 +1909,7 @@
         if (on[key] && !CH.some(function (c) { return c[0] !== key && on[c[0]] })) return;
         on[key] = !on[key];
         b.setAttribute('aria-pressed', on[key] ? 'true' : 'false');
-        if (S) { drawOnline(); drawDays() }
+        if (S) { drawOnline(true); drawDays(true) }
       });
     });
     var resizing = 0;

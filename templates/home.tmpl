@@ -255,8 +255,37 @@
 				<div class="zp-kpi" hidden><dt data-k="half-label">версия дошла до половины программ</dt><dd data-k="half">—</dd></div>
 				<div class="zp-kpi" hidden><dt data-k="queued-label">ждут очереди на скачивание</dt><dd data-k="queued">0</dd></div>
 				<div class="zp-kpi" hidden><dt data-k="peak-label">пик за сутки</dt><dd data-k="peak">0</dd></div>
-				<div class="zp-kpi" hidden><dt>обновлений выдано за сутки</dt><dd data-k="grants">0</dd></div>
+				<div class="zp-kpi" hidden><dt data-k="done-label">программ обновилось за сутки</dt><dd data-k="done">0</dd></div>
+				<div class="zp-kpi" hidden><dt>обычно от разрешения до запуска новой версии</dt><dd data-k="took">—</dd></div>
+				<div class="zp-kpi" hidden><dt>обновлений не удалось за сутки</dt><dd data-k="failed">0</dd></div>
 			</dl>
+			<div class="zw-scene" hidden>
+				<div class="zw-scene-main">
+					<p class="zw-cap">что происходит прямо сейчас · <span data-k="scene-scale">точка — одна программа</span></p>
+					<canvas class="zw-scene-cv" role="img" aria-label="Сценка: программы держат соединение с сервером и переспрашивают, нет ли новой версии"></canvas>
+					<ul class="zw-keys zw-scene-keys" aria-label="Обозначения">
+						<li><i class="zw-k-new"></i>на последней версии</li>
+						<li><i class="zw-k-old"></i>на прежней версии</li>
+						<li><i class="zw-k-busy"></i>заняты: игра, проверка сети</li>
+						<li><i class="zw-k-ask"></i>вопрос «есть новее?»</li>
+						<li><i class="zw-k-grant"></i>разрешение обновиться</li>
+					</ul>
+				</div>
+				<div class="zw-scene-side">
+					<dl class="zw-flow">
+						<div><dt>вопросов серверу за минуту</dt><dd data-k="rpm">0</dd></div>
+						<div><dt>соединений сервер держит открытыми</dt><dd data-k="held">0</dd></div>
+						<div hidden><dt>программ заняты и просят не обновлять</dt><dd data-k="busy">0</dd></div>
+					</dl>
+					<p class="zw-cap">что программа посылает и что слышит в ответ</p>
+					<ol class="zw-log" aria-live="off"></ol>
+					<p class="zw-scene-note">Сценка идёт по настоящим числам: столько программ, столько вопросов в минуту. Какая именно точка спросила — условность: адресов мы не храним.</p>
+				</div>
+			</div>
+			<div class="zw-stage" hidden>
+				<p class="zw-cap">раздача новой версии по ступеням: сначала малой доле программ, дальше — когда они обновились и снова вышли на связь</p>
+				<div class="zw-stage-rows"></div>
+			</div>
 			<div class="zw-wire" hidden>
 				<p class="zw-cap">версии на связи</p>
 				<div class="zw-bar" role="group" aria-label="Доли версий среди программ на связи"></div>
@@ -278,10 +307,19 @@
 				<p class="zw-cap">программ на связи</p>
 				<div class="zw-chart"><svg aria-label="График числа программ на связи" role="img"></svg><div class="zp-tip" hidden></div></div>
 			</div>
+			<div class="zw-upd" hidden>
+				<p class="zw-cap">обновления программ</p>
+				<ul class="zw-keys" aria-label="Обозначения">
+					<li><i class="zw-k-grant"></i>сервер разрешил обновиться</li>
+					<li><i class="zw-k-done"></i>обновились и вышли на связь</li>
+					<li><i class="zw-k-fail"></i>обновиться не удалось</li>
+				</ul>
+				<div class="zw-chart zw-chart-s"><svg aria-label="График обновлений программ" role="img"></svg><div class="zp-tip" hidden></div></div>
+			</div>
 			<div class="zw-days" hidden>
 				<p class="zw-cap">разных пользователей по дням</p>
 				<div class="zw-chart zw-chart-s"><svg aria-label="График числа пользователей по дням" role="img"></svg><div class="zp-tip" hidden></div></div>
-				<details class="zw-tbl"><summary>показать таблицей</summary><table><thead><tr><th>день</th><th>всего</th><th>Stable</th><th>Dev</th></tr></thead><tbody></tbody></table></details>
+				<details class="zw-tbl"><summary>показать таблицей</summary><div class="zw-tbl-scroll"><table data-t="days"><thead><tr><th data-s="d">день</th><th data-s="total">всего</th><th data-s="stable">Stable</th><th data-s="dev">Dev</th></tr></thead><tbody></tbody></table></div></details>
 			</div>
 			<div class="zw-roll" hidden>
 				<div class="zw-roll-side">
@@ -289,10 +327,23 @@
 					<div class="zw-rels" role="group" aria-label="Выпуски"></div>
 				</div>
 				<div class="zw-roll-main">
-					<p class="zw-cap zw-roll-cap">доля программ канала на новой версии</p>
-					<div class="zw-chart zw-chart-s"><svg aria-label="График доли программ на новой версии после выпуска" role="img"></svg><div class="zp-tip" hidden></div></div>
+					<div class="zw-roll-head">
+						<p class="zw-cap zw-roll-cap">доля программ канала на новой версии</p>
+						<div class="zp-range zw-zoom" role="group" aria-label="Отрезок времени после выхода">
+							<button type="button" data-z="600">10 минут</button>
+							<button type="button" data-z="3600">час</button>
+							<button type="button" data-z="0">всё время</button>
+						</div>
+					</div>
+					<div class="zw-chart zw-chart-s zw-curve"><svg aria-label="График доли программ на новой версии после выпуска" role="img"></svg><div class="zp-tip" hidden></div></div>
+					<p class="zw-facts" hidden></p>
+					<div class="zw-took" hidden>
+						<p class="zw-cap">сколько занимало обновление: от разрешения сервера до запуска новой версии</p>
+						<div class="zw-chart zw-chart-xs"><svg aria-label="График времени обновления" role="img"></svg><div class="zp-tip" hidden></div></div>
+					</div>
 				</div>
 			</div>
+			<details class="zw-tbl zw-hist" hidden><summary>история выпусков таблицей</summary><div class="zw-tbl-scroll"><table data-t="rolls"><thead><tr><th data-s="version">версия</th><th data-s="released_at">вышла</th><th data-s="half_sec">до половины</th><th data-s="ninety_sec">до 90%</th><th data-s="full_sec">открыта всем</th><th data-s="granted">получили</th><th data-s="confirmed">обновились</th><th data-s="failed">не вышло</th><th data-s="took_median">обычно за</th></tr></thead><tbody></tbody></table></div></details>
 		</div>
 	</section>
 

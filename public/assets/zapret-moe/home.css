@@ -2436,6 +2436,24 @@ html.zpm-intro-lock body {
   background: var(--zw-dev);
 }
 
+.zw-k-tray {
+  background: var(--acc);
+  opacity: 0.4;
+}
+
+/* чем заняты программы: открытое окно — акцент, трей — нейтральный, дело — золото */
+.zw-bar i.zw-busy {
+  background: var(--gold);
+}
+
+.zw-list .zw-busy b {
+  color: var(--gold);
+}
+
+.zw-act .zw-bar i {
+  cursor: default;
+}
+
 .zw-scene-keys .zw-k-busy {
   background: none;
   box-shadow: inset 0 0 0 1.5px var(--mut);

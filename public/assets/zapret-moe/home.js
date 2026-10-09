@@ -1316,7 +1316,7 @@
           }
           ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 6.2832);
           if (d.busy) { ctx.strokeStyle = paint.mut; ctx.lineWidth = 1.5; ctx.stroke() }
-          else { ctx.fillStyle = c; ctx.fill() }
+          else { ctx.fillStyle = c; ctx.globalAlpha = d.tray && !(d.glow > 0) ? 0.4 : 1; ctx.fill(); ctx.globalAlpha = 1 }
         });
         /* пакеты: вопрос светлый, «пока нет» серый, разрешение золотое */
         fly.forEach(function (p) {
@@ -1375,9 +1375,12 @@
         info.latest = latest[info.channel] || latest.dev || latest.stable || '';
         info.old = old;
         var oldDots = Math.round((total - onLatest) / per), busyDots = Math.min(n, Math.round((s.online.busy || 0) / per));
+        var act = s.online.activity || {}, told = 0;
+        for (var name in act) told += act[name] || 0;
+        var trayDots = told ? Math.round(n * (act.tray || 0) / told) : 0;
         if (dots.length !== n) {
           dots = [];
-          for (var i = 0; i < n; i++) dots.push({ x: 0, y: 0, r: n > 260 ? 2 : n > 120 ? 2.6 : 3.2, old: false, busy: false, wait: false, glow: 0 });
+          for (var i = 0; i < n; i++) dots.push({ x: 0, y: 0, r: n > 260 ? 2 : n > 120 ? 2.6 : 3.2, old: false, busy: false, tray: false, wait: false, glow: 0 });
         }
         /* кто на прежней версии и кто занят — раскиданы по полю, а не кучкой с краю */
         var now = dots.filter(function (d) { return d.old }).length;
@@ -1385,6 +1388,8 @@
           if (now < oldDots && !d.old && (i * 7919) % n < oldDots * 2) { d.old = true; now++ }
           else if (now > oldDots && d.old && !d.wait) { d.old = false; now-- }
           d.busy = (i * 104729) % n < busyDots;
+          /* доля «в трее» — среди тех, кто о себе говорит; остальные рисуются как открытые */
+          d.tray = (i * 15485863) % n < trayDots;
         });
         put('scene-scale', per > 1 ? 'точка — ' + fmt(per) + ' ' + plural(per, 'программа', 'программы', 'программ') : 'точка — одна программа');
         var rpm = s.requests_min != null ? s.requests_min : Math.round(total / 4.5);
@@ -1414,6 +1419,42 @@
       window.addEventListener('resize', function () { if (dots.length) { size(); draw() } });
       return { update: update };
     })();
+
+    /* чем заняты программы — по их собственным словам; считается общим числом */
+    var ACT = [
+      ['window', 'окно открыто', 'zw-now'],
+      ['tray', 'в трее, работают в фоне', ''],
+      ['fullscreen', 'игра или видео на весь экран', 'zw-busy'],
+      ['blockcheck', 'проверяют сеть', 'zw-busy'],
+      ['strategy_scan', 'подбирают стратегию', 'zw-busy']
+    ];
+    function drawActivity() {
+      var box = q('.zw-act'), bar = box.querySelector('.zw-bar'), list = box.querySelector('.zw-list');
+      var a = S.online.activity || {}, total = 0;
+      ACT.forEach(function (c) { total += a[c[0]] || 0 });
+      box.hidden = !total;
+      if (box.hidden) return;
+      bar.textContent = ''; list.textContent = '';
+      ACT.forEach(function (c) {
+        var n = a[c[0]] || 0;
+        if (!n) return;
+        var seg = document.createElement('i');
+        seg.style.flexGrow = String(n);
+        seg.className = c[2];
+        seg.setAttribute('role', 'img');
+        seg.setAttribute('aria-label', c[1] + ': ' + n + ', ' + pct(n / total));
+        bar.appendChild(seg);
+        var li = document.createElement('li');
+        li.className = c[2];
+        var name = document.createElement('b'); name.textContent = c[1]; li.appendChild(name);
+        li.appendChild(document.createTextNode(' ' + fmt(n) + ' · ' + pct(n / total)));
+        list.appendChild(li);
+      });
+      var run = S.online.running || [0, 0], notes = [];
+      if (run[1]) notes.push('обход включён у ' + fmt(run[0]) + ' из ' + fmt(run[1]) + ' (' + pct(run[0] / run[1]) + ')');
+      if (total < (S.online.total || 0)) notes.push('о себе говорят ' + fmt(total) + ' из ' + fmt(S.online.total) + ' — остальные на прежних версиях программы');
+      put('act-note', notes.join(' · '));
+    }
 
     function drawVersions() {
       var wire = q('.zw-wire'), bar = wire.querySelector('.zw-bar'), list = wire.querySelector('.zw-list'), tip = wire.querySelector('.zp-tip');
@@ -1866,6 +1907,7 @@
       scene.update(s);
       drawStage();
       drawVersions();
+      drawActivity();
       /* графики появляются плавно один раз — когда раздел на экране */
       drawCharts(first && seen);
       first = false;

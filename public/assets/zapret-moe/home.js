@@ -1463,6 +1463,94 @@
       put('act-note', notes.join(' · '));
     }
 
+    /* хвост раздачи: почему программы на связи ещё на прежней версии */
+    var TAIL = [
+      ['busy', 'играют или смотрят видео — обновятся, когда человек закончит', 'zw-busy'],
+      ['stage', 'ещё не их ступень раздачи', 'zw-now'],
+      ['queued', 'ждут очереди на скачивание', ''],
+      ['other', 'прямо сейчас качают и ставят или только что запустились', '']
+    ];
+    function drawTail() {
+      var box = q('.zw-tail'), bar = box.querySelector('.zw-bar'), list = box.querySelector('.zw-list');
+      var parts = {}, old = 0;
+      Object.keys(S.tail || {}).forEach(function (ch) {
+        var t = S.tail[ch] || {};
+        old += t.old || 0;
+        TAIL.forEach(function (c) { parts[c[0]] = (parts[c[0]] || 0) + (t[c[0]] || 0) });
+      });
+      box.hidden = !old;
+      if (box.hidden) return;
+      bar.textContent = ''; list.textContent = '';
+      TAIL.forEach(function (c) {
+        var n = parts[c[0]] || 0;
+        if (!n) return;
+        var seg = document.createElement('i');
+        seg.style.flexGrow = String(n);
+        seg.className = c[2];
+        seg.setAttribute('role', 'img');
+        seg.setAttribute('aria-label', c[1] + ': ' + n + ', ' + pct(n / old));
+        bar.appendChild(seg);
+        var li = document.createElement('li');
+        li.className = c[2];
+        var name = document.createElement('b'); name.textContent = c[1]; li.appendChild(name);
+        li.appendChild(document.createTextNode(' ' + fmt(n) + ' · ' + pct(n / old)));
+        list.appendChild(li);
+      });
+      put('tail-note', fmt(old) + ' из ' + fmt(S.online.total || old) + ' на связи');
+    }
+
+    /* коды причин, которые присылают программы (why — не поставилось, miss — не скачалось) */
+    var WHY = {
+      gui: {
+        exit1: 'установщик не смог начать', exit2: 'установку отменили до начала', exit3: 'установщик сломался между шагами',
+        exit4: 'установщик сломался посреди установки', exit5: 'установщик прервал установку — обычно файл занят',
+        exit6: 'установщик закрыли принудительно', exit7: 'установщик отказался ставить', exit8: 'установщик просит перезапустить Windows',
+        same: 'установщик отчитался, а версия на диске прежняя', tamper: 'файл установщика изменили после проверки',
+        gone: 'файл установщика пропал — часто антивирус', start: 'установщик не запустился — антивирус или права',
+        cut: 'установка оборвалась — перезагрузка или выключение'
+      },
+      kvn: {
+        crash: 'новая версия падала при запуске — вернули прежнюю', lock: 'файл программы держит другой процесс',
+        swap: 'не вышло заменить файлы программы', prep: 'не вышло подготовить файлы — место или права',
+        close: 'программа не закрылась перед заменой'
+      },
+      all: {
+        net: 'сеть: файл не скачался', hash: 'файл не совпал с контрольной суммой', disk: 'нет места на диске или нельзя записать',
+        meta: 'не получили данные выпуска', handoff: 'не смогли передать файл установщику', badzip: 'архив повреждён',
+        bad: 'архив отклонён', old: 'прежние версии программы причину не называют', other: 'причина не распознана'
+      }
+    };
+    function whyText(code) {
+      var own = WHY[product] || {};
+      if (own[code]) return own[code];
+      if (WHY.all[code]) return WHY.all[code];
+      var m = /^exitx([0-9a-f]+)$/.exec(code);
+      if (m) return 'установщик аварийно завершился (0x' + m[1].toUpperCase() + ')';
+      m = /^exit(\d+)$/.exec(code);
+      if (m) return 'установщик вернул код ' + m[1];
+      return code;
+    }
+    function drawWhy() {
+      var box = q('.zw-why'), u = S.updates_24h || {}, any = false;
+      ['why', 'miss'].forEach(function (kind) {
+        var col = box.querySelector('[data-w="' + kind + '"]'), list = col.querySelector('.zw-list');
+        var codes = u[kind] || {}, keys = Object.keys(codes).filter(function (k) { return codes[k] > 0 });
+        keys.sort(function (a, b) { return codes[b] - codes[a] || (a < b ? -1 : 1) });
+        list.textContent = '';
+        col.hidden = !keys.length;
+        if (!keys.length) return;
+        any = true;
+        keys.slice(0, 8).forEach(function (k) {
+          var li = document.createElement('li');
+          var name = document.createElement('b'); name.textContent = fmt(codes[k]); li.appendChild(name);
+          li.appendChild(document.createTextNode(' ' + whyText(k)));
+          li.title = k;
+          list.appendChild(li);
+        });
+      });
+      box.hidden = !any;
+    }
+
     function drawVersions() {
       var wire = q('.zw-wire'), bar = wire.querySelector('.zw-bar'), list = wire.querySelector('.zw-list'), tip = wire.querySelector('.zp-tip');
       var items = (S.online.versions || []).filter(function (v) { return v.count > 0 });
@@ -1922,6 +2010,8 @@
       drawStage();
       drawVersions();
       drawActivity();
+      drawTail();
+      drawWhy();
       /* графики появляются плавно один раз — когда раздел на экране */
       drawCharts(first && seen);
       first = false;

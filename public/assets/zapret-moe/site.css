@@ -113,6 +113,11 @@
   padding: 10px 16px;
 }
 
+/* Вторая строка — сайты проекта (общий модуль /_sites/sites.js). */
+.zpm-wikibar-inner + .zpm-wikibar-inner {
+  padding-top: 0;
+}
+
 .zpm-wikibar-label {
   color: var(--color-text-light-2, #888);
 }

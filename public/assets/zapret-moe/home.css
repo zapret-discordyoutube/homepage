@@ -3216,6 +3216,31 @@ html.zpm-intro-lock body {
   60%, 100% { stroke-dashoffset: -42; }
 }
 
+/* DNS: запрос спускается по дереву имён от корня к нужному узлу. */
+.zt-dns circle {
+  fill: var(--bg);
+}
+
+.zt-dns .zt-fill {
+  fill: var(--acc);
+}
+
+.zt-dns .zt-resolve {
+  stroke-width: 4;
+  stroke-dasharray: 5 40;
+  stroke-dashoffset: 5;
+  animation: zt-resolve 2.4s linear infinite;
+}
+
+.zt-list a:hover .zt-dns .zt-resolve {
+  animation-duration: 1s;
+}
+
+@keyframes zt-resolve {
+  0% { stroke-dashoffset: 5; }
+  70%, 100% { stroke-dashoffset: -29; }
+}
+
 .zt-book path:last-child {
   transform-origin: 20px 20px;
   transition: transform 0.5s;

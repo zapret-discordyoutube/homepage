@@ -964,7 +964,7 @@
         case 'lock': var l = document.getElementById('zlock'); if (l) l.scrollIntoView({ behavior: 'smooth', block: 'center' }); break;
         case 'repos': go(sub + '/explore/repos'); break;
         case 'status': go('https://status.zapret.moe/', 1); break;
-        case 'donate': go('https://t.me/zapretvpns_bot', 1); break;
+        case 'donate': go('https://t.me/zapretvpns_bot?start=site_ctxmenu', 1); break;
       }
     }
     function focusIt(i) { items.forEach(function (x, k) { x.classList.toggle('on', k === i) }); cur = i; if (items[i]) items[i].focus({ preventScroll: true }) }

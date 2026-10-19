@@ -1,3 +1,38 @@
 <link rel="icon" href="{{AppSubUrl}}/assets/img/favicon.ico?v=zapret2" sizes="any">
 <link rel="apple-touch-icon" href="{{AppSubUrl}}/assets/img/apple-touch-icon.png?v=zapret2">
 <link rel="stylesheet" href="{{AppSubUrl}}/assets/zapret-moe/site.css?v=@ASSETS_VER@">
+<script>
+	/* У git несколько имён (git.zapret.moe, git2…) — это один сайт, а localStorage у
+	   каждого имени свой. Настройки (заставка, звук, рекорды, редактор, способ
+	   клонирования) лежат ещё и в куке zg_store на общем домене, как куки Forgejo, —
+	   поэтому на любом имени они те же. Стоит в <head>: до того, как их прочтут. */
+	(function () {
+		var KEYS = /^(zpm-|zg-|zlock-|markdown-editor-|repo-clone-protocol$)/;
+		var host = location.hostname.split('.');
+		var domain = host.length > 2 ? host.slice(1).join('.') : location.hostname;
+		var ls, store = {}, key, i;
+		try { ls = window.localStorage; } catch (e) { return; }
+		var m = document.cookie.match(/(?:^|; )zg_store=([^;]*)/);
+		try { if (m) store = JSON.parse(decodeURIComponent(m[1])) || {}; } catch (e) {}
+		var setItem = Storage.prototype.setItem, removeItem = Storage.prototype.removeItem;
+		function save() {
+			document.cookie = 'zg_store=' + encodeURIComponent(JSON.stringify(store)) +
+				'; Domain=' + domain + '; Path=/; Max-Age=31536000; Secure; SameSite=Lax';
+		}
+		/* что было только на этом имени (до общей куки) — тоже в общее */
+		for (i = 0; i < ls.length; i++) {
+			key = ls.key(i);
+			if (KEYS.test(key) && !(key in store)) store[key] = ls.getItem(key);
+		}
+		for (key in store) if (ls.getItem(key) !== store[key]) setItem.call(ls, key, store[key]);
+		save();
+		Storage.prototype.setItem = function (k, v) {
+			setItem.call(this, k, v);
+			if (this === ls && KEYS.test(k)) { store[k] = String(v); save(); }
+		};
+		Storage.prototype.removeItem = function (k) {
+			removeItem.call(this, k);
+			if (this === ls && KEYS.test(k)) { delete store[k]; save(); }
+		};
+	})();
+</script>

@@ -5198,3 +5198,23 @@ html.zcur-on textarea {
   visibility: hidden;
   animation: none;
 }
+
+/* ── Адреса сайта ───────────────────────────────────────────────────
+   Виджет общий с вики (/_sites/mirrors-widget.js): цвета и шрифты он берёт отсюда. */
+.zm-sec {
+  padding: clamp(56px, 7vw, 88px) 0 0;
+}
+
+.zm-sec [data-zapret-mirrors] {
+  --zm-ink: var(--ink);
+  --zm-mut: var(--mut);
+  --zm-dim: var(--dim);
+  --zm-acc: var(--acc);
+  --zm-line: var(--line);
+  --zm-bg: var(--bg);
+  --zm-on-acc: #fff;
+  --zm-disp: var(--disp);
+  --zm-txt: var(--txt);
+  --zm-mono: var(--mono);
+  min-height: 420px;
+}
